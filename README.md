@@ -16,10 +16,10 @@ Web interface for managing LLM Router configurations and text anonymization.
 - **User Management**: Admin panel, authentication, role-based access
 - **Project Management**: Organize configurations into projects
 - **Model Configuration**:
-  - Create, edit, import/export configurations (JSON)
-  - Manage models across families (Google, OpenAI, Qwen)
-  - Configure providers (API hosts, tokens, weights, input sizes)
-  - Version control with restore capability
+    - Create, edit, import/export configurations (JSON)
+    - Manage models across families (Google, OpenAI, Qwen)
+    - Configure providers (API hosts, tokens, weights, input sizes)
+    - Version control with restore capability
 - **Active Model Selection**: Choose which models to activate
 
 ### Anonymizer (`app_anonymizer`)
@@ -99,37 +99,37 @@ python app_anonymizer.py
 
 ### Config Manager
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Configuration list (home) |
-| `/login` | GET/POST | User login |
-| `/logout` | GET | User logout |
-| `/setup` | GET/POST | Initial admin setup |
-| `/admin/users` | GET/POST | User management (admin) |
-| `/projects` | GET/POST | Project management |
-| `/configs` | GET | List configurations |
-| `/configs/new` | GET/POST | Create configuration |
-| `/configs/import` | GET/POST | Import JSON configuration |
-| `/configs/<id>` | GET | View configuration |
-| `/configs/<id>/edit` | GET/POST | Edit configuration |
-| `/configs/<id>/export` | GET | Export configuration (JSON) |
-| `/configs/<id>/activate` | POST | Activate configuration |
-| `/configs/<id>/delete` | POST | Delete configuration |
-| `/configs/<id>/models/add` | POST | Add model |
-| `/models/<id>/delete` | POST | Delete model |
-| `/models/<id>/providers/add` | POST | Add provider |
-| `/providers/<id>/update` | POST | Update provider |
-| `/providers/<id>/delete` | POST | Delete provider |
+| Endpoint                     | Method   | Description                 |
+|------------------------------|----------|-----------------------------|
+| `/`                          | GET      | Configuration list (home)   |
+| `/login`                     | GET/POST | User login                  |
+| `/logout`                    | GET      | User logout                 |
+| `/setup`                     | GET/POST | Initial admin setup         |
+| `/admin/users`               | GET/POST | User management (admin)     |
+| `/projects`                  | GET/POST | Project management          |
+| `/configs`                   | GET      | List configurations         |
+| `/configs/new`               | GET/POST | Create configuration        |
+| `/configs/import`            | GET/POST | Import JSON configuration   |
+| `/configs/<id>`              | GET      | View configuration          |
+| `/configs/<id>/edit`         | GET/POST | Edit configuration          |
+| `/configs/<id>/export`       | GET      | Export configuration (JSON) |
+| `/configs/<id>/activate`     | POST     | Activate configuration      |
+| `/configs/<id>/delete`       | POST     | Delete configuration        |
+| `/configs/<id>/models/add`   | POST     | Add model                   |
+| `/models/<id>/delete`        | POST     | Delete model                |
+| `/models/<id>/providers/add` | POST     | Add provider                |
+| `/providers/<id>/update`     | POST     | Update provider             |
+| `/providers/<id>/delete`     | POST     | Delete provider             |
 
 ### Anonymizer
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/anonymize/` | GET | Anonymization form |
-| `/anonymize/` | POST | Process text anonymization |
-| `/anonymize/chat` | GET | Chat interface |
-| `/anonymize/chat/message` | POST | Send chat message |
-| `/anonymize/models` | GET | List available models |
+| Endpoint                  | Method | Description                |
+|---------------------------|--------|----------------------------|
+| `/anonymize/`             | GET    | Anonymization form         |
+| `/anonymize/`             | POST   | Process text anonymization |
+| `/anonymize/chat`         | GET    | Chat interface             |
+| `/anonymize/chat/message` | POST   | Send chat message          |
+| `/anonymize/models`       | GET    | List available models      |
 
 ## Project Structure
 
@@ -172,3 +172,9 @@ Config Manager uses SQLite with SQLAlchemy ORM:
 - Both apps run independently on different ports
 - Configurations are stored in SQLite database (Config Manager only)
 - All configuration changes are versioned and can be restored
+
+---
+
+## 📜 License
+
+See the [LICENSE](LICENSE) file.
