@@ -117,17 +117,6 @@ def chat_message():
     algorithm = request.form.get("algorithm", "fast")
     model_name = request.form.get("model_name", "").strip()
 
-    # If GenAI was chosen but no model supplied, inform the user.
-    if algorithm == "genai" and not model_name:
-        return render_template(
-            "chat_partial.html",
-            chat="❌ GenAI selected but no model provided. Please select a model.",
-        )
-
-    print("algorithm=", algorithm)
-    print("algorithm=", algorithm)
-    print("algorithm=", algorithm)
-
     payload = {
         "stream": False,
         "anonymize": algorithm != "no_anno",
