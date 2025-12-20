@@ -134,6 +134,12 @@ def chat_message():
             json=payload,
             timeout=60,
         )
+        if resp.status_code == 500:
+            error = resp.json().get("error", {}).get("message", "Error!")
+            return render_template(
+                "chat_partial.html",
+                chat=error,
+            )
         resp.raise_for_status()
     except requests.RequestException as exc:
         return f"❌ Chat service error: {exc}", 502
