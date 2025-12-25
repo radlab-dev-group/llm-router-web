@@ -29,7 +29,15 @@ export LLM_ROUTER_GENAI_MODEL_ANONYMISATION="$GENAI_MODEL_ANON"
 
 # -------------------------------------------------------------------------
 # Run the app with gunicorn.
-#   -w 4           – number of worker processes (adjust as needed)
+#   -w 1           – number of worker processes (adjust as needed)
 #   -b host:port   – bind address/port taken from the env vars above
 # -------------------------------------------------------------------------
-gunicorn --access-logfile - --error-logfile - --capture-output --enable-stdio-inheritance -w 1 -b "${HOST}:${PORT}" llm_router_web.app_anonymizer:app
+gunicorn \
+  --access-logfile - \
+  --error-logfile - \
+  --capture-output \
+  --enable-stdio-inheritance \
+  --timeout 1200 \
+  -w 1 \
+  -b "${HOST}:${PORT}" \
+  llm_router_web.app_anonymizer:app

@@ -10,7 +10,9 @@ Provides endpoints for:
 * model catalogue (proxy to the LLM‑Router `/models` endpoint)
 """
 
+import socket
 import requests
+
 from flask import Blueprint, current_app, request, render_template, jsonify
 
 from .constants import GENAI_MODEL_ANON
@@ -47,6 +49,7 @@ def process_text():
         "genai": "/api/anonymize_text_genai",
         "priv": "/api/anonymize_text_priv_masker",
     }
+    model_name = request.form.get("model_name", "").strip()
 
     if algorithm == "genai" and not GENAI_MODEL_ANON:
         return render_template(
@@ -75,7 +78,7 @@ def process_text():
     try:
         resp = requests.post(
             external_url,
-            json={"text": raw_text, "model_name": "gpt-oss:120b"},
+            json={"text": raw_text, "model_name": model_name or "gpt-oss:120b"},
             timeout=600,
         )
         resp.raise_for_status()
@@ -134,15 +137,26 @@ def chat_message():
             json=payload,
             timeout=600,
         )
-        if resp.status_code == 500:
-            error = resp.json().get("error", {}).get("message", "Error!")
-            return render_template(
-                "chat_partial.html",
-                chat=error,
+        if resp.status_code >= 500:
+            # Grab the error message if the service supplied one
+            error_msg = (
+                resp.json()
+                .get("error", {})
+                .get("message", f"LLM‑Router returned {resp.status_code}")
             )
+            return render_template("chat_partial.html", chat=error_msg), 502
         resp.raise_for_status()
-    except requests.RequestException as exc:
-        return f"❌ Chat service error: {exc}", 502
+    except (requests.RequestException, socket.error) as exc:
+        # Log the full traceback for debugging (Gunicorn already logs it, but we keep it)
+        current_app.logger.exception("Chat service request failed")
+        # Return a friendly message to the UI – avoids the worker abort
+        return (
+            render_template(
+                "chat_partial.html",
+                chat=f"❌ Chat service error: {exc}",
+            ),
+            502,
+        )
 
     try:
         data = resp.json()
