@@ -76,7 +76,7 @@ def process_text():
         resp = requests.post(
             external_url,
             json={"text": raw_text, "model_name": "gpt-oss:120b"},
-            timeout=60,
+            timeout=600,
         )
         resp.raise_for_status()
     except requests.RequestException as exc:
@@ -132,7 +132,7 @@ def chat_message():
         resp = requests.post(
             external_url,
             json=payload,
-            timeout=60,
+            timeout=600,
         )
         if resp.status_code == 500:
             error = resp.json().get("error", {}).get("message", "Error!")
