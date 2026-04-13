@@ -10,10 +10,19 @@ Provides endpoints for:
 * model catalogue (proxy to the LLM‑Router `/models` endpoint)
 """
 
+import json
 import socket
 import requests
 
-from flask import Blueprint, current_app, request, render_template, jsonify
+from flask import (
+    Blueprint,
+    current_app,
+    request,
+    render_template,
+    jsonify,
+    Response,
+    stream_with_context,
+)
 
 from .constants import GENAI_MODEL_ANON
 
@@ -112,7 +121,7 @@ def show_chat():
 
 @anonymize_bp.route("/chat/message", methods=["POST"])
 def chat_message():
-    """Forward a chat message to the LLM‑Router and render the reply."""
+    """Forward a chat message to the LLM‑Router and stream the reply."""
     user_msg = request.form.get("message", "")
     if not user_msg:
         return "⚠️ No message provided.", 400
@@ -121,7 +130,7 @@ def chat_message():
     model_name = request.form.get("model_name", "").strip()
 
     payload = {
-        "stream": False,
+        "stream": True,  # <--- enable streaming
         "anonymize": algorithm != "no_anno",
         "model": model_name or "google/gemma-3-12b-it",
         "messages": [{"role": "user", "content": user_msg}],
@@ -132,46 +141,75 @@ def chat_message():
     )
 
     try:
+        # Use stream=True so that we can forward the chunks to the client
         resp = requests.post(
             external_url,
             json=payload,
             timeout=600,
+            stream=True,
         )
         if resp.status_code >= 500:
-            # Grab the error message if the service supplied one
             error_msg = (
                 resp.json()
                 .get("error", {})
                 .get("message", f"LLM‑Router returned {resp.status_code}")
             )
-            return render_template("chat_partial.html", chat=error_msg), 502
+            # Render a simple error block – it will be streamed as a single chunk
+            return (
+                Response(
+                    render_template("chat_partial.html", chat=error_msg),
+                    mimetype="text/html",
+                ),
+                502,
+            )
         resp.raise_for_status()
     except (requests.RequestException, socket.error) as exc:
-        # Log the full traceback for debugging (Gunicorn already logs it, but we keep it)
         current_app.logger.exception("Chat service request failed")
-        # Return a friendly message to the UI – avoids the worker abort
-        return (
-            render_template(
-                "chat_partial.html",
-                chat=f"❌ Chat service error: {exc}",
-            ),
-            502,
+        error_html = render_template(
+            "chat_partial.html", chat=f"❌ Chat service error: {exc}"
         )
+        return Response(error_html, mimetype="text/html"), 502
 
-    try:
-        data = resp.json()
-        chat_reply = (
-            data.get("choices", [{}])[0].get("message", {}).get("content", "")
-        )
-        if not chat_reply:
-            chat_reply = data.get("message", {}).get("content", "")
-    except (ValueError, AttributeError):
-        chat_reply = ""
+        # --------------------------------------------------------------
+        # Stream the response back to the browser as plain HTML chunks.
+        # Each chunk is rendered with ``chat_partial.html``.
+        # --------------------------------------------------------------
 
-    return render_template(
-        "chat_partial.html",
-        chat=chat_reply,
-    )
+        # --------------------------------------------------------------
+        # Strumieniowanie odpowiedzi – zwracamy **tylko** tekst (bez HTML)
+        # --------------------------------------------------------------
+
+    def generate():
+        for line in resp.iter_lines(decode_unicode=True):
+            if not line:
+                continue
+
+            # Usuwamy prefiks „data:” typowy dla SSE
+            cleaned = line.strip()
+            if cleaned.startswith("data:"):
+                cleaned = cleaned[5:].lstrip()
+
+            # Ignorujemy końcowy znacznik „[DONE]”
+            if cleaned == "[DONE]":
+                continue
+
+            if not cleaned:
+                continue
+
+            try:
+                data = json.loads(cleaned)
+                chunk = (
+                    data.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                )
+            except Exception:
+                # Gdyby nie był to JSON – traktujemy całą linię jako tekst
+                chunk = cleaned
+
+            if chunk:
+                # Zwracamy sam tekst – klient dokleja go do jednego <pre>
+                yield chunk
+
+    return Response(stream_with_context(generate()), mimetype="text/html")
 
 
 # ----------------------------------------------------------------------
