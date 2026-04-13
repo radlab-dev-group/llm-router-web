@@ -37,6 +37,7 @@
         <pre id="chat-output" class="w100" style="white-space:pre-wrap; margin-top:1rem;"></pre>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         // --------------------------------------------------------------
         // Ładowanie listy modeli (bez zmian)
@@ -89,10 +90,11 @@
             const form = e.target;
             const formData = new FormData(form);
             const spinner = document.getElementById('loading-spinner');
-            const output  = document.getElementById('chat-output');
+            const output = document.getElementById('chat-output');
 
             spinner.classList.add('active');
-            output.textContent = '';          // wyczyść poprzednią odpowiedź
+            output.textContent = '';          // clear previous response
+            let markdownContent = '';         // ← accumulate streamed Markdown
 
             try {
                 const response = await fetch(form.action, {
@@ -101,13 +103,14 @@
                 });
 
                 if (!response.body) {
-                    // Brak wsparcia dla strumieni – wyświetlamy całość jednorazowo
+                    // No streaming support – render whole response as Markdown
                     const txt = await response.text();
-                    output.textContent = txt;
+                    markdownContent = txt;
+                    output.innerHTML = marked.parse(markdownContent);
                     return;
                 }
 
-                const reader  = response.body.getReader();
+                const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let done = false;
 
@@ -115,9 +118,10 @@
                     const {value, done: finished} = await reader.read();
                     done = finished;
                     if (value) {
-                        // Każdy kawałek jest czystym tekstem (serwer już go „od‑sse‑ował”)
+                        // Each chunk is plain text (already “de‑SSE‑ed” by the server)
                         const chunk = decoder.decode(value, {stream: true});
-                        output.textContent += chunk;
+                        markdownContent += chunk;               // ← append to accumulator
+                        output.innerHTML = marked.parse(markdownContent); // render Markdown
                     }
                 }
             } catch (err) {
