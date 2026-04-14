@@ -22,6 +22,7 @@ from flask import (
     jsonify,
     Response,
     stream_with_context,
+    session,
 )
 
 from .constants import GENAI_MODEL_ANON
@@ -126,14 +127,29 @@ def chat_message():
     if not user_msg:
         return "⚠️ No message provided.", 400
 
+    # Sprawdzenie czy rozpoczęto nowy czat
+    new_chat = request.form.get("new_chat") == "true"
+    if new_chat:
+        session["chat_history"] = []
+
     algorithm = request.form.get("algorithm", "fast")
     model_name = request.form.get("model_name", "").strip()
 
+    # Pobranie historii z sesji lub inicjalizacja nowej listy
+    history = session.get("chat_history", [])
+    history.append({"role": "user", "content": user_msg})
+
+    # WAŻNE: przy domyślnej sesji cookie nie da się zapisać zmian "po streamie"
+    # (nagłówki są wysyłane zanim generator skończy). Zapisujemy więc historię
+    # użytkownika OD RAZU, a odpowiedź asystenta dopiszemy osobnym requestem (finalize).
+    session["chat_history"] = history
+    session.modified = True
+
     payload = {
-        "stream": True,  # <--- enable streaming
+        "stream": True,
         "anonymize": algorithm != "no_anno",
-        "model": model_name or "google/gemma-3-12b-it",
-        "messages": [{"role": "user", "content": user_msg}],
+        "model": model_name,
+        "messages": history,
     }
 
     external_url = (
@@ -154,7 +170,6 @@ def chat_message():
                 .get("error", {})
                 .get("message", f"LLM‑Router returned {resp.status_code}")
             )
-            # Render a simple error block – it will be streamed as a single chunk
             return (
                 Response(
                     render_template("chat_partial.html", chat=error_msg),
@@ -170,26 +185,15 @@ def chat_message():
         )
         return Response(error_html, mimetype="text/html"), 502
 
-        # --------------------------------------------------------------
-        # Stream the response back to the browser as plain HTML chunks.
-        # Each chunk is rendered with ``chat_partial.html``.
-        # --------------------------------------------------------------
-
-        # --------------------------------------------------------------
-        # Strumieniowanie odpowiedzi – zwracamy **tylko** tekst (bez HTML)
-        # --------------------------------------------------------------
-
     def generate():
         for line in resp.iter_lines(decode_unicode=True):
             if not line:
                 continue
 
-            # Usuwamy prefiks „data:” typowy dla SSE
             cleaned = line.strip()
             if cleaned.startswith("data:"):
                 cleaned = cleaned[5:].lstrip()
 
-            # Ignorujemy końcowy znacznik „[DONE]”
             if cleaned == "[DONE]":
                 continue
 
@@ -202,14 +206,36 @@ def chat_message():
                     data.get("choices", [{}])[0].get("delta", {}).get("content", "")
                 )
             except Exception:
-                # Gdyby nie był to JSON – traktujemy całą linię jako tekst
                 chunk = cleaned
 
             if chunk:
-                # Zwracamy sam tekst – klient dokleja go do jednego <pre>
                 yield chunk
 
     return Response(stream_with_context(generate()), mimetype="text/html")
+
+
+@anonymize_bp.route("/chat/finalize", methods=["POST"])
+def chat_finalize():
+    """
+    Persist assistant response in session.
+
+    This is required when using Flask's default cookie-based session:
+    you cannot modify session after streaming starts (headers already sent).
+    """
+    try:
+        payload = request.get_json(force=True) or {}
+    except Exception:
+        payload = {}
+
+    assistant_msg = (payload.get("assistant") or "").strip()
+    if not assistant_msg:
+        return jsonify({"ok": False, "error": "Missing assistant message"}), 400
+
+    history = session.get("chat_history", [])
+    history.append({"role": "assistant", "content": assistant_msg})
+    session["chat_history"] = history
+    session.modified = True
+    return jsonify({"ok": True})
 
 
 # ----------------------------------------------------------------------
@@ -226,17 +252,14 @@ def models():
         resp = requests.get(external_url, timeout=10)
         resp.raise_for_status()
     except requests.RequestException as exc:
-        # Return an empty list with a 500 status so the client can handle it.
         current_app.logger.error(f"Failed to fetch models: {exc}")
         return jsonify({"models": []}), 500
 
     try:
         data = resp.json()
     except ValueError:
-        # Non‑JSON response – treat as empty list.
         current_app.logger.error("Models endpoint returned non‑JSON.")
         return jsonify({"models": []}), 500
 
-    # The router may return either {"data": [...]} or {"models": [...]}
     models = data.get("models") or data.get("data") or []
     return jsonify({"models": models})
