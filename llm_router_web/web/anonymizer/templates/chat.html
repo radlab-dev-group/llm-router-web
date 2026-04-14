@@ -1,92 +1,712 @@
 {% extends "base_anonymizer.html" %}
 {% block content %}
-<div class="card">
-    <h2>💬 LLM‑Router Chat</h2>
+    <style>
+        /* --------------------------------------------------------------
+           Chat page styling (scoped-ish via .chat-* classes)
+           Works with your global theme styles (dark/light).
+        -------------------------------------------------------------- */
+        .chat-shell {
+            max-width: 1180px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 1rem;
+        }
 
-    <!-- Chat message form -->
-    <form id="chat-form"
-          hx-post="{{ url_for('anonymize_web.chat_message') }}"
-          hx-target="#chat-container"
-          hx-swap="innerHTML"
-          hx-trigger="submit"
-          hx-indicator="#loading-spinner"
-          class="form">
+        .chat-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(6px);
+        }
 
-        <label for="chat-input">Your message:</label>
-        <textarea id="chat-input" name="message" rows="3"
-                  placeholder="Type a message…" required
-                  class="w100"></textarea>
+        .chat-title h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            letter-spacing: 0.2px;
+        }
+        .chat-title .sub {
+            margin-top: 0.35rem;
+            opacity: 0.75;
+            font-size: 0.9rem;
+            line-height: 1.2rem;
+        }
 
-        <!-- New: algorithm selector (same as on the anonymize page) -->
-        <div class="form-actions" style="display:flex; align-items:center; gap:var(--space-2); margin-top:1rem;">
-            <select id="algorithm-select" name="algorithm"
-                    class="btn"
-                    style="width:auto;">
-                <option value="fast" selected>Fast Masking</option>
-                <option value="no_anno">Dont anonymize</option>
-            </select>
+        .chat-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
 
-            <!-- New: model selector – populated from our own `/anonymize/models` endpoint -->
-            <select id="model-select" name="model_name"
-                    class="btn"
-                    style="width:auto;">
-                <option value="" disabled selected>Loading models…</option>
-            </select>
+        .btnx {
+            appearance: none;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            color: inherit;
+            border-radius: 12px;
+            padding: 0.55rem 0.8rem;
+            cursor: pointer;
+            transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+            font-weight: 600;
+            line-height: 1;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        .btnx:hover {
+            background: rgba(255,255,255,0.10);
+            border-color: rgba(255,255,255,0.18);
+            transform: translateY(-1px);
+        }
+        .btnx:active {
+            transform: translateY(0px);
+            opacity: 0.92;
+        }
+        .btnx.primary {
+            border-color: rgba(99, 179, 237, 0.30);
+            background: rgba(99, 179, 237, 0.16);
+        }
+        .btnx.primary:hover {
+            background: rgba(99, 179, 237, 0.22);
+            border-color: rgba(99, 179, 237, 0.42);
+        }
+        .btnx.danger {
+            border-color: rgba(252, 129, 129, 0.28);
+            background: rgba(252, 129, 129, 0.14);
+        }
+        .btnx.danger:hover {
+            background: rgba(252, 129, 129, 0.20);
+            border-color: rgba(252, 129, 129, 0.40);
+        }
 
-            <button type="submit" class="btn primary">📤 Send</button>
-            <span id="loading-spinner" class="spinner" aria-live="polite"></span>
+        .pill {
+            font-size: 0.82rem;
+            padding: 0.25rem 0.55rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.05);
+            opacity: 0.9;
+            white-space: nowrap;
+        }
+
+        .chat-board {
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.03);
+            overflow: hidden;
+            min-height: 420px;
+            display: grid;
+            grid-template-rows: 1fr;
+        }
+
+        .chat-output {
+            padding: 1rem;
+            overflow: auto;
+            max-height: calc(100vh - 400px);
+            scroll-behavior: smooth;
+        }
+
+        .chat-empty {
+            opacity: 0.72;
+            padding: 0.9rem;
+            border-radius: 12px;
+            border: 1px dashed rgba(255,255,255,0.16);
+            background: rgba(255,255,255,0.03);
+        }
+
+        .msg {
+            display: grid;
+            gap: 0.35rem;
+            margin: 0 0 1rem 0;
+        }
+
+        .msg-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+            opacity: 0.85;
+            font-size: 0.86rem;
+        }
+
+        .msg-role {
+            font-weight: 700;
+            letter-spacing: 0.15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .msg-time {
+            opacity: 0.7;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .bubble {
+            padding: 0.85rem 0.95rem;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.05);
+            line-height: 1.45rem;
+            overflow-wrap: anywhere;
+        }
+
+        .msg.user .bubble {
+            background: rgba(99,179,237,0.12);
+            border-color: rgba(99,179,237,0.22);
+        }
+
+        .msg.assistant .bubble {
+            background: rgba(72,187,120,0.10);
+            border-color: rgba(72,187,120,0.20);
+        }
+
+        /* Highlight anonymized tags like {TAGNAME} */
+        .anon-tag {
+            display: inline-block;
+            padding: 0.05rem 0.35rem;
+            border-radius: 9px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255, 220, 120, 0.14);
+            color: inherit;
+            font-weight: 800;
+            letter-spacing: 0.2px;
+            box-shadow: 0 0 0 2px rgba(255, 220, 120, 0.08) inset;
+            white-space: nowrap;
+        }
+
+        /* Markdown output within assistant bubble */
+        .bubble .assistant-msg :first-child { margin-top: 0; }
+        .bubble .assistant-msg :last-child { margin-bottom: 0; }
+        .bubble .assistant-msg pre {
+            padding: 0.8rem;
+            border-radius: 12px;
+            overflow: auto;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(0,0,0,0.25);
+        }
+        .bubble code {
+            border-radius: 8px;
+            padding: 0.1rem 0.35rem;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.06);
+        }
+        .bubble pre code {
+            padding: 0;
+            border: none;
+            background: transparent;
+        }
+
+        .chat-composer {
+            padding: 1rem 1.1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.04);
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .composer-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.6rem;
+        }
+
+        .composer-controls {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        .controls-left {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            align-items: center;
+        }
+
+        .selectx {
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.05);
+            color: inherit;
+            padding: 0.55rem 0.7rem;
+            min-width: 220px;
+            outline: none;
+        }
+
+        .inputx {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04);
+            color: inherit;
+            padding: 0.85rem 0.9rem;
+            outline: none;
+            resize: vertical;
+            min-height: 86px;
+            line-height: 1.35rem;
+        }
+        .inputx:focus, .selectx:focus {
+            border-color: rgba(99,179,237,0.40);
+            box-shadow: 0 0 0 3px rgba(99,179,237,0.16);
+        }
+
+        .right-actions {
+            display: inline-flex;
+            gap: 0.6rem;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .spinnerx {
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            border: 2px solid rgba(255,255,255,0.20);
+            border-top-color: rgba(255,255,255,0.85);
+            display: none;
+            animation: spin 0.8s linear infinite;
+        }
+        .spinnerx.active { display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .kbd {
+            font-size: 0.78rem;
+            padding: 0.18rem 0.38rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            opacity: 0.9;
+            font-variant-numeric: tabular-nums;
+        }
+
+        @media (min-width: 820px) {
+            .composer-row {
+                grid-template-columns: 1fr;
+            }
+            .composer-controls {
+                grid-template-columns: 1fr auto;
+            }
+        }
+    </style>
+
+    <div class="chat-shell">
+        <!-- Header / Toolbar -->
+        <div class="chat-header">
+            <div class="chat-title">
+                <h2>LLM‑Router Chat</h2>
+                <div class="sub">
+                    Wysyłaj wiadomości, a odpowiedź będzie streamowana na żywo.
+                    <span class="pill" id="session-pill">Session: active</span>
+                </div>
+            </div>
+
+            <div class="chat-actions">
+                <button type="button" id="btn-clear-ui" class="btnx" title="Czyści tylko widok (bez sesji)">
+                    Clear view
+                </button>
+                <button type="button" id="btn-new-chat" class="btnx danger" title="Czyści sesję i zaczyna od nowa">
+                    New chat
+                </button>
+            </div>
         </div>
-    </form>
 
-    <!-- Container where the assistant’s reply will appear -->
-    <div id="chat-container"></div>
-</div>
+        <!-- Output board -->
+        <div class="chat-board">
+            <div id="chat-output" class="chat-output">
+                <div class="chat-empty" id="chat-empty">
+                    Napisz wiadomość poniżej. Podpowiedź: <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> wysyła.
+                </div>
+            </div>
+        </div>
 
-<script>
-    // ------------------------------------------------------------------
-    // Load the list of models from our Flask endpoint and fill the dropdown.
-    // ------------------------------------------------------------------
-    async function loadModels() {
-        const modelsUrl = "{{ url_for('anonymize_web.models') }}";
+        <!-- Composer -->
+        <form id="chat-form"
+              action="{{ url_for('anonymize_web.chat_message') }}"
+              method="post"
+              class="chat-composer">
 
-        try {
-            const response = await fetch(modelsUrl);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
+            <input type="hidden" id="new-chat-flag" name="new_chat" value="false">
 
-            const modelSelect = document.getElementById('model-select');
-            modelSelect.innerHTML = '';   // clear placeholder
+            <div class="composer-row">
+                <label for="chat-input" style="opacity:0.85; font-weight:700;">Wiadomość</label>
+                <textarea id="chat-input"
+                          name="message"
+                          class="inputx"
+                          placeholder="Type a message…"
+                          required></textarea>
+            </div>
 
-            const models = data.models || [];
+            <div class="composer-controls">
+                <div class="controls-left">
+                    <select id="algorithm-select" name="algorithm" class="selectx" title="Anonymization mode">
+                        <option value="fast" selected>Fast masking (anonymize)</option>
+                        <option value="no_anno">No anonymization</option>
+                    </select>
 
-            if (models.length === 0) {
-                const opt = document.createElement('option');
-                opt.value = "";
-                opt.textContent = "No models available";
-                opt.disabled = true;
-                modelSelect.appendChild(opt);
-                return;
+                    <select id="model-select" name="model_name" class="selectx" title="Model">
+                        <option value="" disabled selected>Loading models…</option>
+                    </select>
+
+                    <span class="spinnerx" id="loading-spinner" aria-live="polite"></span>
+                </div>
+
+                <div class="right-actions">
+                    <button type="submit" class="btnx primary" id="btn-send" title="Send (Ctrl+Enter)">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        const chatInput = document.getElementById('chat-input');
+        const modelSelect = document.getElementById('model-select');
+        const algorithmSelect = document.getElementById('algorithm-select');
+        const newChatFlag = document.getElementById('new-chat-flag');
+        const chatOutput = document.getElementById('chat-output');
+        const btnNewChat = document.getElementById('btn-new-chat');
+        const btnClearUi = document.getElementById('btn-clear-ui');
+        const chatEmpty = document.getElementById('chat-empty');
+        const spinner = document.getElementById('loading-spinner');
+        const btnSend = document.getElementById('btn-send');
+
+        // --------------------------------------------------------------
+        // LocalStorage: remember draft + model + algorithm
+        // --------------------------------------------------------------
+        function saveState() {
+            localStorage.setItem('chat_last_text', chatInput.value);
+            localStorage.setItem('chat_last_model', modelSelect.value);
+            localStorage.setItem('chat_last_algo', algorithmSelect.value);
+        }
+
+        function loadState() {
+            const savedText = localStorage.getItem('chat_last_text');
+            const savedModel = localStorage.getItem('chat_last_model');
+            const savedAlgo = localStorage.getItem('chat_last_algo');
+            if (savedText) chatInput.value = savedText;
+            if (savedAlgo && [...algorithmSelect.options].some(opt => opt.value === savedAlgo)) {
+                algorithmSelect.value = savedAlgo;
+            }
+            return { savedText, savedModel, savedAlgo };
+        }
+
+        chatInput.addEventListener('input', saveState);
+        modelSelect.addEventListener('change', saveState);
+        algorithmSelect.addEventListener('change', saveState);
+
+        // --------------------------------------------------------------
+        // Models loader
+        // --------------------------------------------------------------
+        async function loadModels() {
+            const modelsUrl = "{{ url_for('anonymize_web.models') }}";
+            const { savedModel } = loadState();
+
+            try {
+                const response = await fetch(modelsUrl);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+
+                modelSelect.innerHTML = '';
+                const models = data.models || [];
+
+                if (models.length === 0) {
+                    modelSelect.innerHTML = '<option value="" disabled selected>No models available</option>';
+                    return;
+                }
+
+                models.forEach(m => {
+                    const name = typeof m === 'string' ? m : (m.id || m.name);
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    modelSelect.appendChild(opt);
+                });
+
+                if (savedModel && [...modelSelect.options].some(opt => opt.value === savedModel)) {
+                    modelSelect.value = savedModel;
+                } else if (modelSelect.options.length) {
+                    modelSelect.selectedIndex = 0;
+                }
+            } catch (err) {
+                console.error('Failed to load models:', err);
+                modelSelect.innerHTML = '<option value="" disabled selected>Error loading models</option>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadModels);
+
+        // --------------------------------------------------------------
+        // Helpers
+        // --------------------------------------------------------------
+        function tsNow() {
+            return new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+        }
+
+        function ensureEmptyHidden() {
+            if (chatEmpty) chatEmpty.style.display = 'none';
+        }
+
+        function scrollToBottom() {
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+
+        // Highlight tags like {TAGNAME} in text nodes, excluding code/pre blocks.
+        const ANON_TAG_RE = /\{[^{}\s]+\}/g;
+
+        function createHighlightedFragment(text) {
+            const frag = document.createDocumentFragment();
+            let lastIndex = 0;
+
+            ANON_TAG_RE.lastIndex = 0;
+            let match;
+            while ((match = ANON_TAG_RE.exec(text)) !== null) {
+                const start = match.index;
+                const end = start + match[0].length;
+
+                if (start > lastIndex) {
+                    frag.appendChild(document.createTextNode(text.slice(lastIndex, start)));
+                }
+
+                const span = document.createElement('span');
+                span.className = 'anon-tag';
+                span.textContent = match[0];
+                frag.appendChild(span);
+
+                lastIndex = end;
             }
 
-            models.forEach(m => {
-                // Router may return a string or an object with `id`/`name`
-                const name = typeof m === 'string' ? m : (m.id || m.name);
-                const opt = document.createElement('option');
-                opt.value = name;
-                opt.textContent = name;
-                modelSelect.appendChild(opt);
-            });
+            if (lastIndex < text.length) {
+                frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+            }
 
-            // Select the first model by default
-            if (modelSelect.options.length) modelSelect.selectedIndex = 0;
-        } catch (err) {
-            console.error('Failed to load models:', err);
-            const modelSelect = document.getElementById('model-select');
-            modelSelect.innerHTML = '<option value="" disabled selected>Error loading models</option>';
+            return frag;
         }
-    }
 
-    // Load models when the page is ready
-    document.addEventListener('DOMContentLoaded', loadModels);
-</script>
+        function highlightAnonTagsInElement(root) {
+            if (!root) return;
+
+            const walker = document.createTreeWalker(
+                root,
+                NodeFilter.SHOW_TEXT,
+                {
+                    acceptNode(node) {
+                        const parent = node.parentNode;
+                        if (!parent) return NodeFilter.FILTER_REJECT;
+
+                        // Don't touch code blocks / inline code
+                        const parentEl = parent.nodeType === Node.ELEMENT_NODE ? parent : parent.parentElement;
+                        if (parentEl && parentEl.closest && parentEl.closest('pre, code')) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+
+                        if (!node.nodeValue || !ANON_TAG_RE.test(node.nodeValue)) {
+                            ANON_TAG_RE.lastIndex = 0;
+                            return NodeFilter.FILTER_REJECT;
+                        }
+
+                        ANON_TAG_RE.lastIndex = 0;
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                },
+                false
+            );
+
+            const textNodes = [];
+            while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+            for (const node of textNodes) {
+                const text = node.nodeValue || '';
+                const frag = createHighlightedFragment(text);
+                node.parentNode.replaceChild(frag, node);
+            }
+        }
+
+        function addMessage(role, rawText, {isStreaming=false} = {}) {
+            ensureEmptyHidden();
+
+            const wrap = document.createElement('div');
+            wrap.className = `msg ${role}`;
+
+            const meta = document.createElement('div');
+            meta.className = 'msg-meta';
+
+            const roleEl = document.createElement('div');
+            roleEl.className = 'msg-role';
+            roleEl.textContent = role === 'user' ? 'You' : 'Assistant';
+
+            const timeEl = document.createElement('div');
+            timeEl.className = 'msg-time';
+            timeEl.textContent = tsNow();
+
+            meta.appendChild(roleEl);
+            meta.appendChild(timeEl);
+
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+
+            if (role === 'assistant') {
+                const inner = document.createElement('div');
+                inner.className = 'assistant-msg';
+                inner.innerHTML = isStreaming ? '...' : marked.parse(rawText || '');
+                bubble.appendChild(inner);
+                wrap._assistantInner = inner;
+
+                // Initial highlight (non-stream or the initial "...")
+                highlightAnonTagsInElement(inner);
+            } else {
+                // Render as text but with highlighted {TAGNAME} spans (safe: no HTML injection)
+                bubble.textContent = '';
+                bubble.appendChild(createHighlightedFragment(rawText || ''));
+            }
+
+            wrap.appendChild(meta);
+            wrap.appendChild(bubble);
+            chatOutput.appendChild(wrap);
+            scrollToBottom();
+            return wrap;
+        }
+
+        // --------------------------------------------------------------
+        // UI Buttons
+        // --------------------------------------------------------------
+        btnClearUi.addEventListener('click', () => {
+            if (!confirm('Clear view only? (This will NOT clear server session history)')) return;
+            chatOutput.innerHTML = '';
+            chatOutput.appendChild(chatEmpty);
+            if (chatEmpty) chatEmpty.style.display = '';
+            chatInput.focus();
+        });
+
+        btnNewChat.addEventListener('click', () => {
+            if (!confirm('Start a new conversation? This will clear the server session history.')) return;
+            newChatFlag.value = 'true';
+            // UI clear immediately
+            chatOutput.innerHTML = '';
+            chatOutput.appendChild(chatEmpty);
+            if (chatEmpty) chatEmpty.style.display = '';
+            // Submit with empty message? We keep a minimal message guard:
+            // We'll send a single whitespace and let backend reject; instead do a real submit only when user sends.
+            // Better: just mark flag; next send will clear server-side.
+            chatInput.focus();
+        });
+
+        // --------------------------------------------------------------
+        // Keyboard shortcut: Ctrl+Enter send
+        // --------------------------------------------------------------
+        chatInput.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                btnSend.click();
+            }
+        });
+
+        // --------------------------------------------------------------
+        // Form submit (streaming)
+        // --------------------------------------------------------------
+        document.getElementById('chat-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const form = e.target;
+
+            const text = chatInput.value;
+            if (!text || !text.trim()) return;
+
+            const formData = new FormData(form);
+
+            // Add user message
+            addMessage('user', text);
+
+            // Add assistant message container
+            const assistantWrap = addMessage('assistant', '', {isStreaming: true});
+            const assistantInner = assistantWrap._assistantInner;
+
+            spinner.classList.add('active');
+            let markdownContent = '';
+
+            // Disable send while streaming to avoid overlapping requests
+            btnSend.disabled = true;
+            btnSend.style.opacity = '0.75';
+            btnSend.style.cursor = 'not-allowed';
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const errTxt = await response.text();
+                    markdownContent = errTxt || `HTTP ${response.status}`;
+                    assistantInner.textContent = markdownContent;
+                    highlightAnonTagsInElement(assistantInner);
+                    return;
+                }
+
+                if (!response.body) {
+                    const txt = await response.text();
+                    markdownContent = txt;
+                    assistantInner.innerHTML = marked.parse(markdownContent);
+                    highlightAnonTagsInElement(assistantInner);
+                } else {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let done = false;
+
+                    while (!done) {
+                        const {value, done: finished} = await reader.read();
+                        done = finished;
+                        if (value) {
+                            const chunk = decoder.decode(value, {stream: true});
+                            markdownContent += chunk;
+                            assistantInner.innerHTML = marked.parse(markdownContent);
+                            highlightAnonTagsInElement(assistantInner);
+                            scrollToBottom();
+                        }
+                    }
+                }
+
+                // Persist assistant response in session (separate request after streaming)
+                await fetch("{{ url_for('anonymize_web.chat_finalize') }}", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({assistant: markdownContent}),
+                });
+
+            } catch (err) {
+                console.error('Chat request failed:', err);
+                assistantInner.textContent = `Chat error: ${err}`;
+                highlightAnonTagsInElement(assistantInner);
+            } finally {
+                spinner.classList.remove('active');
+
+                chatInput.value = '';
+                saveState();
+
+                // Reset new-chat flag AFTER a successful send attempt
+                newChatFlag.value = 'false';
+
+                btnSend.disabled = false;
+                btnSend.style.opacity = '';
+                btnSend.style.cursor = '';
+
+                chatInput.focus();
+                scrollToBottom();
+            }
+        });
+    </script>
 {% endblock %}
