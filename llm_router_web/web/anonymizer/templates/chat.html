@@ -20,8 +20,8 @@
             gap: 1rem;
             padding: 1rem 1.1rem;
             border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.10);
-            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.04);
             backdrop-filter: blur(6px);
         }
 
@@ -30,6 +30,7 @@
             font-size: 1.1rem;
             letter-spacing: 0.2px;
         }
+
         .chat-title .sub {
             margin-top: 0.35rem;
             opacity: 0.75;
@@ -47,8 +48,8 @@
 
         .btnx {
             appearance: none;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
             color: inherit;
             border-radius: 12px;
             padding: 0.55rem 0.8rem;
@@ -62,27 +63,33 @@
             gap: 0.5rem;
             text-decoration: none;
         }
+
         .btnx:hover {
-            background: rgba(255,255,255,0.10);
-            border-color: rgba(255,255,255,0.18);
+            background: rgba(255, 255, 255, 0.10);
+            border-color: rgba(255, 255, 255, 0.18);
             transform: translateY(-1px);
         }
+
         .btnx:active {
             transform: translateY(0px);
             opacity: 0.92;
         }
+
         .btnx.primary {
             border-color: rgba(99, 179, 237, 0.30);
             background: rgba(99, 179, 237, 0.16);
         }
+
         .btnx.primary:hover {
             background: rgba(99, 179, 237, 0.22);
             border-color: rgba(99, 179, 237, 0.42);
         }
+
         .btnx.danger {
             border-color: rgba(252, 129, 129, 0.28);
             background: rgba(252, 129, 129, 0.14);
         }
+
         .btnx.danger:hover {
             background: rgba(252, 129, 129, 0.20);
             border-color: rgba(252, 129, 129, 0.40);
@@ -92,16 +99,16 @@
             font-size: 0.82rem;
             padding: 0.25rem 0.55rem;
             border-radius: 999px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
             opacity: 0.9;
             white-space: nowrap;
         }
 
         .chat-board {
             border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.10);
-            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.03);
             overflow: hidden;
             min-height: 420px;
             display: grid;
@@ -119,8 +126,8 @@
             opacity: 0.72;
             padding: 0.9rem;
             border-radius: 12px;
-            border: 1px dashed rgba(255,255,255,0.16);
-            background: rgba(255,255,255,0.03);
+            border: 1px dashed rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.03);
         }
 
         .msg {
@@ -155,20 +162,20 @@
         .bubble {
             padding: 0.85rem 0.95rem;
             border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.10);
-            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.05);
             line-height: 1.45rem;
             overflow-wrap: anywhere;
         }
 
         .msg.user .bubble {
-            background: rgba(99,179,237,0.12);
-            border-color: rgba(99,179,237,0.22);
+            background: rgba(99, 179, 237, 0.12);
+            border-color: rgba(99, 179, 237, 0.22);
         }
 
         .msg.assistant .bubble {
-            background: rgba(72,187,120,0.10);
-            border-color: rgba(72,187,120,0.20);
+            background: rgba(72, 187, 120, 0.10);
+            border-color: rgba(72, 187, 120, 0.20);
         }
 
         /* Highlight anonymized tags like {TAGNAME} */
@@ -176,7 +183,7 @@
             display: inline-block;
             padding: 0.05rem 0.35rem;
             border-radius: 9px;
-            border: 1px solid rgba(255,255,255,0.18);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             background: rgba(255, 220, 120, 0.14);
             color: inherit;
             font-weight: 800;
@@ -186,21 +193,29 @@
         }
 
         /* Markdown output within assistant bubble */
-        .bubble .assistant-msg :first-child { margin-top: 0; }
-        .bubble .assistant-msg :last-child { margin-bottom: 0; }
+        .bubble .assistant-msg :first-child {
+            margin-top: 0;
+        }
+
+        .bubble .assistant-msg :last-child {
+            margin-bottom: 0;
+        }
+
         .bubble .assistant-msg pre {
             padding: 0.8rem;
             border-radius: 12px;
             overflow: auto;
-            border: 1px solid rgba(255,255,255,0.10);
-            background: rgba(0,0,0,0.25);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(0, 0, 0, 0.25);
         }
+
         .bubble code {
             border-radius: 8px;
             padding: 0.1rem 0.35rem;
-            border: 1px solid rgba(255,255,255,0.10);
-            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.06);
         }
+
         .bubble pre code {
             padding: 0;
             border: none;
@@ -210,8 +225,8 @@
         .chat-composer {
             padding: 1rem 1.1rem;
             border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.10);
-            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.04);
             display: grid;
             gap: 0.75rem;
         }
@@ -238,8 +253,8 @@
 
         .selectx {
             border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
             color: inherit;
             padding: 0.55rem 0.7rem;
             min-width: 220px;
@@ -249,8 +264,8 @@
         .inputx {
             width: 100%;
             border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
             color: inherit;
             padding: 0.85rem 0.9rem;
             outline: none;
@@ -258,9 +273,10 @@
             min-height: 86px;
             line-height: 1.35rem;
         }
+
         .inputx:focus, .selectx:focus {
-            border-color: rgba(99,179,237,0.40);
-            box-shadow: 0 0 0 3px rgba(99,179,237,0.16);
+            border-color: rgba(99, 179, 237, 0.40);
+            box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.16);
         }
 
         .right-actions {
@@ -275,20 +291,28 @@
             width: 18px;
             height: 18px;
             border-radius: 999px;
-            border: 2px solid rgba(255,255,255,0.20);
-            border-top-color: rgba(255,255,255,0.85);
+            border: 2px solid rgba(255, 255, 255, 0.20);
+            border-top-color: rgba(255, 255, 255, 0.85);
             display: none;
             animation: spin 0.8s linear infinite;
         }
-        .spinnerx.active { display: inline-block; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .spinnerx.active {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
         .kbd {
             font-size: 0.78rem;
             padding: 0.18rem 0.38rem;
             border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
             opacity: 0.9;
             font-variant-numeric: tabular-nums;
         }
@@ -297,6 +321,7 @@
             .composer-row {
                 grid-template-columns: 1fr;
             }
+
             .composer-controls {
                 grid-template-columns: 1fr auto;
             }
@@ -309,15 +334,12 @@
             <div class="chat-title">
                 <h2>LLM‑Router Chat</h2>
                 <div class="sub">
-                    Wysyłaj wiadomości, a odpowiedź będzie streamowana na żywo.
-                    <span class="pill" id="session-pill">Session: active</span>
+                    Bezpieczna komunikacja z LLMami - niech Twoje dane zostaną u Ciebie!
+                    <span class="pill" id="session-pill">Anonimizacja: fast_masker</span>
                 </div>
             </div>
 
             <div class="chat-actions">
-                <button type="button" id="btn-clear-ui" class="btnx" title="Czyści tylko widok (bez sesji)">
-                    Clear view
-                </button>
                 <button type="button" id="btn-new-chat" class="btnx danger" title="Czyści sesję i zaczyna od nowa">
                     New chat
                 </button>
@@ -328,7 +350,8 @@
         <div class="chat-board">
             <div id="chat-output" class="chat-output">
                 <div class="chat-empty" id="chat-empty">
-                    Napisz wiadomość poniżej. Podpowiedź: <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> wysyła.
+                    Napisz wiadomość poniżej. Podpowiedź: <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span>
+                    wysyła.
                 </div>
             </div>
         </div>
@@ -339,7 +362,7 @@
               method="post"
               class="chat-composer">
 
-            <input type="hidden" id="new-chat-flag" name="new_chat" value="false">
+            <input type="hidden" id="new-chat-flag" name="new_chat" value="true">
 
             <div class="composer-row">
                 <label for="chat-input" style="opacity:0.85; font-weight:700;">Wiadomość</label>
@@ -381,7 +404,7 @@
         const newChatFlag = document.getElementById('new-chat-flag');
         const chatOutput = document.getElementById('chat-output');
         const btnNewChat = document.getElementById('btn-new-chat');
-        const btnClearUi = document.getElementById('btn-clear-ui');
+        // const btnClearUi = document.getElementById('btn-clear-ui');
         const chatEmpty = document.getElementById('chat-empty');
         const spinner = document.getElementById('loading-spinner');
         const btnSend = document.getElementById('btn-send');
@@ -403,7 +426,7 @@
             if (savedAlgo && [...algorithmSelect.options].some(opt => opt.value === savedAlgo)) {
                 algorithmSelect.value = savedAlgo;
             }
-            return { savedText, savedModel, savedAlgo };
+            return {savedText, savedModel, savedAlgo};
         }
 
         chatInput.addEventListener('input', saveState);
@@ -415,7 +438,7 @@
         // --------------------------------------------------------------
         async function loadModels() {
             const modelsUrl = "{{ url_for('anonymize_web.models') }}";
-            const { savedModel } = loadState();
+            const {savedModel} = loadState();
 
             try {
                 const response = await fetch(modelsUrl);
@@ -449,7 +472,15 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', loadModels);
+        {#document.addEventListener('DOMContentLoaded', loadModels);#}
+        document.addEventListener('DOMContentLoaded', () => {
+            loadModels();
+
+            // Wyczyść widok na start, aby nie wyświetlać starej historii z sesji
+            chatOutput.innerHTML = '';
+            chatOutput.appendChild(chatEmpty);
+            if (chatEmpty) chatEmpty.style.display = '';
+        });
 
         // --------------------------------------------------------------
         // Helpers
@@ -537,7 +568,7 @@
             }
         }
 
-        function addMessage(role, rawText, {isStreaming=false} = {}) {
+        function addMessage(role, rawText, {isStreaming = false} = {}) {
             ensureEmptyHidden();
 
             const wrap = document.createElement('div');
@@ -585,13 +616,13 @@
         // --------------------------------------------------------------
         // UI Buttons
         // --------------------------------------------------------------
-        btnClearUi.addEventListener('click', () => {
-            if (!confirm('Clear view only? (This will NOT clear server session history)')) return;
-            chatOutput.innerHTML = '';
-            chatOutput.appendChild(chatEmpty);
-            if (chatEmpty) chatEmpty.style.display = '';
-            chatInput.focus();
-        });
+        //btnClearUi.addEventListener('click', () => {
+        //    if (!confirm('Clear view only? (This will NOT clear server session history)')) return;
+        //    chatOutput.innerHTML = '';
+        //    chatOutput.appendChild(chatEmpty);
+        //    if (chatEmpty) chatEmpty.style.display = '';
+        //    chatInput.focus();
+        //});
 
         btnNewChat.addEventListener('click', () => {
             if (!confirm('Start a new conversation? This will clear the server session history.')) return;
