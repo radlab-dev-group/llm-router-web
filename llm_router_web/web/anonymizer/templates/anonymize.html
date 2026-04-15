@@ -212,6 +212,7 @@
                         <option value="fast" selected>Fast Masking</option>
                     </select>
                     <span id="loading-spinner" class="spinnerx"></span>
+                    <button type="button" class="btnx" onclick="clearText()">🗑️ Clear</button>
                     <button type="submit" class="btnx primary">🚀 Anonymize</button>
                 </div>
             </header>
@@ -256,6 +257,12 @@
             const text = document.getElementById('result-content').innerText;
             await navigator.clipboard.writeText(text);
             alert('Copied to clipboard!');
+        }
+
+        function clearText() {
+            document.getElementById('input-text').value = '';
+            document.getElementById('result-content').innerHTML =
+                '<span style="opacity:0.5; font-style:italic;">Wynik pojawi się tutaj po przetworzeniu...</span>';
         }
 
         function syncScroll(source) {
