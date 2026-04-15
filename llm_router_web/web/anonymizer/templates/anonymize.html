@@ -10,7 +10,8 @@
         .workspace-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
+            align-items: center; /* Elementy w linii poziomej */
+            gap: 1rem;
         }
 
         .workspace-title h2 {
@@ -18,10 +19,19 @@
             font-size: 1.5rem;
             font-weight: 700;
         }
+
         .workspace-title .sub {
             margin-top: 0.3rem;
             color: var(--text-muted);
             font-size: 0.95rem;
+        }
+
+        /* Kontener na dropdown i przycisk w nagłówku */
+        .workspace-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-shrink: 0;
         }
 
         .editor-grid {
@@ -32,6 +42,8 @@
             border-radius: 16px;
             overflow: hidden;
             background: var(--bg-glass);
+            align-items: stretch;
+            min-height: 500px;
         }
 
         @media (min-width: 820px) {
@@ -45,6 +57,8 @@
             flex-direction: column;
             padding: 1.5rem;
             gap: 1rem;
+            overflow: hidden;
+            height: 100%;
         }
 
         .editor-pane:first-child {
@@ -60,39 +74,58 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--text-muted);
+            flex-shrink: 0;
         }
 
-        .inputx, .selectx {
+        /* ---------- ELEMENTY TEKSTOWE (Synchronizowane) ---------- */
+        .inputx, .result-area {
             width: 100%;
+            flex: 1; /* Wypełnia całą dostępną wysokość panele */
             border-radius: 12px;
             border: 1px solid var(--border-glass);
-            background: rgba(0,0,0,0.2);
+            background: rgba(0, 0, 0, 0.2);
             padding: 1rem;
             color: inherit;
             outline: none;
             font-family: inherit;
             font-size: 0.95rem;
-            transition: border-color 0.2s;
+            line-height: 1.6;
+            box-sizing: border-box;
+            overflow: auto;
+            resize: none;
+            display: block; /* Zapobiega centrowaniu pionowemu */
+            text-align: left;
+        }
+
+        .result-area {
+            white-space: pre-wrap;
+            background: rgba(0, 0, 0, 0.15);
         }
 
         .inputx:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(99,179,237,0.1);
+            box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.1);
         }
 
-        .controls-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            margin-top: auto;
-            padding-top: 1rem;
+        /* ---------- KONTROLY ---------- */
+        .selectx {
+            border-radius: 12px;
+            border: 1px solid var(--border-glass);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.6rem;
+            color: inherit;
+            outline: none;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+            cursor: pointer;
         }
 
         .btnx {
             appearance: none;
             border: 1px solid var(--border-glass);
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             color: inherit;
             border-radius: 10px;
             padding: 0.6rem 1.2rem;
@@ -102,33 +135,30 @@
             align-items: center;
             gap: 0.5rem;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
-        .btnx:hover { background: rgba(255,255,255,0.1); }
+        .btnx:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
         .btnx.primary {
             background: var(--accent);
             color: #0f172a;
             border-color: var(--accent);
         }
-        .btnx.primary:hover { background: var(--accent-hover); }
 
-        .result-area {
-            min-height: 200px;
-            padding: 1rem;
-            border-radius: 12px;
-            background: rgba(0,0,0,0.15);
-            border: 1px solid var(--border-glass);
-            line-height: 1.6;
-            white-space: pre-wrap;
+        .btnx.primary:hover {
+            background: var(--accent-hover);
         }
 
         .anon-tag {
             display: inline-block;
             padding: 0 0.4rem;
             border-radius: 4px;
-            background: rgba(255,220,120,0.15);
+            background: rgba(255, 220, 120, 0.15);
             color: #ffe0a3;
-            border: 1px solid rgba(255,220,120,0.3);
+            border: 1px solid rgba(255, 220, 120, 0.3);
             font-family: monospace;
             font-weight: 700;
             font-size: 0.9em;
@@ -137,66 +167,78 @@
         .spinnerx {
             width: 18px;
             height: 18px;
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             border-top-color: var(--accent);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             display: none;
         }
-        .spinnerx.active { display: inline-block; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .spinnerx.active {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 
     <div class="anon-workspace">
-        <header class="workspace-header">
-            <div class="workspace-title">
-                <h2>🔒 Text Anonymization</h2>
-                <div class="sub">Usuń dane wrażliwe przed wysłaniem tekstu do modelu AI.</div>
-            </div>
-        </header>
+        <!-- Formularz otacza całość, aby łatwo pobrać dane z textarea i selecta -->
+        <form id="anonymize-form"
+              hx-post="{{ url_for('anonymize_web.process_text') }}"
+              hx-target="#result-content"
+              hx-swap="innerHTML"
+              hx-trigger="submit"
+              hx-indicator="#loading-spinner">
 
-        <div class="editor-grid">
-            <!-- Left Pane: Input -->
-            <div class="editor-pane">
-                <div class="pane-label">Original Text</div>
-                <form id="anonymize-form"
-                      hx-post="{{ url_for('anonymize_web.process_text') }}"
-                      hx-target="#result-content"
-                      hx-swap="innerHTML"
-                      hx-trigger="submit"
-                      hx-indicator="#loading-spinner"
-                      style="display: contents;">
+            <header class="workspace-header">
+                <div class="workspace-title">
+                    <h2>🔒 Text Anonymization</h2>
+                    <div class="sub">Usuń dane wrażliwe przed wysłaniem tekstu do modelu AI.</div>
+                </div>
 
+                <div class="workspace-controls">
+                    <select name="algorithm" class="selectx">
+                        <option value="fast" selected>Fast Masking</option>
+                    </select>
+                    <span id="loading-spinner" class="spinnerx"></span>
+                    <button type="submit" class="btnx primary">🚀 Anonymize</button>
+                </div>
+            </header>
+
+            <div class="editor-grid">
+                <!-- Left pane – original text -->
+                <div class="editor-pane">
+                    <div class="pane-label">Original Text</div>
                     <textarea name="text" id="input-text"
                               placeholder="Wklej tekst tutaj..." required
-                              class="inputx" rows="12"></textarea>
+                              class="inputx"></textarea>
+                </div>
 
-                    <div class="controls-bar">
-                        <div style="display:flex; gap:0.5rem; align-items:center;">
-                            <select name="algorithm" class="selectx" style="width: auto;">
-                                <option value="fast" selected>Fast Masking</option>
-                            </select>
-                            <span id="loading-spinner" class="spinnerx"></span>
-                        </div>
-                        <button type="submit" class="btnx primary">🚀 Anonymize</button>
+                <!-- Right pane – anonymized result -->
+                <div class="editor-pane">
+                    <div class="pane-label">
+                        Anonymized Result
+                        <button type="button" class="btnx"
+                                style="font-size:0.7rem; padding:0.2rem 0.6rem;"
+                                onclick="copyResult()">Copy
+                        </button>
                     </div>
-                </form>
-            </div>
-
-            <!-- Right Pane: Result -->
-            <div class="editor-pane">
-                <div class="pane-label">
-                    Anonymized Result
-                    <button class="btnx" style="font-size:0.7rem; padding: 0.2rem 0.6rem;" onclick="copyResult()">Copy</button>
-                </div>
-                <div id="result-content" class="result-area">
-                    <span style="opacity: 0.5; font-style: italic;">Wynik pojawi się tutaj po przetworzeniu...</span>
+                    <div id="result-content" class="result-area">
+                        <span style="opacity:0.5; font-style:italic;">
+                            Wynik pojawi się tutaj po przetworzeniu...
+                        </span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </form>
     </div>
 
     <script>
+        /* ---- Highlight anonimowych tagów ---- */
         function highlightTags() {
             const container = document.getElementById('result-content');
             if (!container) return;
@@ -206,14 +248,44 @@
             );
         }
 
+        /* ---- Kopiowanie wyniku ---- */
         async function copyResult() {
             const text = document.getElementById('result-content').innerText;
             await navigator.clipboard.writeText(text);
             alert('Copied to clipboard!');
         }
 
+        /* ---- Synchronizacja przewijania ---- */
+        function syncScroll(source) {
+            const targetId = source.id === 'input-text' ? 'result-content' : 'input-text';
+            const target = document.getElementById(targetId);
+            if (!target) return;
+
+            if (target.scrollTop !== source.scrollTop || target.scrollLeft !== source.scrollLeft) {
+                target.scrollTop = source.scrollTop;
+                target.scrollLeft = source.scrollLeft;
+            }
+        }
+
+        const inputEl = document.getElementById('input-text');
+        const resultEl = document.getElementById('result-content');
+
+        inputEl.addEventListener('scroll', function (e) {
+            syncScroll(e.target);
+        });
+        resultEl.addEventListener('scroll', function (e) {
+            syncScroll(e.target);
+        });
+
+        /* ---- Po zamianie HTMX ---- */
         document.body.addEventListener('htmx:afterSwap', function (e) {
-            if (e.detail?.target?.id === 'result-content') highlightTags();
+            if (e.detail?.target?.id === 'result-content') {
+                highlightTags();
+                const input = document.getElementById('input-text');
+                if (input) {
+                    syncScroll(input);
+                }
+            }
         });
     </script>
 {% endblock %}
