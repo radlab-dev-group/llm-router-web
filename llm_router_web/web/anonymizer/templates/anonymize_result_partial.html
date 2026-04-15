@@ -1,7 +1,7 @@
 <div id="result-content">
-    <h3>✅ Anonymized Text</h3>
+{#    <h3>✅ Anonymized Text</h3>#}
     {% if result %}
-        <pre id="anonymized-result" class="w100" style="white-space: pre-wrap;">{{ result }}</pre>
+        <p id="anonymized-result" class="w100" style="white-space: pre-wrap;">{{ result }}</p>
     {% else %}
         <p class="muted">The result will appear after anonymization.</p>
     {% endif %}
