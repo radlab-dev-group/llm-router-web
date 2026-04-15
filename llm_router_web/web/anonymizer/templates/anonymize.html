@@ -10,7 +10,7 @@
         .workspace-header {
             display: flex;
             justify-content: space-between;
-            align-items: center; /* Elementy w linii poziomej */
+            align-items: center;
             gap: 1rem;
         }
 
@@ -26,7 +26,6 @@
             font-size: 0.95rem;
         }
 
-        /* Kontener na dropdown i przycisk w nagłówku */
         .workspace-controls {
             display: flex;
             align-items: center;
@@ -43,7 +42,10 @@
             overflow: hidden;
             background: var(--bg-glass);
             align-items: stretch;
-            min-height: 500px;
+
+            height: calc(100dvh - 260px);
+            max-height: calc(100dvh - 260px);
+            min-height: 320px;
         }
 
         @media (min-width: 820px) {
@@ -53,12 +55,13 @@
         }
 
         .editor-pane {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-rows: auto 1fr;
             padding: 1.5rem;
             gap: 1rem;
             overflow: hidden;
             height: 100%;
+            min-height: 0;
         }
 
         .editor-pane:first-child {
@@ -74,13 +77,13 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--text-muted);
-            flex-shrink: 0;
         }
 
         /* ---------- ELEMENTY TEKSTOWE (Synchronizowane) ---------- */
         .inputx, .result-area {
             width: 100%;
-            flex: 1; /* Wypełnia całą dostępną wysokość panele */
+            height: 100%;
+            min-height: 0;
             border-radius: 12px;
             border: 1px solid var(--border-glass);
             background: rgba(0, 0, 0, 0.2);
@@ -93,13 +96,18 @@
             box-sizing: border-box;
             overflow: auto;
             resize: none;
-            display: block; /* Zapobiega centrowaniu pionowemu */
+            display: block;
             text-align: left;
+            vertical-align: top;
         }
 
         .result-area {
             white-space: pre-wrap;
             background: rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-start;
+            flex-direction: column;
         }
 
         .inputx:focus {
@@ -186,7 +194,6 @@
     </style>
 
     <div class="anon-workspace">
-        <!-- Formularz otacza całość, aby łatwo pobrać dane z textarea i selecta -->
         <form id="anonymize-form"
               hx-post="{{ url_for('anonymize_web.process_text') }}"
               hx-target="#result-content"
@@ -210,7 +217,6 @@
             </header>
 
             <div class="editor-grid">
-                <!-- Left pane – original text -->
                 <div class="editor-pane">
                     <div class="pane-label">Original Text</div>
                     <textarea name="text" id="input-text"
@@ -218,7 +224,6 @@
                               class="inputx"></textarea>
                 </div>
 
-                <!-- Right pane – anonymized result -->
                 <div class="editor-pane">
                     <div class="pane-label">
                         Anonymized Result
@@ -238,7 +243,6 @@
     </div>
 
     <script>
-        /* ---- Highlight anonimowych tagów ---- */
         function highlightTags() {
             const container = document.getElementById('result-content');
             if (!container) return;
@@ -248,14 +252,12 @@
             );
         }
 
-        /* ---- Kopiowanie wyniku ---- */
         async function copyResult() {
             const text = document.getElementById('result-content').innerText;
             await navigator.clipboard.writeText(text);
             alert('Copied to clipboard!');
         }
 
-        /* ---- Synchronizacja przewijania ---- */
         function syncScroll(source) {
             const targetId = source.id === 'input-text' ? 'result-content' : 'input-text';
             const target = document.getElementById(targetId);
@@ -277,13 +279,15 @@
             syncScroll(e.target);
         });
 
-        /* ---- Po zamianie HTMX ---- */
         document.body.addEventListener('htmx:afterSwap', function (e) {
             if (e.detail?.target?.id === 'result-content') {
                 highlightTags();
-                const input = document.getElementById('input-text');
-                if (input) {
-                    syncScroll(input);
+
+                // Po wstawieniu nowego wyniku przewiń go na górę (zamiast sync do textarea)
+                const result = document.getElementById('result-content');
+                if (result) {
+                    result.scrollTop = 0;
+                    result.scrollLeft = 0;
                 }
             }
         });
