@@ -12,6 +12,8 @@ Provides endpoints for:
 
 import json
 import socket
+from typing import Tuple, Dict
+
 import requests
 
 from flask import (
@@ -60,7 +62,7 @@ def process_text():
     pii_host = current_app.config["PII_SERVICE_HOST"].rstrip("/")
 
     # Helper to call the PII service
-    def call_pii_service(text, model):
+    def call_pii_service(text, model) -> Dict | str:
         labels = ["LOCATION", "PERSON"]
         try:
             # Analogous to pii/index.html call
@@ -74,7 +76,8 @@ def process_text():
                 timeout=60,
             )
             resp.raise_for_status()
-            return resp.json().get("text", text)
+            data = resp.json()
+            return data
         except Exception as e:
             return f"❌ PII Service Error: {e}"
 
@@ -88,7 +91,7 @@ def process_text():
             )
             resp.raise_for_status()
             data = resp.json()
-            return data.get("text", resp.text)
+            return data
         except Exception as e:
             return f"❌ Router Service Error: {e}"
 
@@ -99,11 +102,17 @@ def process_text():
     elif algorithm == "fast+pii":
         # 1. Run PII first
         pii_result = call_pii_service(raw_text, model_name)
-        if pii_result.startswith("❌"):
-            result = pii_result
-        else:
-            # 2. Run Fast Masker on the result of PII
-            result = call_router_service(pii_result, model_name, "/api/fast_text_mask")
+        if pii_result is str:
+            pii_result = {}
+
+        # 2. Run Fast Masker on the result of PII
+        result_ft = call_router_service(
+            pii_result.get("text", raw_text), model_name, "/api/fast_text_mask"
+        )
+
+        result = result_ft
+        for _k, _v in pii_result.get("mappings", {}).items():
+            result["mappings"][_k] = _v
 
     elif algorithm == "fast":
         result = call_router_service(raw_text, model_name, "/api/fast_text_mask")
@@ -114,7 +123,9 @@ def process_text():
                 "anonymize_result_partial.html",
                 result={"error": "genai model is not set"},
             )
-        result = call_router_service(raw_text, model_name, "/api/anonymize_text_genai")
+        result = call_router_service(
+            raw_text, model_name, "/api/anonymize_text_genai"
+        )
 
     elif algorithm == "priv":
         return render_template(
@@ -229,7 +240,9 @@ def chat_message():
 
             try:
                 data = json.loads(cleaned)
-                chunk = data.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                chunk = (
+                    data.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                )
             except Exception:
                 chunk = cleaned
 
