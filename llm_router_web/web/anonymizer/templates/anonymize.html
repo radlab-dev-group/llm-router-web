@@ -114,15 +114,20 @@
         .selectx {
             border-radius: 12px;
             border: 1px solid var(--border-glass);
-            background: rgba(0, 0, 0, 0.2);
+            background: #1e293b; /* Ciemniejszy, konkretny kolor tła (slate-800) */
             padding: 0.6rem;
-            color: inherit;
+            color: #f8fafc; /* Bardzo jasny tekst dla wysokiego kontrastu */
             outline: none;
             font-family: inherit;
             font-size: 0.85rem;
             transition: border-color 0.2s;
             box-sizing: border-box;
             cursor: pointer;
+        }
+
+        .selectx option {
+            background: #1e293b;
+            color: #f8fafc;
         }
 
         .btnx {
@@ -205,6 +210,9 @@
                 <div class="workspace-controls">
                     <select name="algorithm" class="selectx">
                         <option value="fast" selected>Fast Masking</option>
+                        <option value="pii_masking">PII Masking</option>
+                        <option value="fast+pii">Fast Masker + PII</option>
+                        <option value="genai">GenAI Masking</option>
                     </select>
                     <span id="loading-spinner" class="spinnerx"></span>
                     <button type="button" class="btnx" onclick="clearText()">🗑️ Clear</button>

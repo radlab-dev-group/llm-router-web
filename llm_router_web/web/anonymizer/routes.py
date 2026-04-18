@@ -54,52 +54,79 @@ def process_text():
         return "⚠️ No text provided.", 400
 
     algorithm = request.form.get("algorithm", "fast")
-    endpoint_map = {
-        "fast": "/api/fast_text_mask",
-        "genai": "/api/anonymize_text_genai",
-        "priv": "/api/anonymize_text_priv_masker",
-    }
     model_name = request.form.get("model_name", "").strip()
 
-    if algorithm == "genai" and not GENAI_MODEL_ANON:
+    router_host = current_app.config["LLM_ROUTER_HOST"].rstrip("/")
+    pii_host = current_app.config["PII_SERVICE_HOST"].rstrip("/")
+
+    # Helper to call the PII service
+    def call_pii_service(text, model):
+        labels = ["LOCATION", "PERSON"]
+        try:
+            # Analogous to pii/index.html call
+            resp = requests.post(
+                f"{pii_host}/predict_and_anonymize",
+                json={
+                    "text": text,
+                    "model": model or "1-PLC: 20260417_213751",
+                    "labels": labels,
+                },
+                timeout=60,
+            )
+            resp.raise_for_status()
+            return resp.json().get("text", text)
+        except Exception as e:
+            return f"❌ PII Service Error: {e}"
+
+    # Helper to call the Router service
+    def call_router_service(text, model, endpoint):
+        try:
+            resp = requests.post(
+                f"{router_host}{endpoint}",
+                json={"text": text, "model_name": model or "gpt-oss:120b"},
+                timeout=600,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return data.get("text", resp.text)
+        except Exception as e:
+            return f"❌ Router Service Error: {e}"
+
+    # Logic for the selected algorithm
+    if algorithm == "pii_masking":
+        result = call_pii_service(raw_text, model_name)
+
+    elif algorithm == "fast+pii":
+        # 1. Run PII first
+        pii_result = call_pii_service(raw_text, model_name)
+        if pii_result.startswith("❌"):
+            result = pii_result
+        else:
+            # 2. Run Fast Masker on the result of PII
+            result = call_router_service(pii_result, model_name, "/api/fast_text_mask")
+
+    elif algorithm == "fast":
+        result = call_router_service(raw_text, model_name, "/api/fast_text_mask")
+
+    elif algorithm == "genai":
+        if not GENAI_MODEL_ANON:
+            return render_template(
+                "anonymize_result_partial.html",
+                result={"error": "genai model is not set"},
+            )
+        result = call_router_service(raw_text, model_name, "/api/anonymize_text_genai")
+
+    elif algorithm == "priv":
         return render_template(
             "anonymize_result_partial.html",
-            api_host=current_app.config["LLM_ROUTER_HOST"],
-            result={"error": "genai model is not set"},
-        )
-    if algorithm == "priv":
-        return render_template(
-            "anonymize_result_partial.html",
-            api_host=current_app.config["LLM_ROUTER_HOST"],
             result={"error": "priv_masker is not available yet"},
         )
-    if algorithm not in endpoint_map:
+
+    else:
         return render_template(
             "anonymize_result_partial.html",
-            api_host=current_app.config["LLM_ROUTER_HOST"],
-            result={
-                "error": f"Not supported method {algorithm}.\nSupported: [fast, genai, priv]"
-            },
+            result={"error": f"Not supported method {algorithm}."},
         )
-
-    endpoint = endpoint_map[algorithm]
-    external_url = f"{current_app.config['LLM_ROUTER_HOST'].rstrip('/')}{endpoint}"
-
-    try:
-        resp = requests.post(
-            external_url,
-            json={"text": raw_text, "model_name": model_name or "gpt-oss:120b"},
-            timeout=600,
-        )
-        resp.raise_for_status()
-    except requests.RequestException as exc:
-        return f"❌ Connection error with the anonymization service: {exc}", 502
-
-    try:
-        data = resp.json()
-        result = data.get("text", resp.text)
-    except ValueError:
-        result = resp.text
 
     return render_template(
         "anonymize_result_partial.html",
@@ -202,9 +229,7 @@ def chat_message():
 
             try:
                 data = json.loads(cleaned)
-                chunk = (
-                    data.get("choices", [{}])[0].get("delta", {}).get("content", "")
-                )
+                chunk = data.get("choices", [{}])[0].get("delta", {}).get("content", "")
             except Exception:
                 chunk = cleaned
 
