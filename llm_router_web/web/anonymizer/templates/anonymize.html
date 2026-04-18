@@ -98,10 +98,7 @@
         .result-area {
             white-space: pre-wrap;
             background: rgba(0, 0, 0, 0.15);
-            display: flex;
-            align-items: flex-start;
-            justify-content: flex-start;
-            flex-direction: column;
+            display: block;
         }
 
         .inputx:focus {
@@ -275,7 +272,9 @@
             }
 
             // Replace each {TAG} with a span that shows the tag and a tooltip (title) with the real value
-            container.innerHTML = container.innerHTML.replace(
+            // We use textContent and then set innerHTML to avoid issues with double escaping
+            const originalText = container.textContent;
+            container.innerHTML = originalText.replace(
                 /(\{[A-Z]{2,}[^}]*\})/g,
                 function (match) {
                     const value = mappings[match] || match; // fallback to the tag itself
@@ -283,7 +282,7 @@
                     const escapedTitle = value.replace(/"/g, '&quot;');
                     return `<span class="anon-tag" title="${escapedTitle}">${escapedTag}</span>`;
                 }
-            );
+            ).replace(/\n/g, '<br>');
         }
 
         async function copyResult() {

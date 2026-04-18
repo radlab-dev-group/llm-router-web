@@ -1,8 +1,11 @@
-<div id="result-content">
-{#    <h3>✅ Anonymized Text</h3>#}
+<div id="result-content"
+     class="result-area"
+     data-mappings='{{ result.mappings | tojson | safe }}'>
     {% if result %}
-        <p id="anonymized-result" class="w100" style="white-space: pre-wrap;">{{ result.text }}</p>
+        {{ result.text | e }}
     {% else %}
-        <p class="muted">The result will appear after anonymization.</p>
+        <span style="opacity:0.5; font-style:italic;">
+            Wynik pojawi się tutaj po przetworzeniu...
+        </span>
     {% endif %}
 </div>
