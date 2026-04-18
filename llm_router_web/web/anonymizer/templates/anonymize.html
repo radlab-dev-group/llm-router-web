@@ -88,7 +88,8 @@
             font-size: 0.95rem;
             line-height: 1.6;
             box-sizing: border-box;
-            overflow: auto;
+            overflow-y: auto !important;
+            overflow-x: hidden;
             resize: none;
             display: block;
             text-align: left;
@@ -99,6 +100,13 @@
             white-space: pre-wrap;
             background: rgba(0, 0, 0, 0.15);
             display: block;
+            word-break: break-word;
+        }
+
+        #result-wrapper {
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .inputx:focus {
@@ -277,7 +285,7 @@
                     const escapedTitle = value.replace(/"/g, '&quot;');
                     return `<span class="anon-tag" title="${escapedTitle}">${escapedTag}</span>`;
                 }
-            ).replace(/\n/g, '<br>');
+            );
         }
 
         async function copyResult() {
@@ -297,8 +305,27 @@
             const target = document.getElementById(targetId);
             if (!target) return;
 
-            if (target.scrollTop !== source.scrollTop || target.scrollLeft !== source.scrollLeft) {
-                target.scrollTop = source.scrollTop;
+            // If target is result-content, we might be inside result-wrapper
+            // but result-content itself should be the scrollable element.
+
+            // Calculate the scroll percentage of the source
+            const sourceMaxScroll = source.scrollHeight - source.clientHeight;
+            if (sourceMaxScroll <= 0) {
+                target.scrollTop = 0;
+                return;
+            }
+            const scrollPercentage = source.scrollTop / sourceMaxScroll;
+
+            // Apply the same percentage to the target
+            const targetMaxScroll = target.scrollHeight - target.clientHeight;
+            const newScrollTop = scrollPercentage * targetMaxScroll;
+
+            if (Math.abs(target.scrollTop - newScrollTop) > 1) {
+                target.scrollTop = newScrollTop;
+            }
+
+            // Sync horizontal scroll directly as it's less likely to differ significantly
+            if (target.scrollLeft !== source.scrollLeft) {
                 target.scrollLeft = source.scrollLeft;
             }
         }
@@ -314,11 +341,12 @@
             if (e.detail?.target?.id === 'result-wrapper') {
                 highlightTags();
 
-                // Scroll result to top
-                const result = document.getElementById('result-content');
-                if (result) {
-                    result.scrollTop = 0;
-                    result.scrollLeft = 0;
+                // Re-add event listener to the new result-content if it was replaced
+                const newResultEl = document.getElementById('result-content');
+                if (newResultEl) {
+                    newResultEl.addEventListener('scroll', e => syncScroll(e.target));
+                    newResultEl.scrollTop = 0;
+                    newResultEl.scrollLeft = 0;
                 }
             }
         });
