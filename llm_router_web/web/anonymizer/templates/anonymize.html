@@ -38,7 +38,6 @@
             grid-template-columns: 1fr;
             gap: 1.5rem;
             align-items: stretch;
-
             height: calc(100dvh - 260px);
             max-height: calc(100dvh - 260px);
             min-height: 320px;
@@ -74,8 +73,8 @@
             color: var(--text-muted);
         }
 
-        /* ---------- ELEMENTY TEKSTOWE (Synchronizowane) ---------- */
-        .inputx, .result-area {
+        .inputx,
+        .result-area {
             width: 100%;
             height: 100%;
             min-height: 0;
@@ -110,13 +109,12 @@
             box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.1);
         }
 
-        /* ---------- KONTROLY ---------- */
         .selectx {
             border-radius: 12px;
             border: 1px solid var(--border-glass);
-            background: #1e293b; /* Ciemniejszy, konkretny kolor tła (slate-800) */
+            background: #1e293b;
             padding: 0.6rem;
-            color: #f8fafc; /* Bardzo jasny tekst dla wysokiego kontrastu */
+            color: #f8fafc;
             outline: none;
             font-family: inherit;
             font-size: 0.85rem;
@@ -170,6 +168,7 @@
             font-family: monospace;
             font-weight: 700;
             font-size: 0.9em;
+            cursor: help;
         }
 
         .spinnerx {
@@ -196,7 +195,7 @@
     <div class="anon-workspace">
         <form id="anonymize-form"
               hx-post="{{ url_for('anonymize_web.process_text') }}"
-              hx-target="#result-content"
+              hx-target="#result-wrapper"
               hx-swap="innerHTML"
               hx-trigger="submit"
               hx-indicator="#loading-spinner">
@@ -236,10 +235,22 @@
                                 onclick="copyResult()">Copy
                         </button>
                     </div>
-                    <div id="result-content" class="result-area">
-                        <span style="opacity:0.5; font-style:italic;">
-                            Wynik pojawi się tutaj po przetworzeniu...
-                        </span>
+
+                    <!-- Result container that will be replaced by the htmx response -->
+                    <div id="result-wrapper">
+                        {% if result %}
+                            <div id="result-content"
+                                 class="result-area"
+                                 data-mappings='{{ result.mappings | tojson | safe }}'>
+                                {{ result.text | e }}
+                            </div>
+                        {% else %}
+                            <div id="result-content" class="result-area">
+                                <span style="opacity:0.5; font-style:italic;">
+                                    Wynik pojawi się tutaj po przetworzeniu...
+                                </span>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -247,12 +258,31 @@
     </div>
 
     <script>
+        // Highlight tags and add tooltip with the original value
         function highlightTags() {
             const container = document.getElementById('result-content');
             if (!container) return;
+
+            // Parse mappings from the data‑attribute (if present)
+            let mappings = {};
+            const raw = container.getAttribute('data-mappings');
+            if (raw) {
+                try {
+                    mappings = JSON.parse(raw);
+                } catch (e) {
+                    console.warn('Failed to parse mappings JSON', e);
+                }
+            }
+
+            // Replace each {TAG} with a span that shows the tag and a tooltip (title) with the real value
             container.innerHTML = container.innerHTML.replace(
-                /(\{[A-Z]{2}[^}]*\})/g,
-                '<span class="anon-tag">$1</span>'
+                /(\{[A-Z]{2,}[^}]*\})/g,
+                function (match) {
+                    const value = mappings[match] || match; // fallback to the tag itself
+                    const escapedTag = match.replace(/"/g, '&quot;');
+                    const escapedTitle = value.replace(/"/g, '&quot;');
+                    return `<span class="anon-tag" title="${escapedTitle}">${escapedTag}</span>`;
+                }
             );
         }
 
@@ -282,18 +312,15 @@
         const inputEl = document.getElementById('input-text');
         const resultEl = document.getElementById('result-content');
 
-        inputEl.addEventListener('scroll', function (e) {
-            syncScroll(e.target);
-        });
-        resultEl.addEventListener('scroll', function (e) {
-            syncScroll(e.target);
-        });
+        inputEl.addEventListener('scroll', e => syncScroll(e.target));
+        resultEl.addEventListener('scroll', e => syncScroll(e.target));
 
-        document.body.addEventListener('htmx:afterSwap', function (e) {
-            if (e.detail?.target?.id === 'result-content') {
+        // After htmx swaps the result area, re‑apply highlighting
+        document.body.addEventListener('htmx:afterSwap', e => {
+            if (e.detail?.target?.id === 'result-wrapper') {
                 highlightTags();
 
-                // Po wstawieniu nowego wyniku przewiń go na górę (zamiast sync do textarea)
+                // Scroll result to top
                 const result = document.getElementById('result-content');
                 if (result) {
                     result.scrollTop = 0;
@@ -301,5 +328,8 @@
                 }
             }
         });
+
+        // Initial highlight when the page loads with a result (e.g. after refresh)
+        document.addEventListener('DOMContentLoaded', highlightTags);
     </script>
 {% endblock %}

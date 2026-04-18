@@ -139,6 +139,14 @@ def process_text():
             result={"error": f"Not supported method {algorithm}."},
         )
 
+    _p_map = {}
+    for _k, _v in result.get("mappings", {}).items():
+        if not _k.startswith("{"):
+            _k = "{" + _k + "}"
+        _p_map[_k] = _v
+    result["mappings"] = _p_map
+
+    # print(json.dumps(result, indent=2, ensure_ascii=False))
     return render_template(
         "anonymize_result_partial.html",
         api_host=current_app.config["LLM_ROUTER_HOST"],
