@@ -238,14 +238,9 @@
                         {% if result %}
                             <div id="result-content"
                                  class="result-area"
-                                 data-mappings='{{ result.mappings | tojson | safe }}'>
-                                {{ result.text | e }}
-                            </div>
+                                 data-mappings='{{ result.mappings | tojson | safe }}'>{{ result.text | e }}</div>
                         {% else %}
-                            <div id="result-content" class="result-area">
-                                <span style="opacity:0.5; font-style:italic;">
-                                    Wynik pojawi się tutaj po przetworzeniu...
-                                </span>
+                            <div id="result-content" class="result-area"><span style="opacity:0.5; font-style:italic;">Wynik pojawi się tutaj po przetworzeniu...</span>
                             </div>
                         {% endif %}
                     </div>
@@ -273,7 +268,7 @@
 
             // Replace each {TAG} with a span that shows the tag and a tooltip (title) with the real value
             // We use textContent and then set innerHTML to avoid issues with double escaping
-            const originalText = container.textContent;
+            const originalText = container.textContent.trimStart();
             container.innerHTML = originalText.replace(
                 /(\{[A-Z]{2,}[^}]*\})/g,
                 function (match) {
