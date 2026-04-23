@@ -44,6 +44,14 @@
             border: 1px solid var(--border-glass);
         }
 
+        .session-warning {
+            color: #fca5a5;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
         .chat-thread {
             flex: 1;
             overflow-y: auto;
@@ -150,13 +158,22 @@
         }
 
         .selectx {
-            padding: 0.4rem 0.8rem;
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
             border: 1px solid var(--border-glass);
-            color: inherit;
-            font-size: 0.8rem;
+            background: #1e293b;
+            padding: 0.6rem;
+            color: #f8fafc;
             outline: none;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .selectx option {
+            background: #1e293b;
+            color: #f8fafc;
         }
 
         .btnx {
@@ -230,7 +247,7 @@
         <header class="chat-toolbar">
             <div class="chat-info">
                 <h2>LLM‑Router Chat</h2>
-                <div class="sub">
+                <div class="sub" id="session-status">
                     Bezpieczna sesja <span class="pill" id="session-pill">fast_masker</span>
                 </div>
             </div>
@@ -285,6 +302,16 @@
         const spinner = document.getElementById('loading-spinner');
         const btnSend = document.getElementById('btn-send');
 
+        function updateSessionStatus() {
+            const statusEl = document.getElementById('session-status');
+            if (algoSelect.value === 'no_anno') {
+                statusEl.innerHTML = '<span class="session-warning">⚠️ Sesja bez anonimizacji</span>';
+            } else {
+                const algoText = algoSelect.options[algoSelect.selectedIndex].text;
+                statusEl.innerHTML = `Bezpieczna sesja <span class="pill">${algoText}</span>`;
+            }
+        }
+
         function saveState() {
             localStorage.setItem('chat_last_text', chatInput.value);
             localStorage.setItem('chat_last_model', modelSelect.value);
@@ -302,7 +329,10 @@
 
         chatInput.addEventListener('input', saveState);
         modelSelect.addEventListener('change', saveState);
-        algoSelect.addEventListener('change', saveState);
+        algoSelect.addEventListener('change', () => {
+            saveState();
+            updateSessionStatus();
+        });
 
         async function loadModels() {
             const url = "{{ url_for('anonymize_web.models') }}";
@@ -331,6 +361,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             loadModels();
+            updateSessionStatus();
         });
 
         const ANON_RE = /\{[^{}\s]+\}/g;
