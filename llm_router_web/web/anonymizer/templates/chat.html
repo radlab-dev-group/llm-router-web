@@ -220,6 +220,10 @@
             font-family: monospace;
             font-size: 0.8rem;
         }
+
+        .btnx svg {
+            pointer-events: none;
+        }
     </style>
 
     <div class="chat-workspace">
@@ -379,8 +383,83 @@
                 const inner = document.createElement('div');
                 inner.innerHTML = streaming ? '...' : marked.parse(raw);
                 bubble.appendChild(inner);
+
+                // Actions container
+                const actions = document.createElement('div');
+                actions.className = 'msg-actions';
+                actions.style.cssText = 'display: flex; gap: 0.5rem; margin-top: 0.5rem; justify-content: flex-end; opacity: 0.7;';
+
+                // Copy Button
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'btnx copy-btn';
+                // Use flex to center the icon and ensure a good hit area
+                copyBtn.style.cssText = 'padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;';
+                copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4C2.9 1 2 1.9 2 3v16c0 1.1 0.9 2 2 2h12c1.1 0 2-0.9 2-2V8l-6-6zM16 20H4V3h12v15z"/></svg>`;
+                copyBtn.title = 'Copy message';
+                copyBtn.onclick = async () => {
+                    const textToCopy = wrap.dataset.content || '';
+
+                    const performCopy = async (text) => {
+                        // Try modern Clipboard API first
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            await navigator.clipboard.writeText(text);
+                            return true;
+                        }
+                        // Fallback to execCommand('copy')
+                        const textArea = document.createElement("textarea");
+                        textArea.value = text;
+                        // Ensure textarea is not visible but part of DOM
+                        textArea.style.position = "fixed";
+                        textArea.style.left = "-9999px";
+                        textArea.style.top = "0";
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        try {
+                            const successful = document.execCommand('copy');
+                            document.body.removeChild(textArea);
+                            return successful;
+                        } catch (err) {
+                            document.body.removeChild(textArea);
+                            return false;
+                        }
+                    };
+
+                    try {
+                        const success = await performCopy(textToCopy);
+                        if (success) {
+                            const originalHtml = copyBtn.innerHTML;
+                            copyBtn.textContent = '✓';
+                            setTimeout(() => copyBtn.innerHTML = originalHtml, 2000);
+                        }
+                    } catch (err) {
+                        console.error('Failed to copy: ', err);
+                    }
+                };
+
+                // Refresh Button
+                const regenBtn = document.createElement('button');
+                regenBtn.type = 'button';
+                regenBtn.className = 'btnx regenerate-btn';
+                // Use flex to center the icon and ensure a good hit area
+                regenBtn.style.cssText = 'padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;';
+                regenBtn.innerHTML = `
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6a5.99 5.99 0 0 1-5 5.91v2.02A8.001 8.001 0 0 0 20 12c0-4.42-3.58-8-8-8zM6 12c0-3.31 2.69-6 6-6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8s3.58 8 8 8v-2.02A5.99 5.99 0 0 1 6 12z"/>
+                        </svg>
+                    `;
+                regenBtn.title = 'Regenerate response';
+
+                actions.append(copyBtn, regenBtn);
+                bubble.appendChild(actions);
+
                 wrap._assistantInner = inner;
                 highlightInElement(inner);
+
+                // Only show regenerate button for the last assistant message
+                document.querySelectorAll('.regenerate-btn').forEach(btn => btn.style.display = 'none');
+                regenBtn.style.display = 'inline-block';
             } else {
                 bubble.appendChild(createHighlightedFragment(raw));
             }
@@ -389,6 +468,76 @@
             chatOutput.scrollTop = chatOutput.scrollHeight;
             return wrap;
         }
+
+        // -------------- Regenerate assistant response for the last assistant message --------------
+        document.addEventListener('click', async function (e) {
+            const regenBtn = e.target.closest('.regenerate-btn');
+            if (!regenBtn) return;
+
+            const assistantWrap = regenBtn.closest('.msg.assistant');
+            if (!assistantWrap) return;
+
+            // Find the preceding user message
+            const userWrap = assistantWrap.previousElementSibling;
+            if (!userWrap || !userWrap.classList.contains('user')) {
+                alert('Cannot find the associated user message.');
+                return;
+            }
+            const userText = userWrap.dataset.content || '';
+            if (!userText) return;
+
+            const inner = assistantWrap._assistantInner;
+            if (!inner) return;
+
+            // Show streaming placeholder
+            inner.innerHTML = '...';
+            spinner.classList.add('active');
+            btnSend.disabled = true;
+
+            try {
+                const form = document.getElementById('chat-form');
+                const actionUrl = form.action;
+                const formData = new FormData();
+                // include the original user message
+                formData.append('message', userText);
+                // include chat settings (algorithm & model) just like a normal send
+                formData.append('algorithm', algoSelect.value);
+                formData.append('model_name', modelSelect.value);
+                // preserve the new_chat flag (we are continuing the same chat)
+                formData.append('new_chat', 'false');
+
+                const resp = await fetch(actionUrl, {method: 'POST', body: formData});
+                if (!resp.body) {
+                    const txt = await resp.text();
+                    inner.innerHTML = marked.parse(txt);
+                    highlightInElement(inner);
+                    assistantWrap.dataset.content = txt;
+                } else {
+                    const reader = resp.body.getReader();
+                    const dec = new TextDecoder();
+                    let markdown = '';
+                    while (true) {
+                        const {value, done} = await reader.read();
+                        if (done) break;
+                        markdown += dec.decode(value, {stream: true});
+                        inner.innerHTML = marked.parse(markdown);
+                        highlightInElement(inner);
+                        chatOutput.scrollTop = chatOutput.scrollHeight;
+                    }
+                    assistantWrap.dataset.content = markdown;
+                    await fetch("{{ url_for('anonymize_web.chat_finalize') }}", {
+                        method: 'POST',
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({assistant: markdown})
+                    });
+                }
+            } catch (err) {
+                inner.textContent = `Error: ${err}`;
+            } finally {
+                spinner.classList.remove('active');
+                btnSend.disabled = false;
+            }
+        });
 
         btnNewChat.addEventListener('click', () => {
             if (!confirm('Start a new conversation?')) return;
