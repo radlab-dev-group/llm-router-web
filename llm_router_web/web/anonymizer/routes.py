@@ -12,6 +12,8 @@ Provides endpoints for:
 
 import json
 import socket
+from typing import Tuple, Dict
+
 import requests
 
 from flask import (
@@ -25,7 +27,8 @@ from flask import (
     session,
 )
 
-from .constants import GENAI_MODEL_ANON
+from .constants import GENAI_MODEL_ANON, DEFAULT_PII_MODEL_NAME
+
 
 # Blueprint configuration
 anonymize_bp = Blueprint(
@@ -54,53 +57,97 @@ def process_text():
         return "⚠️ No text provided.", 400
 
     algorithm = request.form.get("algorithm", "fast")
-    endpoint_map = {
-        "fast": "/api/fast_text_mask",
-        "genai": "/api/anonymize_text_genai",
-        "priv": "/api/anonymize_text_priv_masker",
-    }
     model_name = request.form.get("model_name", "").strip()
 
-    if algorithm == "genai" and not GENAI_MODEL_ANON:
-        return render_template(
-            "anonymize_result_partial.html",
-            api_host=current_app.config["LLM_ROUTER_HOST"],
-            result={"error": "genai model is not set"},
+    router_host = current_app.config["LLM_ROUTER_HOST"].rstrip("/")
+    pii_host = current_app.config["PII_SERVICE_HOST"].rstrip("/")
+
+    # Helper to call the PII service
+    def call_pii_service(text, model) -> Dict | str:
+        labels = ["LOCATION", "PERSON"]
+        try:
+            # Analogous to pii/index.html call
+            resp = requests.post(
+                f"{pii_host}/predict_and_anonymize",
+                json={
+                    "text": text,
+                    "model": model or DEFAULT_PII_MODEL_NAME,
+                    "labels": labels,
+                },
+                timeout=60,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return data
+        except Exception as e:
+            return f"❌ PII Service Error: {e}"
+
+    # Helper to call the Router service
+    def call_router_service(text, model, endpoint):
+        try:
+            resp = requests.post(
+                f"{router_host}{endpoint}",
+                json={"text": text, "model_name": model or "gpt-oss:120b"},
+                timeout=600,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return data
+        except Exception as e:
+            return f"❌ Router Service Error: {e}"
+
+    # Logic for the selected algorithm
+    if algorithm == "pii_masking":
+        result = call_pii_service(raw_text, model_name)
+
+    elif algorithm == "fast+pii":
+        # 1. Run PII first
+        pii_result = call_pii_service(raw_text, model_name)
+        if pii_result is str:
+            pii_result = {}
+
+        # 2. Run Fast Masker on the result of PII
+        result_ft = call_router_service(
+            pii_result.get("text", raw_text), model_name, "/api/fast_text_mask"
         )
-    if algorithm == "priv":
+
+        result = result_ft
+        for _k, _v in pii_result.get("mappings", {}).items():
+            result["mappings"][_k] = _v
+
+    elif algorithm == "fast":
+        result = call_router_service(raw_text, model_name, "/api/fast_text_mask")
+
+    elif algorithm == "genai":
+        if not GENAI_MODEL_ANON:
+            return render_template(
+                "anonymize_result_partial.html",
+                result={"error": "genai model is not set"},
+            )
+        result = call_router_service(
+            raw_text, model_name, "/api/anonymize_text_genai"
+        )
+
+    elif algorithm == "priv":
         return render_template(
             "anonymize_result_partial.html",
-            api_host=current_app.config["LLM_ROUTER_HOST"],
             result={"error": "priv_masker is not available yet"},
         )
-    if algorithm not in endpoint_map:
+
+    else:
         return render_template(
             "anonymize_result_partial.html",
-            api_host=current_app.config["LLM_ROUTER_HOST"],
-            result={
-                "error": f"Not supported method {algorithm}.\nSupported: [fast, genai, priv]"
-            },
+            result={"error": f"Not supported method {algorithm}."},
         )
 
-    endpoint = endpoint_map[algorithm]
-    external_url = f"{current_app.config['LLM_ROUTER_HOST'].rstrip('/')}{endpoint}"
+    _p_map = {}
+    for _k, _v in result.get("mappings", {}).items():
+        if not _k.startswith("{"):
+            _k = "{" + _k + "}"
+        _p_map[_k] = _v
+    result["mappings"] = _p_map
 
-    try:
-        resp = requests.post(
-            external_url,
-            json={"text": raw_text, "model_name": model_name or "gpt-oss:120b"},
-            timeout=600,
-        )
-        resp.raise_for_status()
-    except requests.RequestException as exc:
-        return f"❌ Connection error with the anonymization service: {exc}", 502
-
-    try:
-        data = resp.json()
-        result = data.get("text", resp.text)
-    except ValueError:
-        result = resp.text
-
+    # print(json.dumps(result, indent=2, ensure_ascii=False))
     return render_template(
         "anonymize_result_partial.html",
         api_host=current_app.config["LLM_ROUTER_HOST"],

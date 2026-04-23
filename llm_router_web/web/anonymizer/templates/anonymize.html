@@ -1,63 +1,357 @@
 {% extends "base_anonymizer.html" %}
 {% block content %}
-    <div class="card">
-        <h2>🔒 Text Anonymization</h2>
+    <style>
+        .anon-workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
 
+        .workspace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .workspace-title h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .workspace-title .sub {
+            margin-top: 0.3rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .workspace-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            align-items: stretch;
+            height: calc(100dvh - 260px);
+            max-height: calc(100dvh - 260px);
+            min-height: 320px;
+        }
+
+        @media (min-width: 820px) {
+            .editor-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .editor-pane {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            padding: 1.5rem;
+            gap: 1rem;
+            overflow: hidden;
+            height: 100%;
+            min-height: 0;
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            background: var(--bg-glass);
+        }
+
+        .pane-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .inputx,
+        .result-area {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            border-radius: 12px;
+            border: 1px solid var(--border-glass);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            color: inherit;
+            outline: none;
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            box-sizing: border-box;
+            overflow-y: auto !important;
+            overflow-x: hidden;
+            resize: none;
+            display: block;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .result-area {
+            white-space: pre-wrap;
+            background: rgba(0, 0, 0, 0.15);
+            display: block;
+            word-break: break-word;
+        }
+
+        #result-wrapper {
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .inputx:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.1);
+        }
+
+        .selectx {
+            border-radius: 12px;
+            border: 1px solid var(--border-glass);
+            background: #1e293b;
+            padding: 0.6rem;
+            color: #f8fafc;
+            outline: none;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .selectx option {
+            background: #1e293b;
+            color: #f8fafc;
+        }
+
+        .btnx {
+            appearance: none;
+            border: 1px solid var(--border-glass);
+            background: rgba(255, 255, 255, 0.05);
+            color: inherit;
+            border-radius: 10px;
+            padding: 0.6rem 1.2rem;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btnx:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btnx.primary {
+            background: var(--accent);
+            color: #0f172a;
+            border-color: var(--accent);
+        }
+
+        .btnx.primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .anon-tag {
+            display: inline-block;
+            padding: 0 0.4rem;
+            border-radius: 4px;
+            background: rgba(255, 220, 120, 0.15);
+            color: #ffe0a3;
+            border: 1px solid rgba(255, 220, 120, 0.3);
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 0.9em;
+            cursor: help;
+        }
+
+        .spinnerx {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        .spinnerx.active {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <div class="anon-workspace">
         <form id="anonymize-form"
               hx-post="{{ url_for('anonymize_web.process_text') }}"
-              hx-target="#result-container"
+              hx-target="#result-wrapper"
               hx-swap="innerHTML"
               hx-trigger="submit"
-              hx-indicator="#loading-spinner"
-              class="form">
+              hx-indicator="#loading-spinner">
 
-            <label for="input-text">Paste text to anonymize:</label>
-            <textarea id="input-text" name="text" rows="6"
-                      placeholder="Enter or paste text…" required
-                      class="w100"></textarea>
+            <header class="workspace-header">
+                <div class="workspace-title">
+                    <h2>🔒 Text Anonymization</h2>
+                    <div class="sub">Usuń dane wrażliwe przed wysłaniem tekstu do modelu AI.</div>
+                </div>
 
-            <div class="form-actions" style="display:flex; align-items:center; gap:var(--space-2); margin-top:1rem;">
-                <select id="algorithm-select" name="algorithm"
-                        class="btn"
-                        style="width:auto;">
-                    <option value="fast" selected>Fast Masking</option>
-                </select>
+                <div class="workspace-controls">
+                    <select name="algorithm" class="selectx">
+                        <option value="fast" selected>Fast Masking</option>
+                        <option value="pii_masking">PII Masking</option>
+                        <option value="fast+pii">Fast Masker + PII</option>
+                        <option value="genai">GenAI Masking</option>
+                    </select>
+                    <span id="loading-spinner" class="spinnerx"></span>
+                    <button type="button" class="btnx" onclick="clearText()">🗑️ Clear</button>
+                    <button type="submit" class="btnx primary">🚀 Anonymize</button>
+                </div>
+            </header>
 
-                <button type="submit" class="btn primary">🚀 Anonymize</button>
-                <span id="loading-spinner" class="spinner" aria-live="polite"></span>
+            <div class="editor-grid">
+                <div class="editor-pane">
+                    <div class="pane-label">Original Text</div>
+                    <textarea name="text" id="input-text"
+                              placeholder="Wklej tekst tutaj..." required
+                              class="inputx"></textarea>
+                </div>
+
+                <div class="editor-pane">
+                    <div class="pane-label">
+                        Anonymized Result
+                        <button type="button" class="btnx"
+                                style="font-size:0.7rem; padding:0.2rem 0.6rem;"
+                                onclick="copyResult()">Copy
+                        </button>
+                    </div>
+
+                    <!-- Result container that will be replaced by the htmx response -->
+                    <div id="result-wrapper">
+                        {% if result %}
+                            <div id="result-content"
+                                 class="result-area"
+                                 data-mappings='{{ result.mappings | tojson | safe }}'>{{ result.text | e }}</div>
+                        {% else %}
+                            <div id="result-content" class="result-area"><span style="opacity:0.5; font-style:italic;">Wynik pojawi się tutaj po przetworzeniu...</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
+        </form>
+    </div>
 
-            <!-- 1️⃣  Fixed result panel (original placeholder) -->
-            <div id="result-container" class="card" style="margin-top: 1rem;">
-                <h3>✅ Anonymized Text</h3>
-                <p class="muted">The result will appear after anonymization.</p>
-            </div>
+    <script>
+        // Highlight tags and add tooltip with the original value
+        function highlightTags() {
+            const container = document.getElementById('result-content');
+            if (!container) return;
 
-            {% raw %}
-                <script>
-                    // --------------------------------------------------------
-                    // Highlight {{TAG}} occurrences in the returned text
-                    // --------------------------------------------------------
-                    function highlightTags() {
-                        const pre = document.getElementById('anonymized-result');
-                        if (!pre) return;               // nie ma wyniku – nic nie robimy
-                        const highlighted = pre.innerHTML.replace(
-                            /(\{[A-Z]{2}[^}]*\})/g,
-                            '<span class="tag-highlight">$1</span>'
-                        );
-                        pre.innerHTML = highlighted;
-                    }
+            // Parse mappings from the data‑attribute (if present)
+            let mappings = {};
+            const raw = container.getAttribute('data-mappings');
+            if (raw) {
+                try {
+                    mappings = JSON.parse(raw);
+                } catch (e) {
+                    console.warn('Failed to parse mappings JSON', e);
+                }
+            }
 
-                    // --------------------------------------------------------
-                    // Run highlightTags() after htmx swaps the result panel
-                    // --------------------------------------------------------
-                    document.body.addEventListener('htmx:afterSwap', function (e) {
-                        // The result panel is rendered into #result-container
-                        if (e.detail && e.detail.target && e.detail.target.id === 'result-container') {
-                            highlightTags();
-                        }
-                    });
-                </script>
-            {% endraw %}
+            // Replace each {TAG} with a span that shows the tag and a tooltip (title) with the real value
+            // We use textContent and then set innerHTML to avoid issues with double escaping
+            const originalText = container.textContent.trimStart();
+            container.innerHTML = originalText.replace(
+                /(\{[A-Z]{2,}[^}]*\})/g,
+                function (match) {
+                    const value = mappings[match] || match; // fallback to the tag itself
+                    const escapedTag = match.replace(/"/g, '&quot;');
+                    const escapedTitle = value.replace(/"/g, '&quot;');
+                    return `<span class="anon-tag" title="${escapedTitle}">${escapedTag}</span>`;
+                }
+            );
+        }
 
+        async function copyResult() {
+            const text = document.getElementById('result-content').innerText;
+            await navigator.clipboard.writeText(text);
+            alert('Copied to clipboard!');
+        }
+
+        function clearText() {
+            document.getElementById('input-text').value = '';
+            document.getElementById('result-content').innerHTML =
+                '<span style="opacity:0.5; font-style:italic;">Wynik pojawi się tutaj po przetworzeniu...</span>';
+        }
+
+        function syncScroll(source) {
+            const targetId = source.id === 'input-text' ? 'result-content' : 'input-text';
+            const target = document.getElementById(targetId);
+            if (!target) return;
+
+            // If target is result-content, we might be inside result-wrapper
+            // but result-content itself should be the scrollable element.
+
+            // Calculate the scroll percentage of the source
+            const sourceMaxScroll = source.scrollHeight - source.clientHeight;
+            if (sourceMaxScroll <= 0) {
+                target.scrollTop = 0;
+                return;
+            }
+            const scrollPercentage = source.scrollTop / sourceMaxScroll;
+
+            // Apply the same percentage to the target
+            const targetMaxScroll = target.scrollHeight - target.clientHeight;
+            const newScrollTop = scrollPercentage * targetMaxScroll;
+
+            if (Math.abs(target.scrollTop - newScrollTop) > 1) {
+                target.scrollTop = newScrollTop;
+            }
+
+            // Sync horizontal scroll directly as it's less likely to differ significantly
+            if (target.scrollLeft !== source.scrollLeft) {
+                target.scrollLeft = source.scrollLeft;
+            }
+        }
+
+        const inputEl = document.getElementById('input-text');
+        const resultEl = document.getElementById('result-content');
+
+        inputEl.addEventListener('scroll', e => syncScroll(e.target));
+        resultEl.addEventListener('scroll', e => syncScroll(e.target));
+
+        // After htmx swaps the result area, re‑apply highlighting
+        document.body.addEventListener('htmx:afterSwap', e => {
+            if (e.detail?.target?.id === 'result-wrapper') {
+                highlightTags();
+
+                // Re-add event listener to the new result-content if it was replaced
+                const newResultEl = document.getElementById('result-content');
+                if (newResultEl) {
+                    newResultEl.addEventListener('scroll', e => syncScroll(e.target));
+                    newResultEl.scrollTop = 0;
+                    newResultEl.scrollLeft = 0;
+                }
+            }
+        });
+
+        // Initial highlight when the page loads with a result (e.g. after refresh)
+        document.addEventListener('DOMContentLoaded', highlightTags);
+    </script>
 {% endblock %}

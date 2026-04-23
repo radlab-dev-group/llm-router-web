@@ -1,3 +1,4 @@
 import os
 
+DEFAULT_PII_MODEL_NAME = "radlab/pii-pl-v1.0"
 GENAI_MODEL_ANON = os.getenv("LLM_ROUTER_GENAI_MODEL_ANONYMISATION", None)

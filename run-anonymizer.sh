@@ -17,6 +17,7 @@ HOST="${LLM_ROUTER_WEB_ANO_HOST:-0.0.0.0}"
 PORT="${LLM_ROUTER_WEB_ANO_PORT:-8082}"
 DEBUG="${LLM_ROUTER_WEB_ANO_DEBUG:-true}"
 ROUTER_HOST="${LLM_ROUTER_HOST:-"http://192.168.100.65:8080"}"
+PII_SERVICE_HOST="${LLM_ROUTER_HOST:-"http://192.168.100.71:8000"}"
 GENAI_MODEL_ANON="${LLM_ROUTER_HOST:-"gtp-oss:120b"}"
 
 # -------------------------------------------------------------------------
