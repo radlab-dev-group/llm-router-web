@@ -285,6 +285,33 @@ def chat_finalize():
     return jsonify({"ok": True})
 
 
+@anonymize_bp.route("/chat/import", methods=["POST"])
+def import_chat():
+    """
+    Import chat history from a JSON payload and save it to the session.
+    """
+    try:
+        data = request.get_json(force=True) or {}
+        history = data.get("history")
+        if not isinstance(history, list):
+            return jsonify({"ok": False, "error": "History must be a list"}), 400
+
+        # Basic validation of message structure
+        for msg in history:
+            if (
+                not isinstance(msg, dict)
+                or "role" not in msg
+                or "content" not in msg
+            ):
+                return jsonify({"ok": False, "error": "Invalid message format"}), 400
+
+        session["chat_history"] = history
+        session.modified = True
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 # ----------------------------------------------------------------------
 # Model catalogue – proxy to the router’s `/models` endpoint
 # ----------------------------------------------------------------------
