@@ -31,7 +31,7 @@ def create_anonymize_app() -> Flask:
 
     # Address of the PII anonymization service
     app.config["PII_SERVICE_HOST"] = os.getenv(
-        "PII_SERVICE_HOST", "http://192.168.100.71:5001"
+        "PII_SERVICE_HOST", "http://localhost:5001"
     )
 
     # ---- Blueprint registration ----

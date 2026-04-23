@@ -27,7 +27,8 @@ from flask import (
     session,
 )
 
-from .constants import GENAI_MODEL_ANON
+from .constants import GENAI_MODEL_ANON, DEFAULT_PII_MODEL_NAME
+
 
 # Blueprint configuration
 anonymize_bp = Blueprint(
@@ -70,7 +71,7 @@ def process_text():
                 f"{pii_host}/predict_and_anonymize",
                 json={
                     "text": text,
-                    "model": model or "1-PLC: 20260417_213751",
+                    "model": model or DEFAULT_PII_MODEL_NAME,
                     "labels": labels,
                 },
                 timeout=60,
