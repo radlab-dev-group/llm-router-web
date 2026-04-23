@@ -1,13 +1,106 @@
 {% extends "base_anonymizer.html" %}
 {% block content %}
     <style>
-        .chat-workspace {
+        :root {
+            --sidebar-width: 260px;
+        }
+
+        .chat-layout {
+            display: flex;
+            height: calc(100vh - 180px);
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 1rem;
+            position: relative;
+        }
+
+        /* Sidebar History */
+        .history-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 180px);
-            max-width: 900px;
-            margin: 0 auto;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .history-sidebar.hidden {
+            width: 0;
+            margin-left: calc(var(--sidebar-width) * -1);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .history-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-glass);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .history-item {
+            padding: 0.75rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-glass);
+        }
+
+        .history-item.active {
+            background: rgba(var(--accent-rgb), 0.1);
+            border-color: var(--accent);
+        }
+
+        .history-item-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            margin-right: 0.5rem;
+        }
+
+        .btn-del-chat {
+            opacity: 0;
+            color: #fca5a5;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px 5px;
+            font-size: 1rem;
+        }
+
+        .history-item:hover .btn-del-chat {
+            opacity: 1;
+        }
+
+        .chat-workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             gap: 1.5rem;
+            min-width: 0; /* Prevent flex-item from overflowing */
         }
 
         .chat-toolbar {
@@ -155,6 +248,7 @@
             display: flex;
             gap: 0.5rem;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .selectx {
@@ -241,53 +335,82 @@
         .btnx svg {
             pointer-events: none;
         }
+
+        .local-history-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
     </style>
 
-    <div class="chat-workspace">
-        <header class="chat-toolbar">
-            <div class="chat-info">
-                <h2>LLM‑Router Chat</h2>
-                <div class="sub" id="session-status">
-                    Bezpieczna sesja <span class="pill" id="session-pill">fast_masker</span>
-                </div>
+    <div class="chat-layout">
+        <!-- Local History Sidebar -->
+        <aside class="history-sidebar hidden" id="history-sidebar">
+            <div class="history-header">
+                <span>Historia</span>
+                <button type="button" class="btnx" style="padding: 2px 8px" onclick="toggleHistory()">✕</button>
             </div>
-            <div class="chat-toolbar-right">
-                <button type="button" id="btn-export-chat" class="btnx">📤 Export</button>
-                <button type="button" id="btn-import-chat" class="btnx">📥 Import</button>
-                <button type="button" id="btn-new-chat" class="btnx danger">New Chat</button>
-                <input type="file" id="chat-file-input" style="display:none" accept=".json">
+            <div class="history-list" id="history-list">
+                <!-- Items populated by JS -->
             </div>
-        </header>
+        </aside>
 
-        <div id="chat-output" class="chat-thread">
-            <div class="chat-empty" id="chat-empty">
-                Zacznij konwersację. <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> wysyła.
-            </div>
-        </div>
-
-        <form id="chat-form" action="{{ url_for('anonymize_web.chat_message') }}" method="post"
-              class="composer-container">
-            <input type="hidden" id="new-chat-flag" name="new_chat" value="true">
-
-            <div class="composer-grid">
-                <textarea id="chat-input" name="message" class="inputx" placeholder="Napisz wiadomość..." required
-                          rows="3"></textarea>
-
-                <div class="composer-footer">
-                    <div class="controls-left">
-                        <select id="algorithm-select" name="algorithm" class="selectx">
-                            <option value="fast" selected>Fast masking</option>
-                            <option value="no_anno">No anonymization</option>
-                        </select>
-                        <select id="model-select" name="model_name" class="selectx">
-                            <option value="" disabled selected>Loading models…</option>
-                        </select>
-                        <span class="spinnerx" id="loading-spinner"></span>
+        <div class="chat-workspace">
+            <header class="chat-toolbar">
+                <div class="chat-info">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button type="button" class="btnx" id="btn-toggle-history" title="Historia rozmów">📜</button>
+                        <h2>LLM‑Router Chat</h2>
                     </div>
-                    <button type="submit" class="btnx primary" id="btn-send">Send</button>
+                    <div class="sub" id="session-status">
+                        Bezpieczna sesja <span class="pill" id="session-pill">fast_masker</span>
+                    </div>
+                </div>
+                <div class="chat-toolbar-right">
+                    <button type="button" id="btn-export-chat" class="btnx">📤 Export</button>
+                    <button type="button" id="btn-import-chat" class="btnx">📥 Import</button>
+                    <button type="button" id="btn-new-chat" class="btnx danger">New Chat</button>
+                    <input type="file" id="chat-file-input" style="display:none" accept=".json">
+                </div>
+            </header>
+
+            <div id="chat-output" class="chat-thread">
+                <div class="chat-empty" id="chat-empty">
+                    Zacznij konwersację. <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> wysyła.
                 </div>
             </div>
-        </form>
+
+            <form id="chat-form" action="{{ url_for('anonymize_web.chat_message') }}" method="post"
+                  class="composer-container">
+                <input type="hidden" id="new-chat-flag" name="new_chat" value="true">
+
+                <div class="composer-grid">
+                    <textarea id="chat-input" name="message" class="inputx" placeholder="Napisz wiadomość..." required
+                              rows="3"></textarea>
+
+                    <div class="composer-footer">
+                        <div class="controls-left">
+                            <select id="algorithm-select" name="algorithm" class="selectx">
+                                <option value="fast" selected>Fast masking</option>
+                                <option value="no_anno">No anonymization</option>
+                            </select>
+                            <select id="model-select" name="model_name" class="selectx">
+                                <option value="" disabled selected>Loading models…</option>
+                            </select>
+                            <label class="local-history-toggle">
+                                <input type="checkbox" id="local-history-enabled" checked> Lokalna historia
+                            </label>
+                            <span class="spinnerx" id="loading-spinner"></span>
+                        </div>
+                        <button type="submit" class="btnx primary" id="btn-send">Send</button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -301,7 +424,13 @@
         const chatEmpty = document.getElementById('chat-empty');
         const spinner = document.getElementById('loading-spinner');
         const btnSend = document.getElementById('btn-send');
+        const localHistoryEnabled = document.getElementById('local-history-enabled');
+        const historySidebar = document.getElementById('history-sidebar');
+        const historyList = document.getElementById('history-list');
 
+        let currentChatId = null; // ID of currently open local chat
+
+        // --- Session Status Logic ---
         function updateSessionStatus() {
             const statusEl = document.getElementById('session-status');
             if (algoSelect.value === 'no_anno') {
@@ -312,6 +441,117 @@
             }
         }
 
+        // --- Local History Logic ---
+        function getLocalChats() {
+            const data = localStorage.getItem('llm_router_chats');
+            return data ? JSON.parse(data) : {};
+        }
+
+        function saveLocalChats(chats) {
+            localStorage.setItem('llm_router_chats', JSON.stringify(chats));
+        }
+
+        function toggleHistory() {
+            historySidebar.classList.toggle('hidden');
+            if (!historySidebar.classList.contains('hidden')) {
+                renderHistoryList();
+            }
+        }
+
+        function renderHistoryList() {
+            const chats = getLocalChats();
+            historyList.innerHTML = '';
+
+            const sortedChats = Object.entries(chats).sort((a, b) => b[1].timestamp - a[1].timestamp);
+
+            sortedChats.forEach(([id, chat]) => {
+                const item = document.createElement('div');
+                item.className = `history-item ${id === currentChatId ? 'active' : ''}`;
+                item.innerHTML = `
+                    <span class="history-item-name" title="${chat.name}">${chat.name}</span>
+                    <button type="button" class="btn-del-chat" data-id="${id}">🗑️</button>
+                `;
+                item.onclick = (e) => {
+                    if (e.target.classList.contains('btn-del-chat')) return;
+                    loadChatById(id);
+                };
+                item.querySelector('.btn-del-chat').onclick = (e) => {
+                    e.stopPropagation();
+                    deleteChatById(id);
+                };
+                historyList.appendChild(item);
+            });
+        }
+
+        async function loadChatById(id) {
+            const chats = getLocalChats();
+            const chat = chats[id];
+            if (!chat) return;
+
+            currentChatId = id;
+
+            // 1. Sync with server
+            try {
+                const resp = await fetch("{{ url_for('anonymize_web.import_chat') }}", {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({history: chat.messages})
+                });
+                if (!resp.ok) throw new Error('Failed to sync with server');
+            } catch (e) {
+                alert('Błąd synchronizacji z serwerem: ' + e.message);
+            }
+
+            // 2. Update UI
+            chatOutput.innerHTML = '';
+            chat.messages.forEach(msg => {
+                addMessage(msg.role, msg.content);
+            });
+            if (chatEmpty) chatEmpty.style.display = 'none';
+
+            newChatFlag.value = 'false';
+            renderHistoryList();
+        }
+
+        function deleteChatById(id) {
+            if (!confirm('Usunąć tę rozmowę z lokalnej historii?')) return;
+            const chats = getLocalChats();
+            delete chats[id];
+            saveLocalChats(chats);
+            if (currentChatId === id) {
+                currentChatId = null;
+                btnNewChat.click(); // Reset current view
+            }
+            renderHistoryList();
+        }
+
+        function persistCurrentChat() {
+            if (!localHistoryEnabled.checked) return;
+
+            const messages = Array.from(document.querySelectorAll('.msg')).map(msg => ({
+                role: msg.dataset.role,
+                content: msg.dataset.content
+            }));
+
+            if (messages.length === 0) return;
+
+            const chats = getLocalChats();
+
+            if (!currentChatId) {
+                currentChatId = 'chat_' + Date.now();
+                // Use first message as name
+                const firstMsg = messages[0].content || 'Nowa rozmowa';
+                const name = firstMsg.slice(0, 30) + (firstMsg.length > 30 ? '...' : '');
+                chats[currentChatId] = {name, timestamp: Date.now(), messages};
+            } else {
+                chats[currentChatId].messages = messages;
+                chats[currentChatId].timestamp = Date.now();
+            }
+
+            saveLocalChats(chats);
+        }
+
+        // --- Existing Core Logic ---
         function saveState() {
             localStorage.setItem('chat_last_text', chatInput.value);
             localStorage.setItem('chat_last_model', modelSelect.value);
@@ -362,6 +602,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadModels();
             updateSessionStatus();
+            document.getElementById('btn-toggle-history').onclick = toggleHistory;
         });
 
         const ANON_RE = /\{[^{}\s]+\}/g;
@@ -398,7 +639,6 @@
             if (chatEmpty) chatEmpty.style.display = 'none';
             const wrap = document.createElement('div');
             wrap.className = `msg ${role}`;
-            // Store role & original content for later export / import
             wrap.dataset.role = role;
             wrap.dataset.content = raw;
 
@@ -415,80 +655,37 @@
                 inner.innerHTML = streaming ? '...' : marked.parse(raw);
                 bubble.appendChild(inner);
 
-                // Actions container
                 const actions = document.createElement('div');
                 actions.className = 'msg-actions';
                 actions.style.cssText = 'display: flex; gap: 0.5rem; margin-top: 0.5rem; justify-content: flex-end; opacity: 0.7;';
 
-                // Copy Button
                 const copyBtn = document.createElement('button');
                 copyBtn.type = 'button';
                 copyBtn.className = 'btnx copy-btn';
-                // Use flex to center the icon and ensure a good hit area
                 copyBtn.style.cssText = 'padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;';
                 copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4C2.9 1 2 1.9 2 3v16c0 1.1 0.9 2 2 2h12c1.1 0 2-0.9 2-2V8l-6-6zM16 20H4V3h12v15z"/></svg>`;
-                copyBtn.title = 'Copy message';
                 copyBtn.onclick = async () => {
                     const textToCopy = wrap.dataset.content || '';
-
-                    const performCopy = async (text) => {
-                        // Try modern Clipboard API first
-                        if (navigator.clipboard && navigator.clipboard.writeText) {
-                            await navigator.clipboard.writeText(text);
-                            return true;
-                        }
-                        // Fallback to execCommand('copy')
-                        const textArea = document.createElement("textarea");
-                        textArea.value = text;
-                        // Ensure textarea is not visible but part of DOM
-                        textArea.style.position = "fixed";
-                        textArea.style.left = "-9999px";
-                        textArea.style.top = "0";
-                        document.body.appendChild(textArea);
-                        textArea.focus();
-                        textArea.select();
-                        try {
-                            const successful = document.execCommand('copy');
-                            document.body.removeChild(textArea);
-                            return successful;
-                        } catch (err) {
-                            document.body.removeChild(textArea);
-                            return false;
-                        }
-                    };
-
                     try {
-                        const success = await performCopy(textToCopy);
-                        if (success) {
-                            const originalHtml = copyBtn.innerHTML;
-                            copyBtn.textContent = '✓';
-                            setTimeout(() => copyBtn.innerHTML = originalHtml, 2000);
-                        }
+                        await navigator.clipboard.writeText(textToCopy);
+                        const originalHtml = copyBtn.innerHTML;
+                        copyBtn.textContent = '✓';
+                        setTimeout(() => copyBtn.innerHTML = originalHtml, 2000);
                     } catch (err) {
-                        console.error('Failed to copy: ', err);
+                        console.error(err);
                     }
                 };
 
-                // Refresh Button
                 const regenBtn = document.createElement('button');
                 regenBtn.type = 'button';
                 regenBtn.className = 'btnx regenerate-btn';
-                // Use flex to center the icon and ensure a good hit area
                 regenBtn.style.cssText = 'padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;';
-                regenBtn.innerHTML = `
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                            <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6a5.99 5.99 0 0 1-5 5.91v2.02A8.001 8.001 0 0 0 20 12c0-4.42-3.58-8-8-8zM6 12c0-3.31 2.69-6 6-6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8s3.58 8 8 8v-2.02A5.99 5.99 0 0 1 6 12z"/>
-                        </svg>
-                    `;
-                regenBtn.title = 'Regenerate response';
+                regenBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6a5.99 5.99 0 0 1-5 5.91v2.02A8.001 8.001 0 0 0 20 12c0-4.42-3.58-8-8-8zM6 12c0-3.31 2.69-6 6-6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8s3.58 8 8 8v-2.02A5.99 5.99 0 0 1 6 12z"/></svg>`;
 
                 actions.append(copyBtn, regenBtn);
                 bubble.appendChild(actions);
-
                 wrap._assistantInner = inner;
                 highlightInElement(inner);
-
-                // Only show regenerate button for the last assistant message
                 document.querySelectorAll('.regenerate-btn').forEach(btn => btn.style.display = 'none');
                 regenBtn.style.display = 'inline-block';
             } else {
@@ -500,44 +697,26 @@
             return wrap;
         }
 
-        // -------------- Regenerate assistant response for the last assistant message --------------
         document.addEventListener('click', async function (e) {
             const regenBtn = e.target.closest('.regenerate-btn');
             if (!regenBtn) return;
-
             const assistantWrap = regenBtn.closest('.msg.assistant');
-            if (!assistantWrap) return;
-
-            // Find the preceding user message
             const userWrap = assistantWrap.previousElementSibling;
-            if (!userWrap || !userWrap.classList.contains('user')) {
-                alert('Cannot find the associated user message.');
-                return;
-            }
+            if (!userWrap || !userWrap.classList.contains('user')) return;
             const userText = userWrap.dataset.content || '';
-            if (!userText) return;
-
             const inner = assistantWrap._assistantInner;
-            if (!inner) return;
-
-            // Show streaming placeholder
             inner.innerHTML = '...';
             spinner.classList.add('active');
             btnSend.disabled = true;
 
             try {
                 const form = document.getElementById('chat-form');
-                const actionUrl = form.action;
                 const formData = new FormData();
-                // include the original user message
                 formData.append('message', userText);
-                // include chat settings (algorithm & model) just like a normal send
                 formData.append('algorithm', algoSelect.value);
                 formData.append('model_name', modelSelect.value);
-                // preserve the new_chat flag (we are continuing the same chat)
                 formData.append('new_chat', 'false');
-
-                const resp = await fetch(actionUrl, {method: 'POST', body: formData});
+                const resp = await fetch(form.action, {method: 'POST', body: formData});
                 if (!resp.body) {
                     const txt = await resp.text();
                     inner.innerHTML = marked.parse(txt);
@@ -573,73 +752,52 @@
         btnNewChat.addEventListener('click', () => {
             if (!confirm('Start a new conversation?')) return;
             newChatFlag.value = 'true';
+            currentChatId = null;
             chatOutput.innerHTML = '';
             chatOutput.appendChild(chatEmpty);
             chatEmpty.style.display = '';
+            renderHistoryList();
         });
 
-        // Export & Import Logic
         const btnExport = document.getElementById('btn-export-chat');
         const btnImport = document.getElementById('btn-import-chat');
         const fileInput = document.getElementById('chat-file-input');
 
-        // -------------------------------------------------------------------------
-        // Export logic – read the stored raw content instead of rendered text
-        // -------------------------------------------------------------------------
         btnExport.addEventListener('click', () => {
-            const messageElements = document.querySelectorAll('.msg');
-            const messages = Array.from(messageElements).map(msg => {
-                const role = msg.dataset.role || (msg.classList.contains('user') ? 'user' : 'assistant');
-                const content = msg.dataset.content || '';
-                return {role, content};
-            });
-
-            if (messages.length === 0) {
-                alert('No messages to export!');
-                return;
-            }
-
+            const messages = Array.from(document.querySelectorAll('.msg')).map(msg => ({
+                role: msg.dataset.role,
+                content: msg.dataset.content || ''
+            }));
+            if (messages.length === 0) return alert('No messages!');
             const blob = new Blob([JSON.stringify(messages, null, 2)], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = `chat-export-${new Date().toISOString().slice(0, 20)}.json`;
             a.click();
-            URL.revokeObjectURL(url);
         });
 
         btnImport.addEventListener('click', () => fileInput.click());
-
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = async (event) => {
                 try {
                     const history = JSON.parse(event.target.result);
-                    if (!Array.isArray(history)) throw new Error('Invalid format: Expected an array of messages.');
-
-                    // 1. Update server session
-                    const resp = await fetch("{{ url_for('anonymize_web.import_chat') }}", {
+                    await fetch("{{ url_for('anonymize_web.import_chat') }}", {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({history})
                     });
-
-                    if (!resp.ok) throw new Error('Failed to sync history with server.');
-
-                    // 2. Update UI
                     chatOutput.innerHTML = '';
-                    history.forEach(msg => {
-                        addMessage(msg.role, msg.content);
-                    });
+                    history.forEach(msg => addMessage(msg.role, msg.content));
                     if (chatEmpty) chatEmpty.style.display = 'none';
-
+                    newChatFlag.value = 'false';
                 } catch (err) {
                     alert('Import error: ' + err.message);
                 } finally {
-                    fileInput.value = ''; // Reset input
+                    fileInput.value = '';
                 }
             };
             reader.readAsText(file);
@@ -696,6 +854,7 @@
                 newChatFlag.value = 'false';
                 btnSend.disabled = false;
                 chatInput.focus();
+                persistCurrentChat();
             }
         });
     </script>
