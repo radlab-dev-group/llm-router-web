@@ -8,21 +8,22 @@ with LLMs. It acts as a bridge between the user and the backend anonymization se
 
 ## Features
 
+### 🌐 Internationalization (i18n)
+
+- **Multi-language Support**: Full support for Polish (PL) and English (EN).
+- **Dynamic Switching**: Change language via the menu without refreshing the entire session.
+- **Externalized Strings**: All UI texts are stored in JSON files for easy maintenance.
+- **Graceful Fallbacks**: Missing translations automatically fallback to English or display "NO TRANSLATION".
+
 ### 🔒 Text Anonymization Form
 
-- **Multi-Algorithm Support**:
-    - `Fast Masking`: Quick placeholder replacement via LLM-Router.
-    - `PII Masking`: Specialized Personally Identifiable Information detection (Location, Person).
-    - `Fast + PII`: Hybrid approach applying PII masking followed by Fast Masking.
-- **Advanced UI**:
-    - Real-time result highlighting of `{{TAGS}}`.
-    - One-click copying of both the anonymized text and the mapping JSON.
-    - Synchronized scrolling between input and result panes.
-- **HTMX-powered**: Asynchronous processing without full page reloads.
+- **Multi-Algorithm Support**: `Fast Masking`, `PII Masking`, and `Fast + PII`.
+- **Advanced UI**: Real-time result highlighting, one-click copying, and synchronized scrolling.
+- **HTMX-powered**: Asynchronous processing.
 
 ### 💬 Interactive Anonymized Chat
 
-- **Streaming Responses**: Real-time text generation from the LLM.
+- **Streaming Responses**: Real-time text generation.
 - **Privacy Control**: Toggle anonymization on/off per message.
 - **Session Management**:
     - Server-side session history.
@@ -73,26 +74,26 @@ gunicorn -w 4 -b 0.0.0.0:8082 "web.anonymizer:create_anonymize_app()"
 
 Configuration is managed via environment variables:
 
-| Variable                               | Description                               | Default                   |
-|:---------------------------------------|:------------------------------------------|:--------------------------|
-| `FLASK_SECRET_KEY`                     | Secret key for Flask session signing      | `change-me-anonymizer`    |
-| `LLM_ROUTER_HOST`                      | Base URL of the LLM-Router service        | `http://localhost:8000`   |
-| `PII_SERVICE_HOST`                     | Base URL of the PII anonymization service | `http://localhost:5001`   |
-| `LLM_ROUTER_GENAI_MODEL_ANONYMISATION` | Model used for GenAI masking              | (defined in constants.py) |
+| Variable           | Description                               | Default                 |
+|:-------------------|:------------------------------------------|:------------------------|
+| `FLASK_SECRET_KEY` | Secret key for Flask session signing      | `change-me-anonymizer`  |
+| `LLM_ROUTER_HOST`  | Base URL of the LLM-Router service        | `http://localhost:8000` |
+| `PII_SERVICE_HOST` | Base URL of the PII anonymization service | `http://localhost:5001` |
 
 ## Endpoints Overview
 
 All endpoints are prefixed with `/anonymize`.
 
-| URL              | Methods | Description                                                                              |
-|:-----------------|:--------|:-----------------------------------------------------------------------------------------|
-| `/`              | GET     | Renders the anonymization form.                                                          |
-| `/`              | POST    | Processes text based on selected algorithm (`fast`, `pii_masking`, `fast+pii`, `genai`). |
-| `/chat`          | GET     | Renders the interactive chat interface.                                                  |
-| `/chat/message`  | POST    | Sends a message, handles anonymization, and streams the LLM response.                    |
-| `/chat/finalize` | POST    | Saves the final assistant response to the session history.                               |
-| `/chat/import`   | POST    | Imports a JSON chat history into the current session.                                    |
-| `/models`        | GET     | Proxy to LLM-Router to list available models.                                            |
+| URL                | Methods | Description                                                           |
+|:-------------------|:--------|:----------------------------------------------------------------------|
+| `/`                | GET     | Renders the anonymization form.                                       |
+| `/`                | POST    | Processes text based on selected algorithm.                           |
+| `/set_lang/<lang>` | GET     | Changes application language (`pl` or `en`).                          |
+| `/chat`            | GET     | Renders the interactive chat interface.                               |
+| `/chat/message`    | POST    | Sends a message, handles anonymization, and streams the LLM response. |
+| `/chat/finalize`   | POST    | Saves the final assistant response to the session history.            |
+| `/chat/import`     | POST    | Imports a JSON chat history into the current session.                 |
+| `/models`          | GET     | Proxy to LLM-Router to list available models.                         |
 
 ## Development
 
@@ -101,14 +102,17 @@ All endpoints are prefixed with `/anonymize`.
 ```
 web/
 └─ anonymizer/
+   ├─ translations/
+   │   ├─ pl.json              # Polish translations
+   │   └─ en.json              # English translations
    ├─ templates/
-   │   ├─ anonymize.html           # Main form page
-   │   ├─ chat.html                # Interactive chat interface
-   │   ├─ base.html                # Shared layout (Theme support)
-   │   └─ anonymize_result_partial.html 
-   ├─ __init__.py                  # Flask app factory
-   ├─ routes.py                    # Blueprint and logic
-   └─ constants.py                 # Default model names and config
+   │   ├─ anonymize.html
+   │   ├─ chat.html
+   │   ├─ base.html
+   │   └─ ...
+   ├─ __init__.py
+   ├─ routes.py
+   └─ constants.py
 ```
 
 ### Adding new features

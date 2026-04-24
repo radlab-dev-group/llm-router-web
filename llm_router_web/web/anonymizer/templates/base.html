@@ -1,22 +1,17 @@
 <!DOCTYPE html>
-<html lang="pl"
+<html lang="{{ session.get('lang', 'pl') }}"
       x-data="{ theme: localStorage.getItem('theme') || 'dark' }"
       x-effect="localStorage.setItem('theme', theme)"
       :class="{ 'theme-light': theme === 'light', 'theme-dark': theme === 'dark' }">
 <head>
     <meta charset="UTF-8"/>
-    <title>{{ title or "LLM‑Router Anonymizer" }}</title>
+    <title>{{ title or _('brand_name') }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-
-    <!-- Wspólne style -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-    <!-- HTMX + Alpine -->
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
-        /* ---- Theme Variables ---- */
         .theme-dark {
             --bg-main: #0f172a;
             --bg-glass: rgba(255, 255, 255, 0.04);
@@ -58,7 +53,6 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* ---- Common Components ---- */
         .btnx {
             appearance: none;
             border: 1px solid var(--border-glass);
@@ -76,9 +70,7 @@
             font-size: 0.85rem;
         }
 
-        /* Disabled state – gray out and prevent clicks */
-        .btnx:disabled,
-        .btnx[disabled] {
+        .btnx:disabled, .btnx[disabled] {
             opacity: 0.5;
             cursor: not-allowed;
         }
@@ -175,7 +167,6 @@
             cursor: help;
         }
 
-        /* Scrollbars */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -199,7 +190,6 @@
             scrollbar-color: var(--border-glass) transparent;
         }
 
-        /* ---- Header ---- */
         .app-header {
             position: sticky;
             top: 0;
@@ -259,7 +249,6 @@
             color: #0f172a;
         }
 
-        /* ---- Layout ---- */
         .app-container {
             flex: 1;
             display: flex;
@@ -311,7 +300,6 @@
             gap: 0.5rem;
         }
 
-        /* Dodajemy x-cloak, aby zapobiec miganiu modali przed inicjalizacją Alpine.js */
         [x-cloak] {
             display: none !important;
         }
@@ -322,16 +310,15 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 23, 42, 0.7); /* Głęboki ciemny kolor dla lepszego kontrastu */
+            background: rgba(15, 23, 42, 0.7);
             backdrop-filter: blur(12px);
-            display: flex; /* Zmieniamy na flex jako domyślny dla centrowania */
+            display: flex;
             justify-content: center;
             align-items: center;
             z-index: 2000;
             animation: fadeIn 0.3s ease;
         }
 
-        /* Specjalny styl dla modala powitalnego */
         .welcome-modal {
             background: linear-gradient(135deg, var(--bg-glass), var(--bg-input));
             border: 1px solid var(--border-glass);
@@ -360,30 +347,40 @@
 <header class="app-header">
     <a href="{{ url_for('anonymize_web.show_form') }}" class="brand">
         <span class="brand-icon">🛡️</span>
-        <span>LLM‑Router <span style="font-weight:300;opacity:0.8;">Anonymizer</span></span>
+        <span>{{ _('brand_name') }}</span>
     </a>
 
     <div class="nav-menu">
         <a href="{{ url_for('anonymize_web.show_form') }}"
-           class="nav-item {% if request.endpoint == 'anonymize_web.show_form' %}active{% endif %}">Anonymize</a>
+           class="nav-item {% if request.endpoint == 'anonymize_web.show_form' %}active{% endif %}">{{ _('nav_anonymize') }}</a>
         <a href="{{ url_for('anonymize_web.show_chat') }}"
-           class="nav-item {% if request.endpoint == 'anonymize_web.show_chat' %}active{% endif %}">Chat</a>
+           class="nav-item {% if request.endpoint == 'anonymize_web.show_chat' %}active{% endif %}">{{ _('nav_chat') }}</a>
         <a href="{{ url_for('anonymize_web.show_privacy') }}"
-           class="nav-item {% if request.endpoint == 'anonymize_web.show_privacy' %}active{% endif %}">Prywatność</a>
+           class="nav-item {% if request.endpoint == 'anonymize_web.show_privacy' %}active{% endif %}">{{ _('nav_privacy') }}</a>
         <a href="{{ url_for('anonymize_web.show_terms') }}"
-           class="nav-item {% if request.endpoint == 'anonymize_web.show_terms' %}active{% endif %}">Regulamin</a>
+           class="nav-item {% if request.endpoint == 'anonymize_web.show_terms' %}active{% endif %}">{{ _('nav_terms') }}</a>
+
+        <div style="width: 1px; height: 20px; background: var(--border-glass); margin: 0 4px;"></div>
+
+        <div class="nav-menu" style="background: transparent; border: none; padding: 0; gap: 0.2rem;">
+            <a href="{{ url_for('anonymize_web.set_lang', lang='pl') }}"
+               class="nav-item {% if session.get('lang') == 'pl' %}active{% endif %}"
+               style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">{{ _('lang_pl') }}</a>
+            <a href="{{ url_for('anonymize_web.set_lang', lang='en') }}"
+               class="nav-item {% if session.get('lang') == 'en' %}active{% endif %}"
+               style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">{{ _('lang_en') }}</a>
+        </div>
 
         <div style="width: 1px; height: 20px; background: var(--border-glass); margin: 0 4px;"></div>
 
         <button @click="theme = (theme === 'dark' ? 'light' : 'dark')" class="btnx"
                 style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
-            <span x-show="theme === 'dark'">☀️ Light</span>
-            <span x-show="theme === 'light'">🌙 Dark</span>
+            <span x-show="theme === 'dark'">{{ _('theme_light') }}</span>
+            <span x-show="theme === 'light'">{{ _('theme_dark') }}</span>
         </button>
     </div>
 </header>
 
-<!-- Terms Acceptance Overlay (Alpine.js version) -->
 {% if request.endpoint not in ['anonymize_web.show_terms', 'anonymize_web.show_privacy'] %}
     <div x-data="{ accepted: localStorage.getItem('terms_accepted') === 'true' }"
          x-show="!accepted"
@@ -394,20 +391,14 @@
 
         <div class="modal-content" style="max-width: 600px; text-align: center; animation: modalAppear 0.3s ease-out;">
             <div style="font-size: 3rem; margin-bottom: 1rem;">👋</div>
-            <h2 style="margin-bottom: 1rem; color: var(--accent);">Witaj w LLM-Router Anonymizer</h2>
+            <h2 style="margin-bottom: 1rem; color: var(--accent);">{{ _('welcome_title') }}</h2>
             <p style="margin-bottom: 2rem; line-height: 1.6; color: var(--text-main);">
-                Zanim zaczniesz korzystać z narzędzi, prosimy o zapoznanie się z naszym
-                <a href="{{ url_for('anonymize_web.show_terms') }}" target="_blank"
-                   style="color: var(--accent); font-weight: 600;">regulaminem</a>
-                oraz <a href="{{ url_for('anonymize_web.show_privacy') }}" target="_blank"
-                        style="color: var(--accent); font-weight: 600;">polityką prywatności</a>.
-                <br><br>
-                Używając aplikacji, akceptujesz zasady przetwarzania danych w celu ich anonimizacji.
+                {{ _('welcome_text') | safe }}
             </p>
             <button @click="accepted = true; localStorage.setItem('terms_accepted', 'true')"
                     class="btnx primary"
                     style="padding: 0.8rem 2rem; font-size: 1rem; cursor: pointer;">
-                Akceptuję i wchodzę 🚀
+                {{ _('welcome_button') }}
             </button>
         </div>
     </div>
@@ -420,7 +411,7 @@
 </div>
 
 <footer class="app-footer">
-    <div>&copy; 2026 LLM‑Router Anonymizer — Prywatność w komunikacji z AI</div>
+    <div>{{ _('footer_text') }}</div>
 </footer>
 
 </body>

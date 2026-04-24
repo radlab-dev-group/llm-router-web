@@ -5,7 +5,7 @@
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-        {#max-width: 1400px;#} margin: 0 auto;
+            margin: 0 auto;
         }
 
         .workspace-header {
@@ -114,42 +114,40 @@
 
             <header class="workspace-header">
                 <div class="workspace-title">
-                    <h2>🔒 Text Anonymization</h2>
-                    <div class="sub">Usuń dane wrażliwe przed wysłaniem tekstu do modelu AI.</div>
+                    <h2>{{ _('anon_title') }}</h2>
+                    <div class="sub">{{ _('anon_sub') }}</div>
                 </div>
 
                 <div class="workspace-controls">
                     <select name="algorithm" class="selectx">
-                        <option value="fast" selected>Fast Masking</option>
-                        <option value="pii_masking">PII Masking</option>
-                        <option value="fast+pii">Fast Masker + PII</option>
+                        <option value="fast" selected>{{ _('algo_fast') }}</option>
+                        <option value="pii_masking">{{ _('algo_pii') }}</option>
+                        <option value="fast+pii">{{ _('algo_hybrid') }}</option>
                     </select>
                     <span id="loading-spinner" class="spinnerx"></span>
-                    <button type="button" class="btnx" onclick="clearText()">🗑️ Clear</button>
-                    <button type="submit" class="btnx primary">🚀 Anonymize</button>
+                    <button type="button" class="btnx" onclick="clearText()">{{ _('btn_clear') }}</button>
+                    <button type="submit" class="btnx primary">{{ _('btn_anonymize') }}</button>
                 </div>
             </header>
 
             <div class="editor-grid">
                 <div class="editor-pane">
-                    <div class="pane-label">Original Text</div>
+                    <div class="pane-label">{{ _('label_original') }}</div>
                     <textarea name="text" id="input-text"
-                              placeholder="Wklej tekst tutaj..." required
+                              placeholder="{{ _('placeholder_input') }}" required
                               class="inputx" style="height: 100%; resize: none;"></textarea>
                 </div>
 
                 <div class="editor-pane">
                     <div class="pane-label">
-                        Anonymized Result
+                        {{ _('label_result') }}
                         <div style="display:inline-flex; gap:0.4rem; align-items:center; margin-left:0.4rem;">
                             <button type="button" class="btnx"
                                     style="font-size:0.7rem; padding:0.2rem 0.6rem;"
-                                    onclick="copyResult(this)">Copy Text
-                            </button>
+                                    onclick="copyResult(this)">{{ _('btn_copy_text') }}</button>
                             <button type="button" class="btnx"
                                     style="font-size:0.7rem; padding:0.2rem 0.6rem;"
-                                    onclick="copyMappings(this)">Copy Mappings
-                            </button>
+                                    onclick="copyMappings(this)">{{ _('btn_copy_mappings') }}</button>
                         </div>
                     </div>
 
@@ -159,8 +157,8 @@
                                  class="result-area"
                                  data-mappings='{{ result.mappings | tojson | safe }}'>{{ result.text | e }}</div>
                         {% else %}
-                            <div id="result-content" class="result-area"><span style="opacity:0.5; font-style:italic;">Wynik pojawi się tutaj po przetworzeniu...</span>
-                            </div>
+                            <div id="result-content" class="result-area"><span
+                                    style="opacity:0.5; font-style:italic;">{{ _('result_placeholder') }}</span></div>
                         {% endif %}
                     </div>
                 </div>
@@ -179,20 +177,15 @@
                 try {
                     mappings = JSON.parse(raw);
                 } catch (e) {
-                    console.warn('Failed to parse mappings JSON', e);
+                    console.warn('Failed to parse mappings', e);
                 }
             }
 
             const originalText = container.textContent.trimStart();
-            container.innerHTML = originalText.replace(
-                /(\{[A-Z]{2,}[^}]*\})/g,
-                function (match) {
-                    const value = mappings[match] || match;
-                    const escapedTag = match.replace(/"/g, '&quot;');
-                    const escapedTitle = value.replace(/"/g, '&quot;');
-                    return `<span class="anon-tag" title="${escapedTitle}">${escapedTag}</span>`;
-                }
-            );
+            container.innerHTML = originalText.replace(/(\{[A-Z]{2,}[^}]*\})/g, function (match) {
+                const value = mappings[match] || match;
+                return `<span class="anon-tag" title="${value.replace(/"/g, '&quot;')}">${match.replace(/"/g, '&quot;')}</span>`;
+            });
         }
 
         async function copyResult(btn) {
@@ -236,8 +229,7 @@
                     throw new Error('execCommand copy returned false');
                 }
             } catch (e) {
-                console.error('All copy methods failed', e);
-                // Optional: you could still show a temporary error indicator here
+                console.error(e);
             }
         }
 
@@ -253,9 +245,7 @@
 
             let mappingsText = '';
             try {
-                const obj = JSON.parse(raw);
-                // pretty‑print JSON for easier reading when pasted
-                mappingsText = JSON.stringify(obj, null, 2);
+                mappingsText = JSON.stringify(JSON.parse(raw), null, 2);
             } catch (e) {
                 console.error('Failed to parse mappings JSON', e);
                 // fallback: copy raw string
@@ -303,8 +293,7 @@
 
         function clearText() {
             document.getElementById('input-text').value = '';
-            document.getElementById('result-content').innerHTML =
-                '<span style="opacity:0.5; font-style:italic;">Wynik pojawi się tutaj po przetworzeniu...</span>';
+            document.getElementById('result-content').innerHTML = `<span style="opacity:0.5; font-style:italic;">{{ _('result_placeholder') }}</span>`;
         }
 
         function syncScroll(source) {
@@ -318,15 +307,7 @@
                 return;
             }
             const scrollPercentage = source.scrollTop / sourceMaxScroll;
-            const targetMaxScroll = target.scrollHeight - target.clientHeight;
-            const newScrollTop = scrollPercentage * targetMaxScroll;
-
-            if (Math.abs(target.scrollTop - newScrollTop) > 1) {
-                target.scrollTop = newScrollTop;
-            }
-            if (target.scrollLeft !== source.scrollLeft) {
-                target.scrollLeft = source.scrollLeft;
-            }
+            target.scrollTop = scrollPercentage * (target.scrollHeight - target.clientHeight);
         }
 
         const inputEl = document.getElementById('input-text');
@@ -339,11 +320,7 @@
             if (e.detail?.target?.id === 'result-wrapper') {
                 highlightTags();
                 const newResultEl = document.getElementById('result-content');
-                if (newResultEl) {
-                    newResultEl.addEventListener('scroll', e => syncScroll(e.target));
-                    newResultEl.scrollTop = 0;
-                    newResultEl.scrollLeft = 0;
-                }
+                if (newResultEl) newResultEl.addEventListener('scroll', e => syncScroll(e.target));
             }
         });
 
