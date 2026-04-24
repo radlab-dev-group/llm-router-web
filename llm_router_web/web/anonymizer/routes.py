@@ -100,6 +100,10 @@ def process_text():
     if algorithm == "pii_masking":
         result = call_pii_service(raw_text, model_name)
 
+        print(result)
+        print(result)
+        print(result)
+
     elif algorithm == "fast+pii":
         # 1. Run PII first
         pii_result = call_pii_service(raw_text, model_name)

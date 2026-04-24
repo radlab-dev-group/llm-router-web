@@ -5,6 +5,7 @@
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
+        {#max-width: 1400px;#} margin: 0 auto;
         }
 
         .workspace-header {
@@ -12,6 +13,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 1rem;
+            padding: 0 0.5rem;
         }
 
         .workspace-title h2 {
@@ -58,8 +60,10 @@
             height: 100%;
             min-height: 0;
             border: 1px solid var(--border-glass);
-            border-radius: 16px;
+            border-radius: 24px;
             background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px var(--shadow-glass);
         }
 
         .pane-label {
@@ -73,14 +77,13 @@
             color: var(--text-muted);
         }
 
-        .inputx,
         .result-area {
             width: 100%;
             height: 100%;
             min-height: 0;
             border-radius: 12px;
             border: 1px solid var(--border-glass);
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--bg-input);
             padding: 1rem;
             color: inherit;
             outline: none;
@@ -90,16 +93,7 @@
             box-sizing: border-box;
             overflow-y: auto !important;
             overflow-x: hidden;
-            resize: none;
-            display: block;
-            text-align: left;
-            vertical-align: top;
-        }
-
-        .result-area {
             white-space: pre-wrap;
-            background: rgba(0, 0, 0, 0.15);
-            display: block;
             word-break: break-word;
         }
 
@@ -107,93 +101,6 @@
             height: 100%;
             min-height: 0;
             overflow: hidden;
-        }
-
-        .inputx:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.1);
-        }
-
-        .selectx {
-            border-radius: 12px;
-            border: 1px solid var(--border-glass);
-            background: #1e293b;
-            padding: 0.6rem;
-            color: #f8fafc;
-            outline: none;
-            font-family: inherit;
-            font-size: 0.85rem;
-            transition: border-color 0.2s;
-            box-sizing: border-box;
-            cursor: pointer;
-        }
-
-        .selectx option {
-            background: #1e293b;
-            color: #f8fafc;
-        }
-
-        .btnx {
-            appearance: none;
-            border: 1px solid var(--border-glass);
-            background: rgba(255, 255, 255, 0.05);
-            color: inherit;
-            border-radius: 10px;
-            padding: 0.6rem 1.2rem;
-            cursor: pointer;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btnx:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .btnx.primary {
-            background: var(--accent);
-            color: #0f172a;
-            border-color: var(--accent);
-        }
-
-        .btnx.primary:hover {
-            background: var(--accent-hover);
-        }
-
-        .anon-tag {
-            display: inline-block;
-            padding: 0 0.4rem;
-            border-radius: 4px;
-            background: rgba(255, 220, 120, 0.15);
-            color: #ffe0a3;
-            border: 1px solid rgba(255, 220, 120, 0.3);
-            font-family: monospace;
-            font-weight: 700;
-            font-size: 0.9em;
-            cursor: help;
-        }
-
-        .spinnerx {
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            display: none;
-        }
-
-        .spinnerx.active {
-            display: inline-block;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
         }
     </style>
 
@@ -229,7 +136,7 @@
                     <div class="pane-label">Original Text</div>
                     <textarea name="text" id="input-text"
                               placeholder="Wklej tekst tutaj..." required
-                              class="inputx"></textarea>
+                              class="inputx" style="height: 100%; resize: none;"></textarea>
                 </div>
 
                 <div class="editor-pane">
@@ -241,7 +148,6 @@
                         </button>
                     </div>
 
-                    <!-- Result container that will be replaced by the htmx response -->
                     <div id="result-wrapper">
                         {% if result %}
                             <div id="result-content"
@@ -258,12 +164,10 @@
     </div>
 
     <script>
-        // Highlight tags and add tooltip with the original value
         function highlightTags() {
             const container = document.getElementById('result-content');
             if (!container) return;
 
-            // Parse mappings from the data‑attribute (if present)
             let mappings = {};
             const raw = container.getAttribute('data-mappings');
             if (raw) {
@@ -274,13 +178,11 @@
                 }
             }
 
-            // Replace each {TAG} with a span that shows the tag and a tooltip (title) with the real value
-            // We use textContent and then set innerHTML to avoid issues with double escaping
             const originalText = container.textContent.trimStart();
             container.innerHTML = originalText.replace(
                 /(\{[A-Z]{2,}[^}]*\})/g,
                 function (match) {
-                    const value = mappings[match] || match; // fallback to the tag itself
+                    const value = mappings[match] || match;
                     const escapedTag = match.replace(/"/g, '&quot;');
                     const escapedTitle = value.replace(/"/g, '&quot;');
                     return `<span class="anon-tag" title="${escapedTitle}">${escapedTag}</span>`;
@@ -305,26 +207,18 @@
             const target = document.getElementById(targetId);
             if (!target) return;
 
-            // If target is result-content, we might be inside result-wrapper
-            // but result-content itself should be the scrollable element.
-
-            // Calculate the scroll percentage of the source
             const sourceMaxScroll = source.scrollHeight - source.clientHeight;
             if (sourceMaxScroll <= 0) {
                 target.scrollTop = 0;
                 return;
             }
             const scrollPercentage = source.scrollTop / sourceMaxScroll;
-
-            // Apply the same percentage to the target
             const targetMaxScroll = target.scrollHeight - target.clientHeight;
             const newScrollTop = scrollPercentage * targetMaxScroll;
 
             if (Math.abs(target.scrollTop - newScrollTop) > 1) {
                 target.scrollTop = newScrollTop;
             }
-
-            // Sync horizontal scroll directly as it's less likely to differ significantly
             if (target.scrollLeft !== source.scrollLeft) {
                 target.scrollLeft = source.scrollLeft;
             }
@@ -333,15 +227,12 @@
         const inputEl = document.getElementById('input-text');
         const resultEl = document.getElementById('result-content');
 
-        inputEl.addEventListener('scroll', e => syncScroll(e.target));
-        resultEl.addEventListener('scroll', e => syncScroll(e.target));
+        if (inputEl) inputEl.addEventListener('scroll', e => syncScroll(e.target));
+        if (resultEl) resultEl.addEventListener('scroll', e => syncScroll(e.target));
 
-        // After htmx swaps the result area, re‑apply highlighting
         document.body.addEventListener('htmx:afterSwap', e => {
             if (e.detail?.target?.id === 'result-wrapper') {
                 highlightTags();
-
-                // Re-add event listener to the new result-content if it was replaced
                 const newResultEl = document.getElementById('result-content');
                 if (newResultEl) {
                     newResultEl.addEventListener('scroll', e => syncScroll(e.target));
@@ -351,7 +242,6 @@
             }
         });
 
-        // Initial highlight when the page loads with a result (e.g. after refresh)
         document.addEventListener('DOMContentLoaded', highlightTags);
     </script>
 {% endblock %}
