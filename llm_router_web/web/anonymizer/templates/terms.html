@@ -47,58 +47,34 @@
     <div class="terms-container">
         <div class="card terms-card">
             <div class="terms-section" style="text-align: center; margin-bottom: 3rem;">
-                <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">📜 Regulamin Serwisu</h2>
-                <p class="sub">Zasady korzystania z narzędzia LLM-Router Anonymizer</p>
+                <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ _('terms_page_title') }}</h2>
+                <p class="sub">{{ _('terms_page_sub') }}</p>
             </div>
 
             <div class="terms-section">
-                <h3>1. Postanowienia Ogólne</h3>
-                <p>
-                    Narzędzie <strong>LLM-Router Anonymizer</strong> jest aplikacją webową służącą do maskowania danych
-                    wrażliwych
-                    w tekście przed przesłaniem go do modeli językowych (LLM). Korzystanie z aplikacji jest bezpłatne i
-                    dobrowolne.
-                </p>
+                <h3>{{ _('terms_sec1_title') }}</h3>
+                <p>{{ _('terms_sec1_text') }}</p>
             </div>
 
             <div class="terms-section">
-                <h3>2. Odpowiedzialność za dane</h3>
-                <p>
-                    Użytkownik jest w pełni odpowiedzialny za treść przesyłanych danych. Aplikacja dąży do maksymalnego
-                    zabezpieczenia
-                    prywatności poprzez anonimizację, jednakże:
-                </p>
+                <h3>{{ _('terms_sec2_title') }}</h3>
+                <p>{{ _('terms_sec2_text') }}</p>
                 <ul class="terms-list">
-                    <li>Algorytmy maskowania mogą nie wykryć 100% danych wrażliwych.</li>
-                    <li>Wyłączenie anonimizacji (opcja "No anonymization") powoduje wysłanie danych w formie jawnej.
-                    </li>
-                    <li>Użytkownik przyjmuje do wiadomości, że dane mogą być przetwarzane przez zewnętrznych dostawców
-                        modeli AI.
-                    </li>
+                        <li>{{ _('terms_sec2_li1') }}</li>
+                        <li>{{ _('terms_sec2_li2') }}</li>
+                        <li>{{ _('terms_sec2_li3') }}</li>
                 </ul>
-                <div class="warning-box">
-                    <strong>UWAGA:</strong> Aplikacja nie gwarantuje pełnej zgodności z RODO w przypadku błędnej
-                    konfiguracji
-                    lub świadomego wyłączenia maskowania przez użytkownika.
-                </div>
+                <div class="warning-box">{{ _('terms_sec2_warning') }}</div>
             </div>
 
             <div class="terms-section">
-                <h3>3. Sposób działania i przechowywanie</h3>
-                <p>
-                    Aplikacja działa w modelu "stateless" w zakresie treści: teksty nie są zapisywane w bazie danych na
-                    serwerze.
-                    Historia czatów jest przechowywana lokalnie w przeglądarce użytkownika (LocalStorage) lub w
-                    tymczasowej sesji.
-                </p>
+                <h3>{{ _('terms_sec3_title') }}</h3>
+                <p>{{ _('terms_sec3_text') }}</p>
             </div>
 
             <div class="terms-section">
-                <h3>4. Akceptacja</h3>
-                <p>
-                    Korzystanie z serwisu jest równoznaczne z akceptacją niniejszego regulaminu oraz polityki
-                    prywatności.
-                </p>
+                <h3>{{ _('terms_sec4_title') }}</h3>
+                <p>{{ _('terms_sec4_text') }}</p>
             </div>
         </div>
     </div>

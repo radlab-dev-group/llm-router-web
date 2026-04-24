@@ -1,5 +1,6 @@
 import os
-from flask import Flask, redirect, url_for
+import json
+from flask import Flask, redirect, url_for, session
 
 # Blueprint is located in the same package
 from .routes import anonymize_bp
@@ -21,6 +22,35 @@ def create_anonymize_app() -> Flask:
             os.path.join(os.path.dirname(__file__), "templates")
         ),
     )
+
+    # ---- Internationalization (i18n) Setup ----
+    translations = {}
+    trans_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "translations")
+    )
+    for lang in ["pl", "en"]:
+        path = os.path.join(trans_dir, f"{lang}.json")
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                translations[lang] = json.load(f)
+        except Exception as e:
+            print(f"Error loading translation {lang}: {e}")
+            translations[lang] = {}
+
+    app.config["TRANSLATIONS"] = translations
+
+    def get_text(key, **kwargs):
+        """Helper function to retrieve translated text."""
+        lang = session.get("lang", "pl")
+        # Fallback to English if language not found, then to "NO TRANSLATION"
+        texts = app.config["TRANSLATIONS"].get(
+            lang, app.config["TRANSLATIONS"].get("en", {})
+        )
+        text = texts.get(key, "NO TRANSLATION")
+        return text.format(**kwargs) if kwargs else text
+
+    # Register the helper function as a global in Jinja2 templates
+    app.jinja_env.globals.update(_=get_text)
 
     # ---- Configuration (environment variables) ----
     app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "change-me-anonymizer")

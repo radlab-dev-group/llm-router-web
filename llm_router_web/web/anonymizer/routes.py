@@ -20,7 +20,6 @@ Endpoints provided:
 import json
 import socket
 from typing import Tuple, Dict
-
 import requests
 
 from flask import (
@@ -32,16 +31,25 @@ from flask import (
     Response,
     stream_with_context,
     session,
+    redirect,
+    url_for,
 )
 
 from .constants import GENAI_MODEL_ANON, DEFAULT_PII_MODEL_NAME
+
+def _t(key):
+    """Helper function to translate strings within routes.py"""
+    lang = session.get("lang", "pl")
+    translations = current_app.config.get("TRANSLATIONS", {})
+    texts = translations.get(lang, translations.get("en", {}))
+    return texts.get(key, f"NO TRANSLATION: {key}")
 
 # Blueprint configuration
 anonymize_bp = Blueprint(
     "anonymize_web",
     __name__,
-    url_prefix="/anonymize",  # http://HOST:PORT/anonymize
-    template_folder="../templates",  # templates in web/anonymize/templates
+    url_prefix="/anonymize",
+    template_folder="../templates",
 )
 
 
@@ -75,6 +83,17 @@ def show_terms():
     Render the terms of service page.
     """
     return render_template("terms.html")
+
+
+@anonymize_bp.route("/set_lang/<lang>", methods=["GET"])
+def set_lang(lang):
+    """
+    Change the application language and redirect back to the previous page.
+    """
+    if lang not in ["pl", "en"]:
+        lang = "pl"
+    session["lang"] = lang
+    return redirect(request.referrer or url_for("anonymize_web.show_form"))
 
 
 @anonymize_bp.route("/", methods=["POST"])
@@ -126,8 +145,7 @@ def process_text():
                 timeout=60,
             )
             resp.raise_for_status()
-            data = resp.json()
-            return data
+            return resp.json()
         except Exception as e:
             return f"❌ PII Service Error: {e}"
 
@@ -151,8 +169,7 @@ def process_text():
                 timeout=600,
             )
             resp.raise_for_status()
-            data = resp.json()
-            return data
+            return resp.json()
         except Exception as e:
             return f"❌ Router Service Error: {e}"
 
@@ -160,25 +177,18 @@ def process_text():
     if algorithm == "pii_masking":
         result = call_pii_service(raw_text, model_name)
 
-        print(result)
-        print(result)
-        print(result)
-
     elif algorithm == "fast+pii":
-        # 1. Run PII first
         pii_result = call_pii_service(raw_text, model_name)
-        if pii_result is str:
+        if isinstance(pii_result, str):
             pii_result = {}
 
-        # 2. Run Fast Masker on the result of PII
         result_ft = call_router_service(
             pii_result.get("text", raw_text), model_name, "/api/fast_text_mask"
         )
 
         result = result_ft
         for _k, _v in pii_result.get("mappings", {}).items():
-            result["mappings"][_k] = _v
-
+            result.setdefault("mappings", {})[_k] = _v
     elif algorithm == "fast":
         result = call_router_service(raw_text, model_name, "/api/fast_text_mask")
 
@@ -192,12 +202,6 @@ def process_text():
             raw_text, model_name, "/api/anonymize_text_genai"
         )
 
-    elif algorithm == "priv":
-        return render_template(
-            "anonymize_result_partial.html",
-            result={"error": "priv_masker is not available yet"},
-        )
-
     else:
         return render_template(
             "anonymize_result_partial.html",
@@ -205,13 +209,12 @@ def process_text():
         )
 
     _p_map = {}
-    for _k, _v in result.get("mappings", {}).items():
-        if not _k.startswith("{"):
-            _k = "{" + _k + "}"
-        _p_map[_k] = _v
-    result["mappings"] = _p_map
+    if isinstance(result, dict):
+        for _k, _v in result.get("mappings", {}).items():
+            key = _k if _k.startswith("{") else "{" + _k + "}"
+            _p_map[key] = _v
+        result["mappings"] = _p_map
 
-    # print(json.dumps(result, indent=2, ensure_ascii=False))
     return render_template(
         "anonymize_result_partial.html",
         api_host=current_app.config["LLM_ROUTER_HOST"],
@@ -219,9 +222,6 @@ def process_text():
     )
 
 
-# ----------------------------------------------------------------------
-# Chat UI
-# ----------------------------------------------------------------------
 @anonymize_bp.route("/chat", methods=["GET"])
 def show_chat():
     """
@@ -231,8 +231,7 @@ def show_chat():
         The rendered 'chat.html' template.
     """
     return render_template(
-        "chat.html",
-        api_host=current_app.config["LLM_ROUTER_HOST"],
+        "chat.html", api_host=current_app.config["LLM_ROUTER_HOST"]
     )
 
 
@@ -289,37 +288,22 @@ def chat_message():
     }
 
     external_url = (
-        f"{current_app.config['LLM_ROUTER_HOST'].rstrip('/')}" "/v1/chat/completions"
+        f"{current_app.config['LLM_ROUTER_HOST'].rstrip('/')}/v1/chat/completions"
     )
 
     try:
-        # Use stream=True so that we can forward the chunks to the client
-        resp = requests.post(
-            external_url,
-            json=payload,
-            timeout=600,
-            stream=True,
-        )
-        if resp.status_code >= 500:
-            error_msg = (
-                resp.json()
-                .get("error", {})
-                .get("message", f"LLM-Router returned {resp.status_code}")
-            )
-            return (
-                Response(
-                    render_template("chat_partial.html", chat=error_msg),
-                    mimetype="text/html",
-                ),
-                502,
-            )
+        resp = requests.post(external_url, json=payload, timeout=600, stream=True)
         resp.raise_for_status()
-    except (requests.RequestException, socket.error) as exc:
-        current_app.logger.exception("Chat service request failed")
-        error_html = render_template(
-            "chat_partial.html", chat=f"❌ Chat service error: {exc}"
+    except Exception as exc:
+        return (
+            Response(
+                render_template(
+                    "chat_partial.html", chat=f"❌ Chat service error: {exc}"
+                ),
+                mimetype="text/html",
+            ),
+            502,
         )
-        return Response(error_html, mimetype="text/html"), 502
 
     def generate():
         """
@@ -331,23 +315,17 @@ def chat_message():
         for line in resp.iter_lines(decode_unicode=True):
             if not line:
                 continue
-
             cleaned = line.strip()
             if cleaned.startswith("data:"):
                 cleaned = cleaned[5:].lstrip()
-
-            if cleaned == "[DONE]":
+            if cleaned == "[DONE]" or not cleaned:
                 continue
-
-            if not cleaned:
-                continue
-
             try:
                 data = json.loads(cleaned)
                 chunk = (
                     data.get("choices", [{}])[0].get("delta", {}).get("content", "")
                 )
-            except Exception:
+            except:
                 chunk = cleaned
 
             if chunk:
@@ -370,7 +348,7 @@ def chat_finalize():
     """
     try:
         payload = request.get_json(force=True) or {}
-    except Exception:
+    except:
         payload = {}
 
     assistant_msg = (payload.get("assistant") or "").strip()
@@ -401,16 +379,6 @@ def import_chat():
         history = data.get("history")
         if not isinstance(history, list):
             return jsonify({"ok": False, "error": "History must be a list"}), 400
-
-        # Basic validation of message structure
-        for msg in history:
-            if (
-                not isinstance(msg, dict)
-                or "role" not in msg
-                or "content" not in msg
-            ):
-                return jsonify({"ok": False, "error": "Invalid message format"}), 400
-
         session["chat_history"] = history
         session.modified = True
         return jsonify({"ok": True})
@@ -418,33 +386,35 @@ def import_chat():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
-# ----------------------------------------------------------------------
-# Model catalogue – proxy to the router’s `/models` endpoint
-# ----------------------------------------------------------------------
 @anonymize_bp.route("/models", methods=["GET"])
 def models():
     """
-    Retrieve the list of available models from the external LLM-Router.
+    Retrieve the list of models from the configured external LLM router.
 
-    The frontend calls this endpoint (e.g. via `fetch`) to dynamically
-    populate the model selection dropdown menus.
+    The handler builds the target URL from the Flask application config
+    ``LLM_ROUTER_HOST`` and performs a GET request with a 10‑second timeout.
+    If the request succeeds and returns JSON, the function extracts the
+    ``models`` list (or falls back to ``data``) and returns it in a JSON
+    response with HTTP status 200.  If any exception occurs during the
+    request or processing, the endpoint returns an empty ``models`` list
+    with HTTP status 500.
 
-    Returns:
-        A JSON response containing the list of available model names.
+    Returns
+        Flask response
+            JSON object ``{"models": [...]}`` where the value is a list of
+            model identifiers.  Status code 200 on success, 500 on failure.
+
+    Raises
+        Exception
+            Any exception raised while contacting the external service or
+            parsing its response results in a 500 response.
     """
-    external_url = f"{current_app.config['LLM_ROUTER_HOST'].rstrip('/')}" "/models"
+    external_url = f"{current_app.config['LLM_ROUTER_HOST'].rstrip('/')}/models"
     try:
         resp = requests.get(external_url, timeout=10)
         resp.raise_for_status()
-    except requests.RequestException as exc:
-        current_app.logger.error(f"Failed to fetch models: {exc}")
-        return jsonify({"models": []}), 500
-
-    try:
         data = resp.json()
-    except ValueError:
-        current_app.logger.error("Models endpoint returned non-JSON.")
+        models = data.get("models") or data.get("data") or []
+        return jsonify({"models": models})
+    except Exception:
         return jsonify({"models": []}), 500
-
-    models = data.get("models") or data.get("data") or []
-    return jsonify({"models": models})

@@ -19,7 +19,6 @@
             padding: 0 1rem;
         }
 
-        /* --- Sidebar --- */
         .history-sidebar {
             width: var(--sidebar-width);
             background: var(--glass-bg);
@@ -69,10 +68,6 @@
             outline: none;
             width: 100%;
             transition: border-color 0.2s;
-        }
-
-        .theme-dark .history-search {
-            background: rgba(0, 0, 0, 0.3);
         }
 
         .history-search:focus {
@@ -186,7 +181,6 @@
             filter: brightness(1.1);
         }
 
-        /* --- Workspace --- */
         .chat-workspace {
             flex: 1;
             display: flex;
@@ -339,7 +333,6 @@
             backdrop-filter: blur(8px);
         }
 
-        /* --- Composer --- */
         .composer-wrapper {
             position: relative;
             width: 100%;
@@ -407,7 +400,6 @@
             gap: 0.5rem;
         }
 
-        /* --- Modal --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -455,26 +447,6 @@
             gap: 0.75rem;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes modalAppear {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
         .prompt-chip {
             font-size: 0.8rem;
             padding: 10px 14px;
@@ -513,9 +485,25 @@
 
         .controls-left {
             display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            align-items: flex-start;
+        }
+
+        .footer-row {
+            display: flex;
             gap: 0.5rem;
-            flex-wrap: wrap;
             align-items: center;
+        }
+
+        #algorithm-select {
+            flex: 0 0 auto;
+            width: auto;
+        }
+
+        #model-select {
+            flex: 1;
+            min-width: 0;
         }
 
         .chat-empty {
@@ -560,7 +548,7 @@
         <aside class="history-sidebar hidden" id="history-sidebar">
             <div class="history-header">
                 <div class="history-top-row">
-                    <span>Historia</span>
+                    <span>{{ _('history_title') }}</span>
                     <button type="button" class="btn-icon-small" onclick="toggleHistory()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -569,7 +557,8 @@
                         </svg>
                     </button>
                 </div>
-                <input type="text" class="history-search" id="history-search" placeholder="Szukaj rozmowy...">
+                <input type="text" class="history-search" id="history-search"
+                       placeholder="{{ _('history_search_placeholder') }}">
             </div>
 
             <button type="button" class="btn-new-chat-sidebar" id="btn-sidebar-new-chat">
@@ -578,7 +567,7 @@
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                Nowy Czat
+                {{ _('btn_new_chat') }}
             </button>
 
             <div class="history-list" id="history-list"></div>
@@ -595,10 +584,10 @@
                                 <circle cx="12" cy="12" r="9"></circle>
                             </svg>
                         </button>
-                        <h2 id="current-chat-title">LLM‑Router Chat</h2>
+                        <h2 id="current-chat-title">{{ _('chat_title') }}</h2>
                     </div>
                     <div class="sub" id="session-status">
-                        Bezpieczna sesja <span class="pill" id="session-pill">fast_masker</span>
+                        {{ _('session_secure') }} <span class="pill" id="session-pill">fast_masker</span>
                     </div>
                 </div>
                 <div class="chat-toolbar-right">
@@ -609,7 +598,7 @@
                             <polyline points="7 10 12 15 17 10"></polyline>
                             <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
-                        Export
+                        {{ _('btn_export') }}
                     </button>
                     <button type="button" id="btn-import-chat" class="btnx">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -618,7 +607,7 @@
                             <polyline points="17 10 12 15 7 10"></polyline>
                             <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
-                        Import
+                        {{ _('btn_import') }}
                     </button>
                     <button type="button" id="btn-new-chat" class="btnx danger" title="Nowy czat (Ctrl+L)">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -626,7 +615,7 @@
                             <polyline points="3 6 12 18 21 6"></polyline>
                             <line x1="12" y1="6" x2="12" y2="18"></line>
                         </svg>
-                        New Chat
+                        {{ _('btn_new_chat') }}
                     </button>
                     <input type="file" id="chat-file-input" style="display:none" accept=".json">
                 </div>
@@ -634,11 +623,7 @@
 
             <div id="chat-output" class="chat-thread">
                 <div class="chat-empty" id="chat-empty">
-                    Zacznij konwersację:<br>
-                    <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> wysyła<br>
-                    <span class="kbd">Ctrl</span>+<span class="kbd">/</span> historia<br>
-                    <span class="kbd">Ctrl</span>+<span class="kbd">S</span> export<br>
-                    <span class="kbd">Ctrl</span>+<span class="kbd">L</span> nowy czat
+                    {{ _('chat_empty_text') | safe }}
                 </div>
             </div>
 
@@ -650,57 +635,69 @@
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
-                        Osobowość AI (System Prompt)
+                        {{ _('label_system_prompt') }}
                     </div>
                     <textarea id="system-prompt" name="system_prompt" class="inputx"
-                              placeholder="Np. Odpowiadaj zwięźle i technicznie..." rows="3"></textarea>
+                              placeholder="{{ _('placeholder_system_prompt') }}" rows="3"></textarea>
                 </div>
 
                 <form id="chat-form" action="{{ url_for('anonymize_web.chat_message') }}" method="post"
                       class="composer-container">
                     <input type="hidden" id="new-chat-flag" name="new_chat" value="true">
-                    <textarea id="chat-input" name="message" class="inputx" placeholder="Napisz wiadomość..." required
+                    <textarea id="chat-input" name="message" class="inputx"
+                              placeholder="{{ _('placeholder_chat_input') }}" required
                               rows="1"
                               style="border: none; background: transparent; resize: none; max-height: 40vh; overflow-y: auto;"></textarea>
-                    <div class="input-stats" id="input-stats">Znaków: 0 | Słów: 0</div>
+                    <div class="input-stats"
+                         id="input-stats">{{ _('stats_chars_words').format(chars=0, words=0) }}</div>
 
                     <div class="composer-footer">
                         <div class="controls-left">
-                            <button type="button" class="btnx" id="btn-toggle-sys-prompt" title="Ustawienia AI">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1 1.51z"></path>
-                                </svg>
-                                AI
-                            </button>
-                            <button type="button" class="btnx" id="btn-open-prompts" title="Szybkie prompty">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"></path>
-                                </svg>
-                                Prompty
-                            </button>
-                            <select id="algorithm-select" name="algorithm" class="selectx">
-                                <option value="fast" selected>Fast masking</option>
-                                <option value="no_anno">No anonymization</option>
-                            </select>
-                            <select id="model-select" name="model_name" class="selectx">
-                                <option value="" disabled selected>Loading models…</option>
-                            </select>
-                            <label class="local-history-toggle">
-                                <input type="checkbox" id="local-history-enabled" checked> Lokalna historia
-                            </label>
-                            <span class="spinnerx" id="loading-spinner"></span>
+                            <div class="footer-row">
+                                <button type="button" class="btnx" id="btn-toggle-sys-prompt" title="Ustawienia AI">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1 1.51z"></path>
+                                    </svg>
+                                    {{ _('btn_ai_settings') }}
+                                </button>
+                                <button type="button" class="btnx" id="btn-open-prompts" title="Szybkie prompty">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"></path>
+                                    </svg>
+                                    {{ _('btn_prompts') }}
+                                </button>
+                            </div>
+                            <div class="footer-row">
+                                <select id="algorithm-select" name="algorithm" class="selectx">
+                                    <option value="fast" selected>{{ _('algo_fast') }}</option>
+                                    <option value="no_anno">{{ _('algo_no_anno') }}</option>
+                                </select>
+                                <select id="model-select" name="model_name" class="selectx">
+                                    <option value="" disabled selected>Loading models…</option>
+                                </select>
+                            </div>
+                            <div class="footer-row">
+                                <label class="local-history-toggle">
+                                    <input type="checkbox" id="local-history-enabled"
+                                           checked> {{ _('label_local_history') }}
+                                </label>
+                            </div>
                         </div>
-                        <button type="submit" class="btnx primary" id="btn-send">
-                            Send
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="22" y1="2" x2="11" y2="13"></line>
-                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                            </svg>
-                        </button>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span class="spinnerx" id="loading-spinner"></span>
+                            <button type="submit" class="btnx primary" id="btn-send">
+                                {{ _('btn_send') }}
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -710,7 +707,7 @@
     <div class="modal-overlay" id="prompt-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <span>Szybkie Prompty</span>
+                <span>{{ _('prompt_modal_title') }}</span>
                 <button type="button" class="btn-icon-small" id="btn-close-prompts">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                          stroke-linecap="round" stroke-linejoin="round">
@@ -720,14 +717,10 @@
                 </button>
             </div>
             <div class="prompt-grid">
-                <div class="prompt-chip" data-text="Podsumuj powyższą rozmowę w 3 punktach:">📝 Podsumuj</div>
-                <div class="prompt-chip" data-text="Popraw błędy gramatyczne i stylistyczne w poniższym tekście:">✨
-                    Popraw tekst
-                </div>
-                <div class="prompt-chip" data-text="Wyjaśnij to tak, jakbym miał 5 lat:">👶 Wyjaśnij prosto</div>
-                <div class="prompt-chip" data-text="Przeanalizuj poniższy kod pod kątem wydajności i bezpieczeństwa:">💻
-                    Analiza kodu
-                </div>
+                <div class="prompt-chip" data-text="{{ _('prompt_summarize_text') }}">{{ _('prompt_summarize') }}</div>
+                <div class="prompt-chip" data-text="{{ _('prompt_fix_text') }}">{{ _('prompt_fix') }}</div>
+                <div class="prompt-chip" data-text="{{ _('prompt_explain_text') }}">{{ _('prompt_explain') }}</div>
+                <div class="prompt-chip" data-text="{{ _('prompt_code_text') }}">{{ _('prompt_code') }}</div>
             </div>
         </div>
     </div>
@@ -738,44 +731,26 @@
             <div class="modal-header" style="justify-content: center; color: #ef4444;">
                     <span style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                            <line x1="12" y1="9" x2="12" y2="13"></line>
-                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                        </svg>
-                        Ostrzeżenie o prywatności
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line
+                                x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01"
+                                                                            y2="17"></line></svg>
+                        {{ _('privacy_warning_title') }}
                     </span>
             </div>
             <div style="margin: 1.5rem 0; line-height: 1.6; color: var(--text-main);">
-                <p style="font-weight: 700; margin-bottom: 1rem; font-size: 1.1rem;">Właśnie wyłączyłeś maskowanie
-                    danych!</p>
-                <p>
-                    Wybierając opcję <strong style="color: var(--accent);">"No anonymization"</strong>, wszystkie Twoje
-                    wiadomości zostaną wysłane do modelu AI w formie jawnej.
-                    Oznacza to, że wszelkie dane wrażliwe, takie jak:
-                </p>
-                <ul style="text-align: left; display: inline-block; margin: 1rem 0; color: var(--text-main); opacity: 0.9;">
-                    <li style="margin-bottom: 0.3rem;">• Imiona i nazwiska,</li>
-                    <li style="margin-bottom: 0.3rem;">• Adresy e-mail i numery telefonów,</li>
-                    <li style="margin-bottom: 0.3rem;">• Nazwy firm i konkretne lokalizacje,</li>
-                    <li style="margin-bottom: 0.3rem;">• Wszelkie inne dane osobowe (PII).</li>
-                </ul>
-                <p style="margin-top: 1rem;">
-                    zostaną przesłane do dostawcy modelu i mogą zostać wykorzystane do trenowania
-                    przyszłych wersji AI.
-                    <br><strong style="display: block; margin-top: 0.5rem;">Czy na pewno chcesz kontynuować bez
-                    ochrony?</strong>
-                </p>
+                <p style="font-weight: 700; margin-bottom: 1rem; font-size: 1.1rem;">{{ _('privacy_warning_text') }}</p>
+                <p>{{ _('privacy_warning_desc') | safe }}</p>
             </div>
             <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
-                <button type="button" class="btnx" id="btn-cancel-no-anno" style="flex: 1;">Wróć do ochrony</button>
+                <button type="button" class="btnx" id="btn-cancel-no-anno"
+                        style="flex: 1;">{{ _('privacy_warning_cancel') }}</button>
                 <button type="button" class="btnx danger" id="btn-confirm-no-anno" style="flex: 1; font-weight: 700;">
-                    Tak, ryzykuję
+                    {{ _('privacy_warning_confirm') }}
                 </button>
             </div>
         </div>
     </div>
-
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
@@ -796,17 +771,14 @@
         const sysPromptInput = document.getElementById('system-prompt');
         const inputStats = document.getElementById('input-stats');
         const currentChatTitle = document.getElementById('current-chat-title');
-
         const promptModal = document.getElementById('prompt-modal');
         const btnOpenPrompts = document.getElementById('btn-open-prompts');
         const btnClosePrompts = document.getElementById('btn-close-prompts');
-
         const privacyWarningModal = document.getElementById('privacy-warning-modal');
         const btnConfirmNoAnno = document.getElementById('btn-confirm-no-anno');
         const btnCancelNoAnno = document.getElementById('btn-cancel-no-anno');
 
         let currentChatId = null;
-        let prevAlgoValue = null;
 
         function autoResize() {
             chatInput.style.height = 'auto';
@@ -817,7 +789,8 @@
 
         function formatDate(timestamp) {
             const date = new Date(timestamp);
-            return new Intl.DateTimeFormat('pl-PL', {
+            const lang = "{{ session.get('lang', 'pl') }}";
+            return new Intl.DateTimeFormat(lang === 'pl' ? 'pl-PL' : 'en-US', {
                 day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
             }).format(date);
         }
@@ -826,19 +799,16 @@
             const text = chatInput.value;
             const chars = text.length;
             const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-            inputStats.textContent = `Znaków: ${chars} | Słów: ${words}`;
+            inputStats.textContent = `{{ _('stats_chars_words') }}`.replace('{chars}', chars).replace('{words}', words);
         }
 
         function updateSessionStatus() {
             const statusEl = document.getElementById('session-status');
             if (algoSelect.value === 'no_anno') {
-                statusEl.innerHTML = `
-                        <span class="session-warning" style="display:flex; align-items:center; gap:0.6rem;">
-                           <span class="pill pill-danger">SESJA BEZ ANONIMIZACJI</span>
-                        </span>`;
+                statusEl.innerHTML = `<span class="session-warning" style="display:flex; align-items:center; gap:0.6rem;"><span class="pill pill-danger">{{ _('session_unsecure') }}</span></span>`;
             } else {
                 const algoText = algoSelect.options[algoSelect.selectedIndex].text;
-                statusEl.innerHTML = `Bezpieczna sesja <span class="pill pill-success">${algoText}</span>`;
+                statusEl.innerHTML = `{{ _('session_secure') }} <span class="pill pill-success">${algoText}</span>`;
             }
         }
 
@@ -874,12 +844,8 @@
                             <span class="history-item-date">${formatDate(chat.timestamp)}</span>
                         </div>
                         <div class="history-actions">
-                            <button type="button" class="btn-icon-small" data-id="${id}" title="Zmień nazwę">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            </button>
-                            <button type="button" class="btn-icon-small del" data-id="${id}" title="Usuń">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                            </button>
+                            <button type="button" class="btn-icon-small" data-id="${id}" title="Rename"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                            <button type="button" class="btn-icon-small del" data-id="${id}" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                         </div>`;
                 item.onclick = (e) => {
                     if (e.target.closest('.history-actions')) return;
@@ -904,14 +870,13 @@
             currentChatId = id;
             currentChatTitle.textContent = chat.name;
             try {
-                const resp = await fetch("{{ url_for('anonymize_web.import_chat') }}", {
+                await fetch("{{ url_for('anonymize_web.import_chat') }}", {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({history: chat.messages})
                 });
-                if (!resp.ok) throw new Error('Failed to sync');
             } catch (e) {
-                alert('Błąd synchronizacji: ' + e.message);
+                alert('{{ _("js_sync_error") }}' + e.message);
             }
             chatOutput.innerHTML = '';
             chat.messages.forEach(msg => addMessage(msg.role, msg.content));
@@ -923,7 +888,7 @@
         function renameChatById(id) {
             const chats = getLocalChats();
             const oldName = chats[id].name;
-            const newName = prompt('Nowa nazwa rozmowy:', oldName);
+            const newName = prompt('{{ _("js_rename_prompt") }}', oldName);
             if (newName && newName.trim()) {
                 chats[id].name = newName.trim();
                 saveLocalChats(chats);
@@ -933,7 +898,7 @@
         }
 
         function deleteChatById(id) {
-            if (!confirm('Usunąć tę rozmowę?')) return;
+            if (!confirm('{{ _("js_delete_confirm") }}')) return;
             const chats = getLocalChats();
             delete chats[id];
             saveLocalChats(chats);
@@ -953,7 +918,7 @@
             const chats = getLocalChats();
             if (!currentChatId) {
                 currentChatId = 'chat_' + Date.now();
-                const firstMsg = messages[0].content || 'Nowa rozmowa';
+                const firstMsg = messages[0].content || 'New chat';
                 const name = firstMsg.slice(0, 30) + (firstMsg.length > 30 ? '...' : '');
                 chats[currentChatId] = {name, timestamp: Date.now(), messages};
             } else {
@@ -994,10 +959,6 @@
 
         algoSelect.addEventListener('change', () => {
             if (algoSelect.value === 'no_anno') {
-                // Store current value to revert if canceled
-                prevAlgoValue = [...algoSelect.options].find(o => o.selected === false && o.value !== 'no_anno')?.value || 'fast';
-                // Correctly capture the value before the change was finalized by the user
-                // Actually, let's find the previous value from state or a variable
                 privacyWarningModal.classList.add('active');
             } else {
                 saveState();
@@ -1005,7 +966,6 @@
             }
         });
 
-        // Handle Privacy Modal Actions
         btnConfirmNoAnno.onclick = () => {
             privacyWarningModal.classList.remove('active');
             saveState();
@@ -1013,9 +973,7 @@
         };
 
         btnCancelNoAnno.onclick = () => {
-            // Revert to previous value
-            const previousValue = localStorage.getItem('chat_last_algo') || 'fast';
-            algoSelect.value = previousValue;
+            algoSelect.value = localStorage.getItem('chat_last_algo') || 'fast';
             privacyWarningModal.classList.remove('active');
             updateSessionStatus();
         };
@@ -1024,10 +982,8 @@
         historySearch.addEventListener('input', renderHistoryList);
 
         async function loadModels() {
-            const url = "{{ url_for('anonymize_web.models') }}";
-            const {mdl} = loadState();
             try {
-                const resp = await fetch(url);
+                const resp = await fetch("{{ url_for('anonymize_web.models') }}");
                 const data = await resp.json();
                 const models = data.models || [];
                 modelSelect.innerHTML = '';
@@ -1038,6 +994,7 @@
                     opt.textContent = name;
                     modelSelect.appendChild(opt);
                 });
+                const {mdl} = loadState();
                 if (mdl && [...modelSelect.options].some(o => o.value === mdl)) modelSelect.value = mdl;
                 else if (modelSelect.options.length) modelSelect.selectedIndex = 0;
             } catch (e) {
@@ -1050,12 +1007,8 @@
             updateSessionStatus();
             updateInputStats();
             autoResize();
-
-            // Load history visibility state
             const isVisible = localStorage.getItem('chat_history_visible') !== 'false';
-            if (!isVisible) historySidebar.classList.add('hidden');
-            else renderHistoryList();
-
+            if (!isVisible) historySidebar.classList.add('hidden'); else renderHistoryList();
             document.getElementById('btn-toggle-history').onclick = toggleHistory;
             document.getElementById('btn-sidebar-new-chat').onclick = () => btnNewChat.click();
             document.getElementById('btn-toggle-sys-prompt').onclick = () => sysPromptPanel.classList.toggle('active');
@@ -1116,7 +1069,7 @@
 
             const meta = document.createElement('div');
             meta.className = 'msg-meta';
-            meta.innerHTML = `<span style="font-weight:600">${role === 'user' ? 'You' : 'Assistant'}</span> <span>${new Date().toLocaleTimeString([], {
+            meta.innerHTML = `<span style="font-weight:600">${role === 'user' ? '{{ _('role_user') }}' : '{{ _('role_assistant') }}'}</span> <span>${new Date().toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit'
             })}</span>`;
@@ -1199,17 +1152,15 @@
                 current.remove();
                 current = next;
             }
-
-            const remainingMessages = Array.from(document.querySelectorAll('.msg'));
-            const messagesBeforeUser = remainingMessages.slice(0, -1);
-
+            const remaining = Array.from(document.querySelectorAll('.msg'));
+            const beforeUser = remaining.slice(0, -1);
             try {
                 await fetch("{{ url_for('anonymize_web.import_chat') }}", {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        history: messagesBeforeUser.map(msg => ({
-                            role: msg.dataset.role, content: msg.dataset.content
+                        history: beforeUser.map(msg => ({
+                            role: msg.dataset.role,
+                            content: msg.dataset.content
                         }))
                     })
                 });
@@ -1249,8 +1200,7 @@
                     }
                     assistantWrapNew.dataset.content = markdown;
                     await fetch("{{ url_for('anonymize_web.chat_finalize') }}", {
-                        method: 'POST',
-                        headers: {"Content-Type": "application/json"},
+                        method: 'POST', headers: {"Content-Type": "application/json"},
                         body: JSON.stringify({assistant: markdown})
                     });
                 }
@@ -1264,10 +1214,10 @@
         });
 
         btnNewChat.addEventListener('click', () => {
-            if (!confirm('Start a new conversation?')) return;
+            if (!confirm('{{ _("js_new_chat_confirm") }}')) return;
             newChatFlag.value = 'true';
             currentChatId = null;
-            currentChatTitle.textContent = 'LLM‑Router Chat';
+            currentChatTitle.textContent = '{{ _("chat_title") }}';
             chatOutput.innerHTML = '';
             chatOutput.appendChild(chatEmpty);
             chatEmpty.style.display = '';
@@ -1280,7 +1230,8 @@
 
         btnExport.addEventListener('click', () => {
             const messages = Array.from(document.querySelectorAll('.msg')).map(msg => ({
-                role: msg.dataset.role, content: msg.dataset.content || ''
+                role: msg.dataset.role,
+                content: msg.dataset.content || ''
             }));
             if (messages.length === 0) return alert('No messages!');
             const blob = new Blob([JSON.stringify(messages, null, 2)], {type: 'application/json'});
@@ -1300,8 +1251,7 @@
                 try {
                     const history = JSON.parse(event.target.result);
                     await fetch("{{ url_for('anonymize_web.import_chat') }}", {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({history})
                     });
                     chatOutput.innerHTML = '';
@@ -1340,11 +1290,8 @@
             const text = chatInput.value.trim();
             if (!text) return;
             addMessage('user', text);
-
-            {#chatInput.value = '';#}
             chatInput.style.height = 'auto';
-            updateInputStats()
-
+            updateInputStats();
             const assistantWrap = addMessage('assistant', '', {streaming: true});
             const assistantInner = assistantWrap._assistantInner;
             spinner.classList.add('active');
@@ -1372,8 +1319,7 @@
                     }
                     assistantWrap.dataset.content = markdown;
                     await fetch("{{ url_for('anonymize_web.chat_finalize') }}", {
-                        method: 'POST',
-                        headers: {"Content-Type": "application/json"},
+                        method: 'POST', headers: {"Content-Type": "application/json"},
                         body: JSON.stringify({assistant: markdown})
                     });
                 }

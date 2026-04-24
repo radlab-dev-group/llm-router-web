@@ -22,12 +22,16 @@ Web interface for managing LLM Router configurations and text anonymization.
     - Version control with restore capability
 - **Active Model Selection**: Choose which models to activate
 
+Read the module [README](llm_router_web/web/configs_manager/README.md)
+
 ### Anonymizer (`app_anonymizer`)
 
 - **Text Anonymization**: Multiple algorithms (fast, GenAI, PrivMasker)
 - **Chat Interface**: Interactive chat with optional anonymization
 - **Model Selection**: Browse and select available LLM models
 - **Real-time Processing**: Direct integration with LLM Router API
+
+Read the module [README](llm_router_web/web/anonymizer/README.md)
 
 ## Installation
 
