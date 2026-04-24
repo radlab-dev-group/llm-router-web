@@ -1,28 +1,45 @@
 # llm_router_web.anonymizer
 
-**llm_router_web: anonymizer** is a lightweight Flask web interface that provides a simple UI for text anonymization.  
-It forwards the supplied text to an external LLM‑router anonymization service (`/api/fast_text_mask`)
-and displays the masked result, with on‑the‑fly highlighting of detected tags (`{{…}}`).
+**llm_router_web: anonymizer** is a Flask web interface providing tools for text anonymization and private interaction
+with LLMs. It acts as a bridge between the user and the backend anonymization services (PII Service and LLM-Router).
 
 **llm_router_web.anonymizer** is the web interface component of the
 [llm-router](https://github.com/radlab-dev-group/llm-router) library.
 
 ## Features
 
-- **Web form** – Paste text and trigger anonymization with a single click.
-- **HTMX‑powered UI** – Asynchronous request/response without a full page reload.
-- **Result highlighting** – Detected placeholders are wrapped in a colored span for easy spotting.
-- **Spinner indicator** – Visual feedback while the request is in progress.
-- **Error handling** – Returns clear messages for missing input or communication problems.
-- **Configurable backend** – Target anonymization service URL is supplied via `LLM_ROUTER_HOST` environment variable.
+### 🔒 Text Anonymization Form
+
+- **Multi-Algorithm Support**:
+    - `Fast Masking`: Quick placeholder replacement via LLM-Router.
+    - `PII Masking`: Specialized Personally Identifiable Information detection (Location, Person).
+    - `Fast + PII`: Hybrid approach applying PII masking followed by Fast Masking.
+- **Advanced UI**:
+    - Real-time result highlighting of `{{TAGS}}`.
+    - One-click copying of both the anonymized text and the mapping JSON.
+    - Synchronized scrolling between input and result panes.
+- **HTMX-powered**: Asynchronous processing without full page reloads.
+
+### 💬 Interactive Anonymized Chat
+
+- **Streaming Responses**: Real-time text generation from the LLM.
+- **Privacy Control**: Toggle anonymization on/off per message.
+- **Session Management**:
+    - Server-side session history.
+    - Local browser storage for persistent chat lists.
+    - Ability to import/export chat history as JSON.
+- **AI Customization**:
+    - Dynamic model selection (fetched from the Router's `/models` endpoint).
+    - Custom System Prompts to define AI personality.
+    - Quick Prompts modal for common tasks (Summarize, Fix Grammar, etc.).
+- **UX Enhancements**: Markdown rendering, response regeneration, and keyboard shortcuts (Ctrl+Enter, Ctrl+L, etc.).
 
 ## Installation
 
-The project follows the same conventions as the rest of the **llm‑router** repository and uses
-**Python 3.10.6** with **virtualenv**.
+The project uses **Python 3.11** with **virtualenv**.
 
 ```shell script
-# Clone the repository (if not already done)
+# Clone the repository
 git clone https://github.com/radlab-dev-group/llm-router.git
 cd llm-router/llm_router_web
 
@@ -30,67 +47,52 @@ cd llm-router/llm_router_web
 python3 -m venv venv
 source venv/bin/activate
 
-# Install dependencies (the base requirements already contain Flask)
+# Install dependencies
 pip install -r requirements.txt
 ```
-
-> **Note:** The only additional packages required for the anonymizer are already listed in `requirements.txt` (`flask`,
-`requests`, `htmx`, `alpine.js` are loaded from CDN).
 
 ## Running the Application
 
 ### Development server
 
 ```shell script
-# Start the Flask development server for the anonymizer module
 python -m web.anonymizer
 ```
 
-The UI will be reachable at `http://localhost:5000/anonymize`.  
-The root path (`/`) redirects to the form page.
+The UI is reachable at `http://localhost:5000/anonymize`.
 
 ### Production (Gunicorn)
 
-A small launch script is included in the main repository. Example:
-
 ```shell script
 LLM_ROUTER_HOST=http://localhost:8000 \
-FLASK_SECRET_KEY=super-secret \
+PII_SERVICE_HOST=http://localhost:5001 \
 gunicorn -w 4 -b 0.0.0.0:8082 "web.anonymizer:create_anonymize_app()"
 ```
 
-- `LLM_ROUTER_HOST` – base URL of the external anonymization service (default: `http://localhost:8000`).
-- `FLASK_SECRET_KEY` – secret key for session signing (default: `change-me-anonymizer`).
-
-Adjust the number of workers (`-w`) as needed.
-
 ## Configuration
 
-All configuration is performed via environment variables:
+Configuration is managed via environment variables:
 
-| Variable           | Description                               | Default                 |
-|--------------------|-------------------------------------------|-------------------------|
-| `FLASK_SECRET_KEY` | Secret key for Flask session signing      | `change-me-anonymizer`  |
-| `LLM_ROUTER_HOST`  | URL of the external anonymization service | `http://localhost:8000` |
-
-The variables are read in `web/anonymizer/__init__.py` when `create_anonymize_app()` is called.
+| Variable                               | Description                               | Default                   |
+|:---------------------------------------|:------------------------------------------|:--------------------------|
+| `FLASK_SECRET_KEY`                     | Secret key for Flask session signing      | `change-me-anonymizer`    |
+| `LLM_ROUTER_HOST`                      | Base URL of the LLM-Router service        | `http://localhost:8000`   |
+| `PII_SERVICE_HOST`                     | Base URL of the PII anonymization service | `http://localhost:5001`   |
+| `LLM_ROUTER_GENAI_MODEL_ANONYMISATION` | Model used for GenAI masking              | (defined in constants.py) |
 
 ## Endpoints Overview
 
-| URL              | Methods | Description                                                                                                                        |
-|------------------|---------|------------------------------------------------------------------------------------------------------------------------------------|
-| `/` (root)       | GET     | Redirects to `/anonymize/`.                                                                                                        |
-| `/anonymize/`    | GET     | Renders the anonymization form (`anonymize.html`).                                                                                 |
-| `/anonymize/`    | POST    | Accepts `text` form field, forwards it to the external service, and returns the rendered result (`anonymize_result_partial.html`). |
-| *Error handlers* | –       | Returns JSON payloads for 400, 404, and 500 errors.                                                                                |
+All endpoints are prefixed with `/anonymize`.
 
-### Request flow (POST `/anonymize/`)
-
-1. The form posts the `text` field via HTMX.
-2. The server builds the target URL: `"{LLM_ROUTER_HOST.rstrip('/')}/api/fast_text_mask"`.
-3. It sends a JSON payload `{ "text": "<raw text>" }` to the external service.
-4. On success the response text (or the `text` field from JSON) is injected back into the page, where JavaScript
-   highlights any `{{…}}` tags.
+| URL              | Methods | Description                                                                              |
+|:-----------------|:--------|:-----------------------------------------------------------------------------------------|
+| `/`              | GET     | Renders the anonymization form.                                                          |
+| `/`              | POST    | Processes text based on selected algorithm (`fast`, `pii_masking`, `fast+pii`, `genai`). |
+| `/chat`          | GET     | Renders the interactive chat interface.                                                  |
+| `/chat/message`  | POST    | Sends a message, handles anonymization, and streams the LLM response.                    |
+| `/chat/finalize` | POST    | Saves the final assistant response to the session history.                               |
+| `/chat/import`   | POST    | Imports a JSON chat history into the current session.                                    |
+| `/models`        | GET     | Proxy to LLM-Router to list available models.                                            |
 
 ## Development
 
@@ -100,11 +102,13 @@ The variables are read in `web/anonymizer/__init__.py` when `create_anonymize_ap
 web/
 └─ anonymizer/
    ├─ templates/
-   │   ├─ anonymize.html                # Main form page (HTMX enabled)
-   │   ├─ anonymize_result_partial.html # Partial used to render the result
-   │   └─ base_anonymizer.html          # Base layout shared by both templates
-   ├─ __init__.py                       # Flask app factory (create_anonymize_app)
-   └─ routes.py                         # Blueprint with view functions
+   │   ├─ anonymize.html           # Main form page
+   │   ├─ chat.html                # Interactive chat interface
+   │   ├─ base.html                # Shared layout (Theme support)
+   │   └─ anonymize_result_partial.html 
+   ├─ __init__.py                  # Flask app factory
+   ├─ routes.py                    # Blueprint and logic
+   └─ constants.py                 # Default model names and config
 ```
 
 ### Adding new features
