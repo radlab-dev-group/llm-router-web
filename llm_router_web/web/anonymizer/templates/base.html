@@ -335,7 +335,8 @@
            class="nav-item {% if request.endpoint == 'anonymize_web.show_form' %}active{% endif %}">Anonymize</a>
         <a href="{{ url_for('anonymize_web.show_chat') }}"
            class="nav-item {% if request.endpoint == 'anonymize_web.show_chat' %}active{% endif %}">Chat</a>
-
+        <a href="{{ url_for('anonymize_web.show_privacy') }}"
+           class="nav-item {% if request.endpoint == 'anonymize_web.show_privacy' %}active{% endif %}">Prywatność</a>
         <div style="width: 1px; height: 20px; background: var(--border-glass); margin: 0 4px;"></div>
 
         <button @click="theme = (theme === 'dark' ? 'light' : 'dark')" class="btnx"

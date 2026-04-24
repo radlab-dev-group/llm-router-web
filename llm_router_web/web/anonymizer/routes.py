@@ -61,6 +61,14 @@ def show_form():
     )
 
 
+@anonymize_bp.route("/privacy", methods=["GET"])
+def show_privacy():
+    """
+    Render the privacy policy page.
+    """
+    return render_template("privacy.html")
+
+
 @anonymize_bp.route("/", methods=["POST"])
 def process_text():
     """

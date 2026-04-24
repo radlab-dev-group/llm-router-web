@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+    <style>
+        .privacy-container {
+            max-width: 900px;
+            margin: 0 auto;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .privacy-card {
+            padding: 2.5rem;
+            line-height: 1.8;
+        }
+
+        .privacy-section {
+            margin-bottom: 2rem;
+        }
+
+        .privacy-section h3 {
+            color: var(--accent);
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .privacy-section p, .privacy-section li {
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+
+        .privacy-list {
+            padding-left: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .privacy-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: var(--bg-input);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 1.2rem;
+            margin-top: 1rem;
+            font-style: italic;
+            color: var(--text-muted);
+        }
+    </style>
+
+    <div class="privacy-container">
+        <div class="card privacy-card">
+            <div class="privacy-section" style="text-align: center; margin-bottom: 3rem;">
+                <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">🛡️ Polityka Prywatności</h2>
+                <p class="sub">Informacje o tym, jak traktujemy Twoje dane i co przechowujemy w Twojej przeglądarce.</p>
+            </div>
+
+            <div class="privacy-section">
+                <h3>🚀 Przetwarzanie danych</h3>
+                <p>
+                    Aplikacja <strong>LLM-Router Anonymizer</strong> działa jako interfejs pośredniczący (proxy).
+                    Głównym celem aplikacji jest usunięcie danych wrażliwych z Twojego tekstu <i>zanim</i> zostanie on wysłany do modeli AI.
+                </p>
+                <div class="highlight-box">
+                    <strong>Kluczowa zasada:</strong> Aplikacja nie posiada własnej bazy danych użytkowników ani logów treści.
+                    Wszystkie przesyłane teksty są przetwarzane w pamięci RAM i przekazywane do zewnętrznych usług (LLM-Router, PII Service),
+                    po czym są usuwane z pamięci serwera aplikacji webowej.
+                </div>
+            </div>
+
+            <div class="privacy-section">
+                <h3>🍪 Pliki Cookies i Przechowywanie Lokalne</h3>
+                <p>
+                    Aby zapewnić wygodę użytkowania i funkcjonalność czatu, aplikacja korzysta z dwóch mechanizmów przechowywania danych po stronie klienta:
+                </p>
+
+                <ul class="privacy-list">
+                    <li>
+                        <strong>Sesje Flask (Cookies):</strong>
+                        Używamy zaszyfrowanych ciasteczek sesyjnych do przechowywania aktualnej historii rozmowy. Dzięki temu,
+                        podczas odświeżenia strony, Twój czat nie zostaje utracony. Dane te wygasają po zamknięciu przeglądarki lub wygaśnięciu sesji.
+                    </li>
+                    <li>
+                        <strong>LocalStorage (Pamięć lokalna przeglądarki):</strong>
+                        Przechowujemy tutaj dane, które nie wymagają przesyłania na serwer:
+                        <ul class="privacy-list" style="margin-top: 0.5rem;">
+                            <li>Preferencje motywu (Jasny/Ciemny).</li>
+                            <li>Listę nazw i dat poprzednich rozmów (historia lokalna).</li>
+                            <li>Ostatnio wybrane ustawienia modelu i algorytmu anonimizacji.</li>
+                            <li>Szyfrowane kopie zapasowe rozmów, jeśli opcja "Lokalna historia" jest włączona.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="privacy-section">
+                <h3>🌐 Zewnętrzne Serwisy</h3>
+                <p>
+                    W zależności od wybranego algorytmu, Twoje dane są przesyłane do:
+                </p>
+                <ul class="privacy-list">
+                    <li><strong>PII Service:</strong> Służy do wykrywania imion, nazwisk i lokalizacji.</li>
+                    <li><strong>LLM-Router:</strong> Odpowiada za maskowanie tekstu oraz generowanie odpowiedzi przez modele AI.</li>
+                </ul>
+                <p>
+                    Zalecamy zapoznanie się z polityką prywatności dostawcy infrastruktury, na której uruchomiony jest LLM-Router.
+                </p>
+            </div>
+
+            <div class="privacy-section" style="text-align: center; margin-top: 3rem; border-top: 1px solid var(--border-glass); padding-top: 2rem;">
+                <p style="font-size: 0.9rem; color: var(--text-muted);">
+                    Ostatnia aktualizacja: 24 kwietnia 2026 r.
+                </p>
+                <a href="{{ url_for('anonymize_web.show_form') }}" class="btnx" style="margin-top: 1rem; text-decoration: none;">
+                    Powrót do narzędzi 🚀
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
