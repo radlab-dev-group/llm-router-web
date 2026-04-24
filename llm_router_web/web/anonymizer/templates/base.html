@@ -76,6 +76,13 @@
             font-size: 0.85rem;
         }
 
+        /* Disabled state – gray out and prevent clicks */
+        .btnx:disabled,
+        .btnx[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .btnx:hover {
             background: rgba(128, 128, 128, 0.1);
         }

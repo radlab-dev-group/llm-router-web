@@ -1275,6 +1275,7 @@
             } finally {
                 spinner.classList.remove('active');
                 chatInput.value = '';
+                chatInput.style.height = 'auto';
                 updateInputStats();
                 autoResize();
                 saveState();
