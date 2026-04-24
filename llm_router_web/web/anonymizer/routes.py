@@ -29,7 +29,6 @@ from flask import (
 
 from .constants import GENAI_MODEL_ANON, DEFAULT_PII_MODEL_NAME
 
-
 # Blueprint configuration
 anonymize_bp = Blueprint(
     "anonymize_web",
@@ -178,6 +177,10 @@ def chat_message():
     if not user_msg:
         return "⚠️ No message provided.", 400
 
+    system_prompt = request.form.get("system_prompt", "").strip()
+
+    print(f"System prompt: '{system_prompt}'")
+
     # Sprawdzenie czy rozpoczęto nowy czat
     new_chat = request.form.get("new_chat") == "true"
     if new_chat:
@@ -196,11 +199,18 @@ def chat_message():
     session["chat_history"] = history
     session.modified = True
 
+    # Build the payload for the LLM‑Router.
+    # If a system prompt is provided, prepend it as a message with role "system".
+    payload_messages = []
+    if system_prompt:
+        payload_messages.append({"role": "system", "content": system_prompt})
+    payload_messages.extend(history)
+
     payload = {
         "stream": True,
         "anonymize": algorithm != "no_anno",
         "model": model_name,
-        "messages": history,
+        "messages": payload_messages,
     }
 
     external_url = (
@@ -303,9 +313,9 @@ def import_chat():
         # Basic validation of message structure
         for msg in history:
             if (
-                not isinstance(msg, dict)
-                or "role" not in msg
-                or "content" not in msg
+                    not isinstance(msg, dict)
+                    or "role" not in msg
+                    or "content" not in msg
             ):
                 return jsonify({"ok": False, "error": "Invalid message format"}), 400
 

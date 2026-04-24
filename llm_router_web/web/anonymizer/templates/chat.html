@@ -1238,6 +1238,11 @@
             const text = chatInput.value.trim();
             if (!text) return;
             addMessage('user', text);
+
+            {#chatInput.value = '';#}
+            chatInput.style.height = 'auto';
+            updateInputStats()
+
             const assistantWrap = addMessage('assistant', '', {streaming: true});
             const assistantInner = assistantWrap._assistantInner;
             spinner.classList.add('active');
