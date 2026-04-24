@@ -710,9 +710,9 @@
 
     <!-- Privacy Warning Modal -->
     <div class="modal-overlay" id="privacy-warning-modal">
-        <div class="modal-content" style="max-width: 500px; text-align: center;">
-            <div class="modal-header" style="justify-content: center; color: #fca5a5;">
-                    <span style="display: flex; align-items: center; gap: 0.5rem;">
+        <div class="modal-content" style="max-width: 500px; text-align: center; border-top: 5px solid #ef4444;">
+            <div class="modal-header" style="justify-content: center; color: #ef4444;">
+                    <span style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
@@ -723,30 +723,36 @@
                     </span>
             </div>
             <div style="margin: 1.5rem 0; line-height: 1.6; color: var(--text-main);">
-                <p style="font-weight: 600; margin-bottom: 1rem;">Właśnie wyłączyłeś maskowanie danych!</p>
+                <p style="font-weight: 700; margin-bottom: 1rem; font-size: 1.1rem;">Właśnie wyłączyłeś maskowanie
+                    danych!</p>
                 <p>
-                    Wybierając opcję <strong>"No anonymization"</strong>, wszystkie Twoje wiadomości zostaną wysłane do
-                    modelu AI w formie jawnej.
+                    Wybierając opcję <strong style="color: var(--accent);">"No anonymization"</strong>, wszystkie Twoje
+                    wiadomości zostaną wysłane do modelu AI w formie jawnej.
                     Oznacza to, że wszelkie dane wrażliwe, takie jak:
                 </p>
-                <ul style="text-align: left; display: inline-block; margin: 1rem 0; color: var(--text-muted);">
-                    <li>Imiona i nazwiska,</li>
-                    <li>Adresy e-mail i numery telefonów,</li>
-                    <li>Nazwy firm i konkretne lokalizacje,</li>
-                    <li>Wszelkie inne dane osobowe (PII).</li>
+                <ul style="text-align: left; display: inline-block; margin: 1rem 0; color: var(--text-main); opacity: 0.9;">
+                    <li style="margin-bottom: 0.3rem;">• Imiona i nazwiska,</li>
+                    <li style="margin-bottom: 0.3rem;">• Adresy e-mail i numery telefonów,</li>
+                    <li style="margin-bottom: 0.3rem;">• Nazwy firm i konkretne lokalizacje,</li>
+                    <li style="margin-bottom: 0.3rem;">• Wszelkie inne dane osobowe (PII).</li>
                 </ul>
-                <p>
-                    zostaną przesłane do dostawcy modelu i w zależności od jego polityki mogą
-                    zostać wykorzystane do trenowania przyszłych wersji AI.
-                    <strong>Czy na pewno chcesz kontynuować bez ochrony prywatności?</strong>
+                <p style="margin-top: 1rem;">
+                    zostaną przesłane do dostawcy modelu i mogą zostać wykorzystane do trenowania
+                    przyszłych wersji AI.
+                    <br><strong style="display: block; margin-top: 0.5rem;">Czy na pewno chcesz kontynuować bez
+                    ochrony?</strong>
                 </p>
             </div>
             <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
-                <button type="button" class="btnx" id="btn-cancel-no-anno">Wróć do ochrony</button>
-                <button type="button" class="btnx danger" id="btn-confirm-no-anno">Tak, ryzykuję</button>
+                <button type="button" class="btnx" id="btn-cancel-no-anno" style="flex: 1;">Wróć do ochrony</button>
+                <button type="button" class="btnx danger" id="btn-confirm-no-anno" style="flex: 1; font-weight: 700;">
+                    Tak, ryzykuję
+                </button>
             </div>
         </div>
     </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         const chatInput = document.getElementById('chat-input');
