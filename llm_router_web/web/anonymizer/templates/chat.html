@@ -4,28 +4,33 @@
         :root {
             --sidebar-width: 280px;
             --transition-speed: 0.3s;
+            --accent-rgb: 100, 116, 139;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
         .chat-layout {
             display: flex;
-            height: calc(100vh - 180px);
-            max-width: 1300px;
+            height: calc(100vh - 160px);
+            max-width: 1400px;
             margin: 0 auto;
-            gap: 1rem;
+            gap: 1.5rem;
             position: relative;
+            padding: 0 1rem;
         }
 
-        /* Sidebar History */
+        /* --- Sidebar --- */
         .history-sidebar {
             width: var(--sidebar-width);
-            background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
             border-radius: 24px;
             display: flex;
             flex-direction: column;
             transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
 
         .history-sidebar.hidden {
@@ -37,7 +42,13 @@
 
         .history-header {
             padding: 1.25rem 1rem;
-            border-bottom: 1px solid var(--border-glass);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .history-top-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -46,7 +57,22 @@
         .history-header span {
             font-weight: 700;
             font-size: 1.1rem;
-            letter-spacing: -0.02em;
+        }
+
+        .history-search {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.6rem 0.8rem;
+            color: inherit;
+            font-size: 0.8rem;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+
+        .history-search:focus {
+            border-color: var(--accent);
         }
 
         .history-list {
@@ -55,21 +81,20 @@
             padding: 0.75rem;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
 
-        /* Scrollbar for history */
         .history-list::-webkit-scrollbar {
             width: 4px;
         }
 
         .history-list::-webkit-scrollbar-thumb {
-            background: var(--border-glass);
+            background: var(--glass-border);
             border-radius: 10px;
         }
 
         .history-item {
-            padding: 0.75rem;
+            padding: 0.7rem;
             border-radius: 14px;
             cursor: pointer;
             display: flex;
@@ -77,16 +102,15 @@
             align-items: center;
             transition: all 0.2s ease;
             border: 1px solid transparent;
-            group: hover;
         }
 
         .history-item:hover {
             background: rgba(255, 255, 255, 0.05);
-            border-color: var(--border-glass);
+            border-color: var(--glass-border);
         }
 
         .history-item.active {
-            background: rgba(var(--accent-rgb), 0.15);
+            background: rgba(var(--accent-rgb), 0.2);
             border-color: var(--accent);
         }
 
@@ -99,7 +123,7 @@
         }
 
         .history-item-name {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 500;
             white-space: nowrap;
             overflow: hidden;
@@ -109,29 +133,42 @@
         .history-item-date {
             font-size: 0.7rem;
             color: var(--text-muted);
-            opacity: 0.8;
         }
 
-        .btn-del-chat {
+        .history-actions {
+            display: flex;
+            gap: 4px;
             opacity: 0;
-            color: #fca5a5;
+            transition: opacity 0.2s;
+        }
+
+        .history-item:hover .history-actions {
+            opacity: 1;
+        }
+
+        .btn-icon-small {
             background: none;
             border: none;
+            color: var(--text-muted);
             cursor: pointer;
-            padding: 6px;
-            transition: opacity 0.2s;
+            padding: 4px;
+            border-radius: 6px;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: all 0.2s;
         }
 
-        .history-item:hover .btn-del-chat {
-            opacity: 1;
+        .btn-icon-small:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent);
+        }
+
+        .btn-icon-small.del:hover {
+            color: #fca5a5;
         }
 
         .btn-new-chat-sidebar {
             margin: 1rem;
-            padding: 0.75rem;
+            padding: 0.7rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -141,7 +178,7 @@
             border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, filter 0.2s;
+            transition: all 0.2s;
             border: none;
         }
 
@@ -150,35 +187,25 @@
             filter: brightness(1.1);
         }
 
+        /* --- Workspace --- */
         .chat-workspace {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1rem;
             min-width: 0;
+            position: relative;
         }
 
         .chat-toolbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.5rem 1rem;
-        }
-
-        .chat-toolbar-right {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        .chat-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem; /* Steruje odstępem między h2 a .sub */
+            padding: 0.5rem 0;
         }
 
         .chat-info h2 {
-            margin: 0;
+            margin: 0 0 0.4rem 0;
             font-size: 1.3rem;
             font-weight: 700;
         }
@@ -189,6 +216,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            margin-top: 0.8rem;
         }
 
         .pill {
@@ -196,7 +224,7 @@
             padding: 2px 8px;
             border-radius: 10px;
             background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
+            border: 1px solid var(--glass-border);
         }
 
         .session-warning {
@@ -210,7 +238,7 @@
         .chat-thread {
             flex: 1;
             overflow-y: auto;
-            padding: 1rem;
+            padding: 1rem 0;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
@@ -220,7 +248,19 @@
         .msg {
             display: flex;
             flex-direction: column;
-            max-width: 85%;
+            max-width: 80%;
+            animation: msgAppear 0.3s ease-out forwards;
+        }
+
+        @keyframes msgAppear {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .msg.user {
@@ -234,7 +274,7 @@
         }
 
         .msg-meta {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
             margin-bottom: 0.4rem;
             display: flex;
@@ -243,11 +283,10 @@
 
         .bubble {
             padding: 0.8rem 1.2rem;
-            border-radius: 18px;
+            border-radius: 20px;
             font-size: 0.95rem;
-            line-height: 1.5;
-            position: relative;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            line-height: 1.6;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
 
         .msg.user .bubble {
@@ -257,9 +296,11 @@
         }
 
         .msg.assistant .bubble {
-            background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: #f8fafc;
             border-bottom-left-radius: 4px;
+            backdrop-filter: blur(8px);
         }
 
         .anon-tag {
@@ -273,42 +314,192 @@
             font-weight: 700;
         }
 
-        .composer-container {
+        /* --- COMPACT COMPOSER --- */
+        .composer-wrapper {
             position: relative;
-            background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 24px;
-            padding: 1rem;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 850px;
+            margin: 0 auto;
+            align-self: center;
         }
 
-        .composer-grid {
-            display: grid;
+        .composer-container {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 0.75rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .composer-container:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--accent);
+        }
+
+        /* System Prompt Overlay */
+        .sys-prompt-overlay {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(20px);
+            display: none;
+            flex-direction: column;
             gap: 0.75rem;
+            z-index: 10;
+            animation: slideUp 0.2s ease-out;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sys-prompt-overlay.active {
+            display: flex;
+        }
+
+        .sys-prompt-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* --- Modal for Quick Prompts --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 90%;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            animation: modalAppear 0.2s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .prompt-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .prompt-chip {
+            font-size: 0.8rem;
+            padding: 10px 14px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .prompt-chip:hover {
+            background: var(--accent);
+            color: #0f172a;
+            border-color: var(--accent);
+            transform: translateY(-2px);
         }
 
         .inputx {
             width: 100%;
-            border-radius: 16px;
-            border: 1px solid var(--border-glass);
-            background: rgba(0, 0, 0, 0.2);
-            padding: 0.8rem;
+            border: none;
+            background: transparent;
+            padding: 0.5rem;
             color: inherit;
             outline: none;
             resize: none;
             font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            max-height: 200px;
+            min-height: 24px;
         }
 
         .composer-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--glass-border);
             gap: 1rem;
         }
 
         .controls-left {
             display: flex;
-            gap: 0.75rem;
+            gap: 0.5rem;
             flex-wrap: wrap;
             align-items: center;
         }
@@ -333,19 +524,22 @@
         }
 
         .btnx {
-            appearance: none;
-            border: 1px solid var(--border-glass);
+            border: 1px solid var(--glass-border);
             background: rgba(255, 255, 255, 0.05);
             color: inherit;
-            border-radius: 12px;
-            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            padding: 0.4rem 0.8rem;
             cursor: pointer;
             font-weight: 600;
+            font-size: 0.8rem;
             transition: all 0.2s;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
+        }
+
+        .btnx:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .btnx.primary {
@@ -359,13 +553,9 @@
             border-color: rgba(239, 68, 68, 0.3);
         }
 
-        .btnx.danger:hover {
-            background: rgba(239, 68, 68, 0.1);
-        }
-
         .spinnerx {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border: 2px solid rgba(255, 255, 255, 0.2);
             border-top-color: var(--accent);
             border-radius: 50%;
@@ -386,7 +576,7 @@
         .chat-empty {
             text-align: center;
             margin-top: 20vh;
-            opacity: 0.5;
+            opacity: 0.4;
             font-style: italic;
         }
 
@@ -395,26 +585,28 @@
             background: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
             font-family: monospace;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
         }
 
         .local-history-toggle {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 0.8rem;
+            gap: 0.4rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             cursor: pointer;
-            user-select: none;
-            padding: 0.4rem 0.8rem;
+            padding: 0.3rem 0.7rem;
             border-radius: 10px;
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-glass);
-            transition: background 0.2s;
+            border: 1px solid var(--glass-border);
         }
 
-        .local-history-toggle:hover {
-            background: rgba(255, 255, 255, 0.1);
+        .input-stats {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 4px;
+            padding-right: 0.5rem;
         }
     </style>
 
@@ -422,15 +614,17 @@
         <!-- Local History Sidebar -->
         <aside class="history-sidebar hidden" id="history-sidebar">
             <div class="history-header">
-                <span>Historia</span>
-                <button type="button" class="btnx" style="padding: 4px 8px; border: none; background: transparent;"
-                        onclick="toggleHistory()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                         stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
+                <div class="history-top-row">
+                    <span>Historia</span>
+                    <button type="button" class="btn-icon-small" onclick="toggleHistory()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <input type="text" class="history-search" id="history-search" placeholder="Szukaj rozmowy...">
             </div>
 
             <button type="button" class="btn-new-chat-sidebar" id="btn-sidebar-new-chat">
@@ -442,31 +636,29 @@
                 Nowy Czat
             </button>
 
-            <div class="history-list" id="history-list">
-                <!-- Items populated by JS -->
-            </div>
+            <div class="history-list" id="history-list"></div>
         </aside>
 
         <div class="chat-workspace">
             <header class="chat-toolbar">
                 <div class="chat-info">
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <button type="button" class="btnx" id="btn-toggle-history" title="Historia rozmów">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <button type="button" class="btnx" id="btn-toggle-history" title="Historia (Ctrl+/)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 8v4l3 3"></path>
                                 <circle cx="12" cy="12" r="9"></circle>
                             </svg>
                         </button>
-                        <h2>LLM‑Router Chat</h2>
+                        <h2 id="current-chat-title">LLM‑Router Chat</h2>
                     </div>
                     <div class="sub" id="session-status">
                         Bezpieczna sesja <span class="pill" id="session-pill">fast_masker</span>
                     </div>
                 </div>
                 <div class="chat-toolbar-right">
-                    <button type="button" id="btn-export-chat" class="btnx">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <button type="button" id="btn-export-chat" class="btnx" title="Export (Ctrl+S)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
@@ -475,7 +667,7 @@
                         Export
                     </button>
                     <button type="button" id="btn-import-chat" class="btnx">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="17 10 12 15 7 10"></polyline>
@@ -483,8 +675,8 @@
                         </svg>
                         Import
                     </button>
-                    <button type="button" id="btn-new-chat" class="btnx danger">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <button type="button" id="btn-new-chat" class="btnx danger" title="Nowy czat (Ctrl+L)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="3 6 12 18 21 6"></polyline>
                             <line x1="12" y1="6" x2="12" y2="18"></line>
@@ -497,20 +689,52 @@
 
             <div id="chat-output" class="chat-thread">
                 <div class="chat-empty" id="chat-empty">
-                    Zacznij konwersację. <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> wysyła.
+                    Zacznij konwersację. <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> wysyła, <span
+                        class="kbd">Ctrl</span>+<span class="kbd">/</span> historia, <span class="kbd">Ctrl</span>+<span
+                        class="kbd">S</span> export, <span class="kbd">Ctrl</span>+<span class="kbd">L</span> nowy czat.
                 </div>
             </div>
 
-            <form id="chat-form" action="{{ url_for('anonymize_web.chat_message') }}" method="post"
-                  class="composer-container">
-                <input type="hidden" id="new-chat-flag" name="new_chat" value="true">
+            <div class="composer-wrapper">
+                <!-- System Prompt Overlay -->
+                <div class="sys-prompt-overlay" id="system-prompt-panel">
+                    <div class="sys-prompt-label">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        Osobowość AI (System Prompt)
+                    </div>
+                    <textarea id="system-prompt" name="system_prompt" class="inputx"
+                              placeholder="Np. Odpowiadaj zwięźle i technicznie..." rows="3"></textarea>
+                </div>
 
-                <div class="composer-grid">
+                <form id="chat-form" action="{{ url_for('anonymize_web.chat_message') }}" method="post"
+                      class="composer-container">
+                    <input type="hidden" id="new-chat-flag" name="new_chat" value="true">
+
                     <textarea id="chat-input" name="message" class="inputx" placeholder="Napisz wiadomość..." required
-                              rows="3"></textarea>
+                              rows="1"></textarea>
+                    <div class="input-stats" id="input-stats">Znaków: 0 | Słów: 0</div>
 
                     <div class="composer-footer">
                         <div class="controls-left">
+                            <button type="button" class="btnx" id="btn-toggle-sys-prompt" title="Ustawienia AI">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1 1.51z"></path>
+                                </svg>
+                                AI
+                            </button>
+                            <button type="button" class="btnx" id="btn-open-prompts" title="Szybkie prompty">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"></path>
+                                </svg>
+                                Prompty
+                            </button>
                             <select id="algorithm-select" name="algorithm" class="selectx">
                                 <option value="fast" selected>Fast masking</option>
                                 <option value="no_anno">No anonymization</option>
@@ -525,16 +749,42 @@
                         </div>
                         <button type="submit" class="btnx primary" id="btn-send">
                             Send
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="22" y1="2" x2="11" y2="13"></line>
                                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                             </svg>
                         </button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
+    </div>
+
+    <!-- Quick Prompts Modal -->
+    <div class="modal-overlay" id="prompt-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Szybkie Prompty</span>
+                <button type="button" class="btn-icon-small" id="btn-close-prompts">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="prompt-grid">
+                <div class="prompt-chip" data-text="Podsumuj powyższą rozmowę w 3 punktach:">📝 Podsumuj</div>
+                <div class="prompt-chip" data-text="Popraw błędy gramatyczne i stylistyczne w poniższym tekście:">✨
+                    Popraw tekst
+                </div>
+                <div class="prompt-chip" data-text="Wyjaśnij to tak, jakbym miał 5 lat:">👶 Wyjaśnij prosto</div>
+                <div class="prompt-chip" data-text="Przeanalizuj poniższy kod pod kątem wydajności i bezpieczeństwa:">💻
+                    Analiza kodu
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -551,21 +801,42 @@
         const localHistoryEnabled = document.getElementById('local-history-enabled');
         const historySidebar = document.getElementById('history-sidebar');
         const historyList = document.getElementById('history-list');
+        const historySearch = document.getElementById('history-search');
+        const sysPromptPanel = document.getElementById('system-prompt-panel');
+        const sysPromptInput = document.getElementById('system-prompt');
+        const inputStats = document.getElementById('input-stats');
+        const currentChatTitle = document.getElementById('current-chat-title');
+
+        // Modal Elements
+        const promptModal = document.getElementById('prompt-modal');
+        const btnOpenPrompts = document.getElementById('btn-open-prompts');
+        const btnClosePrompts = document.getElementById('btn-close-prompts');
 
         let currentChatId = null;
+
+        // --- Auto-resize textarea ---
+        function autoResize() {
+            chatInput.style.height = 'auto';
+            chatInput.style.height = chatInput.scrollHeight + 'px';
+        }
+
+        chatInput.addEventListener('input', autoResize);
 
         // --- Utils ---
         function formatDate(timestamp) {
             const date = new Date(timestamp);
             return new Intl.DateTimeFormat('pl-PL', {
-                day: 'numeric',
-                month: 'short',
-                hour: '2-digit',
-                minute: '2-digit'
+                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
             }).format(date);
         }
 
-        // --- Session Status Logic ---
+        function updateInputStats() {
+            const text = chatInput.value;
+            const chars = text.length;
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            inputStats.textContent = `Znaków: ${chars} | Słów: ${words}`;
+        }
+
         function updateSessionStatus() {
             const statusEl = document.getElementById('session-status');
             if (algoSelect.value === 'no_anno') {
@@ -588,18 +859,19 @@
 
         function toggleHistory() {
             historySidebar.classList.toggle('hidden');
-            if (!historySidebar.classList.contains('hidden')) {
-                renderHistoryList();
-            }
+            if (!historySidebar.classList.contains('hidden')) renderHistoryList();
         }
 
         function renderHistoryList() {
             const chats = getLocalChats();
+            const searchTerm = historySearch.value.toLowerCase();
             historyList.innerHTML = '';
 
             const sortedChats = Object.entries(chats).sort((a, b) => b[1].timestamp - a[1].timestamp);
 
             sortedChats.forEach(([id, chat]) => {
+                if (searchTerm && !chat.name.toLowerCase().includes(searchTerm)) return;
+
                 const item = document.createElement('div');
                 item.className = `history-item ${id === currentChatId ? 'active' : ''}`;
                 item.innerHTML = `
@@ -607,15 +879,24 @@
                         <span class="history-item-name" title="${chat.name}">${chat.name}</span>
                         <span class="history-item-date">${formatDate(chat.timestamp)}</span>
                     </div>
-                    <button type="button" class="btn-del-chat" data-id="${id}">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
+                    <div class="history-actions">
+                        <button type="button" class="btn-icon-small" data-id="${id}" title="Zmień nazwę">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button type="button" class="btn-icon-small del" data-id="${id}" title="Usuń">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
                 `;
                 item.onclick = (e) => {
-                    if (e.target.closest('.btn-del-chat')) return;
+                    if (e.target.closest('.history-actions')) return;
                     loadChatById(id);
                 };
-                item.querySelector('.btn-del-chat').onclick = (e) => {
+                item.querySelector('[data-id]').onclick = (e) => {
+                    e.stopPropagation();
+                    renameChatById(id);
+                };
+                item.querySelector('.del').onclick = (e) => {
                     e.stopPropagation();
                     deleteChatById(id);
                 };
@@ -627,32 +908,39 @@
             const chats = getLocalChats();
             const chat = chats[id];
             if (!chat) return;
-
             currentChatId = id;
-
+            currentChatTitle.textContent = chat.name;
             try {
                 const resp = await fetch("{{ url_for('anonymize_web.import_chat') }}", {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({history: chat.messages})
                 });
-                if (!resp.ok) throw new Error('Failed to sync with server');
+                if (!resp.ok) throw new Error('Failed to sync');
             } catch (e) {
-                alert('Błąd synchronizacji z serwerem: ' + e.message);
+                alert('Błąd synchronizacji: ' + e.message);
             }
-
             chatOutput.innerHTML = '';
-            chat.messages.forEach(msg => {
-                addMessage(msg.role, msg.content);
-            });
+            chat.messages.forEach(msg => addMessage(msg.role, msg.content));
             if (chatEmpty) chatEmpty.style.display = 'none';
-
             newChatFlag.value = 'false';
             renderHistoryList();
         }
 
+        function renameChatById(id) {
+            const chats = getLocalChats();
+            const oldName = chats[id].name;
+            const newName = prompt('Nowa nazwa rozmowy:', oldName);
+            if (newName && newName.trim()) {
+                chats[id].name = newName.trim();
+                saveLocalChats(chats);
+                if (currentChatId === id) currentChatTitle.textContent = chats[id].name;
+                renderHistoryList();
+            }
+        }
+
         function deleteChatById(id) {
-            if (!confirm('Usunąć tę rozmowę z lokalnej historii?')) return;
+            if (!confirm('Usunąć tę rozmowę?')) return;
             const chats = getLocalChats();
             delete chats[id];
             saveLocalChats(chats);
@@ -665,16 +953,11 @@
 
         function persistCurrentChat() {
             if (!localHistoryEnabled.checked) return;
-
             const messages = Array.from(document.querySelectorAll('.msg')).map(msg => ({
-                role: msg.dataset.role,
-                content: msg.dataset.content
+                role: msg.dataset.role, content: msg.dataset.content
             }));
-
             if (messages.length === 0) return;
-
             const chats = getLocalChats();
-
             if (!currentChatId) {
                 currentChatId = 'chat_' + Date.now();
                 const firstMsg = messages[0].content || 'Nowa rozmowa';
@@ -684,32 +967,39 @@
                 chats[currentChatId].messages = messages;
                 chats[currentChatId].timestamp = Date.now();
             }
-
             saveLocalChats(chats);
         }
 
-        // --- Core Logic ---
         function saveState() {
             localStorage.setItem('chat_last_text', chatInput.value);
             localStorage.setItem('chat_last_model', modelSelect.value);
             localStorage.setItem('chat_last_algo', algoSelect.value);
+            localStorage.setItem('chat_last_sys_prompt', sysPromptInput.value);
         }
 
         function loadState() {
             const txt = localStorage.getItem('chat_last_text');
             const mdl = localStorage.getItem('chat_last_model');
             const alg = localStorage.getItem('chat_last_algo');
+            const sys = localStorage.getItem('chat_last_sys_prompt');
             if (txt) chatInput.value = txt;
+            if (sys) sysPromptInput.value = sys;
             if (alg && [...algoSelect.options].some(o => o.value === alg)) algoSelect.value = alg;
             return {mdl, alg};
         }
 
-        chatInput.addEventListener('input', saveState);
+        chatInput.addEventListener('input', () => {
+            saveState();
+            updateInputStats();
+            autoResize();
+        });
+        sysPromptInput.addEventListener('input', saveState);
         modelSelect.addEventListener('change', saveState);
         algoSelect.addEventListener('change', () => {
             saveState();
             updateSessionStatus();
         });
+        historySearch.addEventListener('input', renderHistoryList);
 
         async function loadModels() {
             const url = "{{ url_for('anonymize_web.models') }}";
@@ -726,11 +1016,8 @@
                     opt.textContent = name;
                     modelSelect.appendChild(opt);
                 });
-                if (mdl && [...modelSelect.options].some(o => o.value === mdl)) {
-                    modelSelect.value = mdl;
-                } else if (modelSelect.options.length) {
-                    modelSelect.selectedIndex = 0;
-                }
+                if (mdl && [...modelSelect.options].some(o => o.value === mdl)) modelSelect.value = mdl;
+                else if (modelSelect.options.length) modelSelect.selectedIndex = 0;
             } catch (e) {
                 modelSelect.innerHTML = '<option disabled selected>Error loading models</option>';
             }
@@ -739,8 +1026,28 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadModels();
             updateSessionStatus();
+            updateInputStats();
+            autoResize();
             document.getElementById('btn-toggle-history').onclick = toggleHistory;
             document.getElementById('btn-sidebar-new-chat').onclick = () => btnNewChat.click();
+            document.getElementById('btn-toggle-sys-prompt').onclick = () => sysPromptPanel.classList.toggle('active');
+        });
+
+        // Modal Logic
+        btnOpenPrompts.onclick = () => promptModal.classList.add('active');
+        btnClosePrompts.onclick = () => promptModal.classList.remove('active');
+        promptModal.onclick = (e) => {
+            if (e.target === promptModal) promptModal.classList.remove('active');
+        };
+
+        document.querySelectorAll('.prompt-chip').forEach(chip => {
+            chip.onclick = () => {
+                chatInput.value += (chatInput.value ? '\n\n' : '') + chip.dataset.text;
+                updateInputStats();
+                autoResize();
+                chatInput.focus();
+                promptModal.classList.remove('active');
+            };
         });
 
         const ANON_RE = /\{[^{}\s]+\}/g;
@@ -786,6 +1093,7 @@
                 hour: '2-digit',
                 minute: '2-digit'
             })}</span>`;
+
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
             if (role === 'assistant') {
@@ -801,11 +1109,10 @@
                 copyBtn.type = 'button';
                 copyBtn.className = 'btnx copy-btn';
                 copyBtn.style.cssText = 'padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;';
-                copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+                copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
                 copyBtn.onclick = async () => {
-                    const textToCopy = wrap.dataset.content || '';
                     try {
-                        await navigator.clipboard.writeText(textToCopy);
+                        await navigator.clipboard.writeText(wrap.dataset.content || '');
                         const originalHtml = copyBtn.innerHTML;
                         copyBtn.textContent = '✓';
                         setTimeout(() => copyBtn.innerHTML = originalHtml, 2000);
@@ -818,7 +1125,7 @@
                 regenBtn.type = 'button';
                 regenBtn.className = 'btnx regenerate-btn';
                 regenBtn.style.cssText = 'padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;';
-                regenBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>`;
+                regenBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>`;
 
                 actions.append(copyBtn, regenBtn);
                 bubble.appendChild(actions);
@@ -853,6 +1160,7 @@
                 formData.append('message', userText);
                 formData.append('algorithm', algoSelect.value);
                 formData.append('model_name', modelSelect.value);
+                formData.append('system_prompt', sysPromptInput.value);
                 formData.append('new_chat', 'false');
                 const resp = await fetch(form.action, {method: 'POST', body: formData});
                 if (!resp.body) {
@@ -891,6 +1199,7 @@
             if (!confirm('Start a new conversation?')) return;
             newChatFlag.value = 'true';
             currentChatId = null;
+            currentChatTitle.textContent = 'LLM‑Router Chat';
             chatOutput.innerHTML = '';
             chatOutput.appendChild(chatEmpty);
             chatEmpty.style.display = '';
@@ -903,8 +1212,7 @@
 
         btnExport.addEventListener('click', () => {
             const messages = Array.from(document.querySelectorAll('.msg')).map(msg => ({
-                role: msg.dataset.role,
-                content: msg.dataset.content || ''
+                role: msg.dataset.role, content: msg.dataset.content || ''
             }));
             if (messages.length === 0) return alert('No messages!');
             const blob = new Blob([JSON.stringify(messages, null, 2)], {type: 'application/json'});
@@ -941,10 +1249,21 @@
             reader.readAsText(file);
         });
 
-        chatInput.addEventListener('keydown', e => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                e.preventDefault();
-                btnSend.click();
+        window.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey)) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    btnSend.click();
+                } else if (e.key === '/') {
+                    e.preventDefault();
+                    toggleHistory();
+                } else if (e.key === 's') {
+                    e.preventDefault();
+                    btnExport.click();
+                } else if (e.key === 'l') {
+                    e.preventDefault();
+                    btnNewChat.click();
+                }
             }
         });
 
@@ -958,6 +1277,8 @@
             spinner.classList.add('active');
             btnSend.disabled = true;
             try {
+                const formData = new FormData(e.target);
+                formData.append('system_prompt', sysPromptInput.value);
                 const resp = await fetch(e.target.action, {method: 'POST', body: new FormData(e.target)});
                 if (!resp.body) {
                     const txt = await resp.text();
@@ -988,6 +1309,8 @@
             } finally {
                 spinner.classList.remove('active');
                 chatInput.value = '';
+                updateInputStats();
+                autoResize();
                 saveState();
                 newChatFlag.value = 'false';
                 btnSend.disabled = false;
