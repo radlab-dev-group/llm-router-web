@@ -903,9 +903,9 @@ summary.clickable:hover {
     cursor: pointer;
 }
 
-#theme-select::-ms-expand {
-    display: none;
-}
+/*#theme-select::-ms-expand {*/
+/*    display: none;*/
+/*}*/
 
 #theme-select::-webkit-inner-spin-button,
 #theme-select::-webkit-outer-spin-button {
