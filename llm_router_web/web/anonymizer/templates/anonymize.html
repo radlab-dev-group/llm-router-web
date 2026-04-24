@@ -5,8 +5,7 @@
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            {#max-width: 1400px;#}
-            margin: 0 auto;
+        {#max-width: 1400px;#} margin: 0 auto;
         }
 
         .workspace-header {
@@ -143,10 +142,16 @@
                 <div class="editor-pane">
                     <div class="pane-label">
                         Anonymized Result
-                        <button type="button" class="btnx"
-                                style="font-size:0.7rem; padding:0.2rem 0.6rem;"
-                                onclick="copyResult()">Copy
-                        </button>
+                        <div style="display:inline-flex; gap:0.4rem; align-items:center; margin-left:0.4rem;">
+                            <button type="button" class="btnx"
+                                    style="font-size:0.7rem; padding:0.2rem 0.6rem;"
+                                    onclick="copyResult(this)">Copy Text
+                            </button>
+                            <button type="button" class="btnx"
+                                    style="font-size:0.7rem; padding:0.2rem 0.6rem;"
+                                    onclick="copyMappings(this)">Copy Mappings
+                            </button>
+                        </div>
                     </div>
 
                     <div id="result-wrapper">
@@ -191,27 +196,29 @@
             );
         }
 
-        async function copyResult() {
+        async function copyResult(btn) {
             const el = document.getElementById('result-content');
             if (!el) return;
             const text = el.textContent.trim();
 
-            // Metoda 1: Nowoczesne API Clipboard (wymaga HTTPS/localhost)
+            // Try modern Clipboard API first
             if (navigator.clipboard && window.isSecureContext) {
                 try {
                     await navigator.clipboard.writeText(text);
-                    alert('Copied to clipboard!');
+                    // Show check‑mark icon temporarily
+                    const original = btn.textContent;
+                    btn.textContent = '✓';
+                    setTimeout(() => btn.textContent = original, 2000);
                     return;
                 } catch (e) {
                     console.error('Clipboard API failed, trying fallback...', e);
                 }
             }
 
-            // Metoda 2: Fallback dla niebezpiecznych kontekstów (HTTP, IP)
+            // Fallback for non‑secure contexts
             try {
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
-                // Pozycjonowanie poza ekranem, by nie przeszkadzało
                 textArea.style.position = "fixed";
                 textArea.style.left = "-9999px";
                 textArea.style.top = "0";
@@ -223,13 +230,75 @@
                 document.body.removeChild(textArea);
 
                 if (successful) {
-                    alert('Copied to clipboard!');
+                    const original = btn.textContent;
+                    btn.textContent = '✓';
+                    setTimeout(() => btn.textContent = original, 2000);
                 } else {
                     throw new Error('execCommand copy returned false');
                 }
             } catch (e) {
                 console.error('All copy methods failed', e);
-                alert('Failed to copy text. Please select it manually.');
+                // Optional: you could still show a temporary error indicator here
+            }
+        }
+
+        async function copyMappings(btn) {
+            const el = document.getElementById('result-content');
+            if (!el) return;
+
+            const raw = el.getAttribute('data-mappings');
+            if (!raw) {
+                console.warn('No mappings data found');
+                return;
+            }
+
+            let mappingsText = '';
+            try {
+                const obj = JSON.parse(raw);
+                // pretty‑print JSON for easier reading when pasted
+                mappingsText = JSON.stringify(obj, null, 2);
+            } catch (e) {
+                console.error('Failed to parse mappings JSON', e);
+                // fallback: copy raw string
+                mappingsText = raw;
+            }
+
+            // Try modern Clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(mappingsText);
+                    const original = btn.textContent;
+                    btn.textContent = '✓';
+                    setTimeout(() => btn.textContent = original, 2000);
+                    return;
+                } catch (e) {
+                    console.error('Clipboard API failed, trying fallback...', e);
+                }
+            }
+
+            // Fallback for non‑secure contexts
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = mappingsText;
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                textarea.style.top = '0';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textarea);
+
+                if (successful) {
+                    const original = btn.textContent;
+                    btn.textContent = '✓';
+                    setTimeout(() => btn.textContent = original, 2000);
+                } else {
+                    throw new Error('execCommand copy returned false');
+                }
+            } catch (e) {
+                console.error('All copy methods failed', e);
             }
         }
 
