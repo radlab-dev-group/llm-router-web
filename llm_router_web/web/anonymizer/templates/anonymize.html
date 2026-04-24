@@ -5,7 +5,8 @@
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-        {#max-width: 1400px;#} margin: 0 auto;
+            {#max-width: 1400px;#}
+            margin: 0 auto;
         }
 
         .workspace-header {
@@ -191,9 +192,45 @@
         }
 
         async function copyResult() {
-            const text = document.getElementById('result-content').innerText;
-            await navigator.clipboard.writeText(text);
-            alert('Copied to clipboard!');
+            const el = document.getElementById('result-content');
+            if (!el) return;
+            const text = el.textContent.trim();
+
+            // Metoda 1: Nowoczesne API Clipboard (wymaga HTTPS/localhost)
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    alert('Copied to clipboard!');
+                    return;
+                } catch (e) {
+                    console.error('Clipboard API failed, trying fallback...', e);
+                }
+            }
+
+            // Metoda 2: Fallback dla niebezpiecznych kontekstów (HTTP, IP)
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                // Pozycjonowanie poza ekranem, by nie przeszkadzało
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                if (successful) {
+                    alert('Copied to clipboard!');
+                } else {
+                    throw new Error('execCommand copy returned false');
+                }
+            } catch (e) {
+                console.error('All copy methods failed', e);
+                alert('Failed to copy text. Please select it manually.');
+            }
         }
 
         function clearText() {

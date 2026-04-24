@@ -60,7 +60,7 @@
         }
 
         .history-search {
-            background: rgba(0, 0, 0, 0.1);
+            background: rgba(128, 128, 128, 0.1);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
             padding: 0.6rem 0.8rem;
@@ -194,6 +194,7 @@
             gap: 1rem;
             min-width: 0;
             position: relative;
+            height: 100%;
         }
 
         .chat-toolbar {
@@ -201,6 +202,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.5rem 0;
+            flex-shrink: 0;
         }
 
         .chat-info h2 {
@@ -248,6 +250,7 @@
             flex-direction: column;
             gap: 1.5rem;
             scroll-behavior: smooth;
+            min-height: 0;
         }
 
         .msg {
@@ -319,6 +322,7 @@
             max-width: 850px;
             margin: 0 auto;
             align-self: center;
+            flex-shrink: 0;
         }
 
         .composer-container {
@@ -632,7 +636,8 @@
                       class="composer-container">
                     <input type="hidden" id="new-chat-flag" name="new_chat" value="true">
                     <textarea id="chat-input" name="message" class="inputx" placeholder="Napisz wiadomość..." required
-                              rows="1" style="border: none; background: transparent; resize: none;"></textarea>
+                              rows="1"
+                              style="border: none; background: transparent; resize: none; max-height: 40vh; overflow-y: auto;"></textarea>
                     <div class="input-stats" id="input-stats">Znaków: 0 | Słów: 0</div>
 
                     <div class="composer-footer">
@@ -705,8 +710,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        /*--- JS logic remains identical to original chat.html -... -...- -/-*/
-        // (Skompresowano w celu przejrzystości, ale w rzeczywistym pliku zostają wszystkie funkcje z oryginalnego chat.html)
         const chatInput = document.getElementById('chat-input');
         const modelSelect = document.getElementById('model-select');
         const algoSelect = document.getElementById('algorithm-select');
@@ -772,8 +775,9 @@
         }
 
         function toggleHistory() {
-            historySidebar.classList.toggle('hidden');
-            if (!historySidebar.classList.contains('hidden')) renderHistoryList();
+            const isHidden = historySidebar.classList.toggle('hidden');
+            localStorage.setItem('chat_history_visible', !isHidden);
+            if (!isHidden) renderHistoryList();
         }
 
         function renderHistoryList() {
@@ -944,6 +948,12 @@
             updateSessionStatus();
             updateInputStats();
             autoResize();
+
+            // Load history visibility state
+            const isVisible = localStorage.getItem('chat_history_visible') !== 'false';
+            if (!isVisible) historySidebar.classList.add('hidden');
+            else renderHistoryList();
+
             document.getElementById('btn-toggle-history').onclick = toggleHistory;
             document.getElementById('btn-sidebar-new-chat').onclick = () => btnNewChat.click();
             document.getElementById('btn-toggle-sys-prompt').onclick = () => sysPromptPanel.classList.toggle('active');
@@ -1026,10 +1036,24 @@
                 copyBtn.style.cssText = 'padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;';
                 copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
                 copyBtn.onclick = async () => {
+                    const textToCopy = wrap.dataset.content || '';
+                    if (!textToCopy) return;
                     try {
-                        const textToCopy = wrap.dataset.content || (wrap._assistantInner ? wrap._assistantInner.innerText : '').trim();
-                        if (!textToCopy) return;
-                        await navigator.clipboard.writeText(textToCopy);
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            await navigator.clipboard.writeText(textToCopy);
+                        } else {
+                            // Fallback for non‑secure contexts
+                            const textarea = document.createElement('textarea');
+                            textarea.value = textToCopy;
+                            // Prevent scrolling to the bottom
+                            textarea.style.position = 'fixed';
+                            textarea.style.opacity = '0';
+                            document.body.appendChild(textarea);
+                            textarea.focus();
+                            textarea.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(textarea);
+                        }
                         const originalHtml = copyBtn.innerHTML;
                         copyBtn.textContent = '✓';
                         setTimeout(() => copyBtn.innerHTML = originalHtml, 2000);

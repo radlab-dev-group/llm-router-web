@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pl"
       x-data="{ theme: localStorage.getItem('theme') || 'dark' }"
-      x-init="localStorage.setItem('theme', theme)"
+      x-effect="localStorage.setItem('theme', theme)"
       :class="{ 'theme-light': theme === 'light', 'theme-dark': theme === 'dark' }">
 <head>
     <meta charset="UTF-8"/>
@@ -29,6 +29,7 @@
             --text-muted: #a0aec0;
             --header-bg: rgba(15, 23, 42, 0.8);
             --footer-bg: rgba(15, 23, 42, 0.5);
+            --option-bg: #1e293b;
         }
 
         .theme-light {
@@ -43,6 +44,7 @@
             --text-muted: #64748b;
             --header-bg: rgba(241, 245, 249, 0.8);
             --footer-bg: rgba(241, 245, 249, 0.5);
+            --option-bg: #ffffff;
         }
 
         body {
@@ -56,7 +58,7 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* ---- Common Components (Moved from pages) ---- */
+        /* ---- Common Components ---- */
         .btnx {
             appearance: none;
             border: 1px solid var(--border-glass);
@@ -75,11 +77,7 @@
         }
 
         .btnx:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .theme-light .btnx:hover {
-            background: rgba(0, 0, 0, 0.05);
+            background: rgba(128, 128, 128, 0.1);
         }
 
         .btnx.primary {
@@ -112,6 +110,11 @@
             font-size: 0.85rem;
             transition: border-color 0.2s;
             cursor: pointer;
+        }
+
+        .selectx option {
+            background-color: var(--option-bg);
+            color: var(--text-main);
         }
 
         .inputx {
