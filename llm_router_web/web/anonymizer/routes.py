@@ -69,6 +69,14 @@ def show_privacy():
     return render_template("privacy.html")
 
 
+@anonymize_bp.route("/terms", methods=["GET"])
+def show_terms():
+    """
+    Render the terms of service page.
+    """
+    return render_template("terms.html")
+
+
 @anonymize_bp.route("/", methods=["POST"])
 def process_text():
     """
