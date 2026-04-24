@@ -84,13 +84,29 @@
             gap: 0.4rem;
         }
 
-        .history-list::-webkit-scrollbar {
-            width: 4px;
+        /* Scrollbar dla wszystkich kontenerów z overflow */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
 
-        .history-list::-webkit-scrollbar-thumb {
-            background: var(--glass-border);
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
+            transition: background 0.2s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
         }
 
         .history-item {
