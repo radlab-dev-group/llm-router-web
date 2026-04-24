@@ -5,8 +5,8 @@
             --sidebar-width: 280px;
             --transition-speed: 0.3s;
             --accent-rgb: 100, 116, 139;
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-bg: var(--bg-glass);
+            --glass-border: var(--border-glass);
         }
 
         .chat-layout {
@@ -30,7 +30,7 @@
             transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
             backdrop-filter: blur(16px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 32px var(--shadow-glass);
         }
 
         .history-sidebar.hidden {
@@ -60,7 +60,7 @@
         }
 
         .history-search {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(128, 128, 128, 0.1);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
             padding: 0.6rem 0.8rem;
@@ -69,6 +69,10 @@
             outline: none;
             width: 100%;
             transition: border-color 0.2s;
+        }
+
+        .theme-dark .history-search {
+            background: rgba(0, 0, 0, 0.3);
         }
 
         .history-search:focus {
@@ -84,31 +88,6 @@
             gap: 0.4rem;
         }
 
-        /* Scrollbar dla wszystkich kontenerów z overflow */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            transition: background 0.2s ease;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
-        }
-
         .history-item {
             padding: 0.7rem;
             border-radius: 14px;
@@ -121,7 +100,7 @@
         }
 
         .history-item:hover {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(128, 128, 128, 0.1);
             border-color: var(--glass-border);
         }
 
@@ -174,7 +153,7 @@
         }
 
         .btn-icon-small:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(128, 128, 128, 0.1);
             color: var(--accent);
         }
 
@@ -190,12 +169,16 @@
             justify-content: center;
             gap: 0.5rem;
             background: var(--accent);
-            color: #0f172a;
+            color: #fff;
             border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             border: none;
+        }
+
+        .theme-dark .btn-new-chat-sidebar {
+            color: #0f172a;
         }
 
         .btn-new-chat-sidebar:hover {
@@ -211,6 +194,7 @@
             gap: 1rem;
             min-width: 0;
             position: relative;
+            height: 100%;
         }
 
         .chat-toolbar {
@@ -218,6 +202,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.5rem 0;
+            flex-shrink: 0;
         }
 
         .chat-info h2 {
@@ -265,6 +250,7 @@
             flex-direction: column;
             gap: 1.5rem;
             scroll-behavior: smooth;
+            min-height: 0;
         }
 
         .msg {
@@ -308,65 +294,58 @@
             border-radius: 20px;
             font-size: 0.95rem;
             line-height: 1.6;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 15px var(--shadow-glass);
         }
 
         .msg.user .bubble {
             background: var(--accent);
-            color: #0f172a;
+            color: #fff;
             border-bottom-right-radius: 4px;
         }
 
+        .theme-dark .msg.user .bubble {
+            color: #0f172a;
+        }
+
         .msg.assistant .bubble {
-            background: var(--glass-bg);
+            background: var(--bg-glass);
             border: 1px solid var(--glass-border);
-            color: #f8fafc;
+            color: var(--text-main);
             border-bottom-left-radius: 4px;
             backdrop-filter: blur(8px);
         }
 
-        .anon-tag {
-            display: inline-block;
-            padding: 0 0.3rem;
-            border-radius: 4px;
-            background: rgba(255, 220, 120, 0.15);
-            color: #ffe0a3;
-            border: 1px solid rgba(255, 220, 120, 0.3);
-            font-family: monospace;
-            font-weight: 700;
-        }
-
-        /* --- COMPACT COMPOSER --- */
+        /* --- Composer --- */
         .composer-wrapper {
             position: relative;
             width: 100%;
             max-width: 850px;
             margin: 0 auto;
             align-self: center;
+            flex-shrink: 0;
         }
 
         .composer-container {
-            background: var(--glass-bg);
+            background: var(--bg-glass);
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             padding: 0.75rem;
             backdrop-filter: blur(20px);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 40px var(--shadow-glass);
             transition: all 0.3s ease;
         }
 
         .composer-container:focus-within {
             border-color: var(--accent);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--accent);
+            box-shadow: 0 10px 40px var(--shadow-glass), 0 0 0 1px var(--accent);
         }
 
-        /* System Prompt Overlay */
         .sys-prompt-overlay {
             position: absolute;
             bottom: 100%;
             left: 0;
             right: 0;
-            background: var(--glass-bg);
+            background: var(--bg-glass);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
             padding: 1rem;
@@ -377,7 +356,7 @@
             gap: 0.75rem;
             z-index: 10;
             animation: slideUp 0.2s ease-out;
-            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 -10px 30px var(--shadow-glass);
         }
 
         @keyframes slideUp {
@@ -404,7 +383,7 @@
             gap: 0.5rem;
         }
 
-        /* --- Modal for Quick Prompts --- */
+        /* --- Modal --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -425,14 +404,14 @@
         }
 
         .modal-content {
-            background: var(--glass-bg);
+            background: var(--bg-glass);
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             padding: 1.5rem;
             max-width: 500px;
             width: 90%;
             backdrop-filter: blur(20px);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 50px var(--shadow-glass);
             animation: modalAppear 0.2s ease-out;
         }
 
@@ -476,7 +455,7 @@
             font-size: 0.8rem;
             padding: 10px 14px;
             border-radius: 14px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(128, 128, 128, 0.05);
             border: 1px solid var(--glass-border);
             cursor: pointer;
             color: var(--text-muted);
@@ -489,24 +468,13 @@
 
         .prompt-chip:hover {
             background: var(--accent);
-            color: #0f172a;
+            color: #fff;
             border-color: var(--accent);
             transform: translateY(-2px);
         }
 
-        .inputx {
-            width: 100%;
-            border: none;
-            background: transparent;
-            padding: 0.5rem;
-            color: inherit;
-            outline: none;
-            resize: none;
-            font-family: inherit;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            max-height: 200px;
-            min-height: 24px;
+        .theme-dark .prompt-chip:hover {
+            color: #0f172a;
         }
 
         .composer-footer {
@@ -526,75 +494,6 @@
             align-items: center;
         }
 
-        .selectx {
-            border-radius: 12px;
-            border: 1px solid var(--border-glass);
-            background: #1e293b;
-            padding: 0.6rem;
-            color: #f8fafc;
-            outline: none;
-            font-family: inherit;
-            font-size: 0.85rem;
-            transition: border-color 0.2s;
-            box-sizing: border-box;
-            cursor: pointer;
-        }
-
-        .selectx option {
-            background: #1e293b;
-            color: #f8fafc;
-        }
-
-        .btnx {
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.05);
-            color: inherit;
-            border-radius: 10px;
-            padding: 0.4rem 0.8rem;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .btnx:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .btnx.primary {
-            background: var(--accent);
-            color: #0f172a;
-            border-color: var(--accent);
-        }
-
-        .btnx.danger {
-            color: #fca5a5;
-            border-color: rgba(239, 68, 68, 0.3);
-        }
-
-        .spinnerx {
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            display: none;
-        }
-
-        .spinnerx.active {
-            display: inline-block;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
         .chat-empty {
             text-align: center;
             margin-top: 20vh;
@@ -604,7 +503,7 @@
 
         .kbd {
             padding: 2px 5px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(128, 128, 128, 0.1);
             border-radius: 4px;
             font-family: monospace;
             font-size: 0.75rem;
@@ -619,7 +518,7 @@
             cursor: pointer;
             padding: 0.3rem 0.7rem;
             border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(128, 128, 128, 0.05);
             border: 1px solid var(--glass-border);
         }
 
@@ -720,7 +619,6 @@
             </div>
 
             <div class="composer-wrapper">
-                <!-- System Prompt Overlay -->
                 <div class="sys-prompt-overlay" id="system-prompt-panel">
                     <div class="sys-prompt-label">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -737,9 +635,9 @@
                 <form id="chat-form" action="{{ url_for('anonymize_web.chat_message') }}" method="post"
                       class="composer-container">
                     <input type="hidden" id="new-chat-flag" name="new_chat" value="true">
-
                     <textarea id="chat-input" name="message" class="inputx" placeholder="Napisz wiadomość..." required
-                              rows="1"></textarea>
+                              rows="1"
+                              style="border: none; background: transparent; resize: none; max-height: 40vh; overflow-y: auto;"></textarea>
                     <div class="input-stats" id="input-stats">Znaków: 0 | Słów: 0</div>
 
                     <div class="composer-footer">
@@ -830,14 +728,12 @@
         const inputStats = document.getElementById('input-stats');
         const currentChatTitle = document.getElementById('current-chat-title');
 
-        // Modal Elements
         const promptModal = document.getElementById('prompt-modal');
         const btnOpenPrompts = document.getElementById('btn-open-prompts');
         const btnClosePrompts = document.getElementById('btn-close-prompts');
 
         let currentChatId = null;
 
-        // --- Auto-resize textarea ---
         function autoResize() {
             chatInput.style.height = 'auto';
             chatInput.style.height = chatInput.scrollHeight + 'px';
@@ -845,7 +741,6 @@
 
         chatInput.addEventListener('input', autoResize);
 
-        // --- Utils ---
         function formatDate(timestamp) {
             const date = new Date(timestamp);
             return new Intl.DateTimeFormat('pl-PL', {
@@ -870,7 +765,6 @@
             }
         }
 
-        // --- Local History Logic ---
         function getLocalChats() {
             const data = localStorage.getItem('llm_router_chats');
             return data ? JSON.parse(data) : {};
@@ -881,8 +775,9 @@
         }
 
         function toggleHistory() {
-            historySidebar.classList.toggle('hidden');
-            if (!historySidebar.classList.contains('hidden')) renderHistoryList();
+            const isHidden = historySidebar.classList.toggle('hidden');
+            localStorage.setItem('chat_history_visible', !isHidden);
+            if (!isHidden) renderHistoryList();
         }
 
         function renderHistoryList() {
@@ -894,23 +789,21 @@
 
             sortedChats.forEach(([id, chat]) => {
                 if (searchTerm && !chat.name.toLowerCase().includes(searchTerm)) return;
-
                 const item = document.createElement('div');
                 item.className = `history-item ${id === currentChatId ? 'active' : ''}`;
                 item.innerHTML = `
-                    <div class="history-item-info">
-                        <span class="history-item-name" title="${chat.name}">${chat.name}</span>
-                        <span class="history-item-date">${formatDate(chat.timestamp)}</span>
-                    </div>
-                    <div class="history-actions">
-                        <button type="button" class="btn-icon-small" data-id="${id}" title="Zmień nazwę">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        </button>
-                        <button type="button" class="btn-icon-small del" data-id="${id}" title="Usuń">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                    </div>
-                `;
+                        <div class="history-item-info">
+                            <span class="history-item-name" title="${chat.name}">${chat.name}</span>
+                            <span class="history-item-date">${formatDate(chat.timestamp)}</span>
+                        </div>
+                        <div class="history-actions">
+                            <button type="button" class="btn-icon-small" data-id="${id}" title="Zmień nazwę">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button type="button" class="btn-icon-small del" data-id="${id}" title="Usuń">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>`;
                 item.onclick = (e) => {
                     if (e.target.closest('.history-actions')) return;
                     loadChatById(id);
@@ -1055,12 +948,17 @@
             updateSessionStatus();
             updateInputStats();
             autoResize();
+
+            // Load history visibility state
+            const isVisible = localStorage.getItem('chat_history_visible') !== 'false';
+            if (!isVisible) historySidebar.classList.add('hidden');
+            else renderHistoryList();
+
             document.getElementById('btn-toggle-history').onclick = toggleHistory;
             document.getElementById('btn-sidebar-new-chat').onclick = () => btnNewChat.click();
             document.getElementById('btn-toggle-sys-prompt').onclick = () => sysPromptPanel.classList.toggle('active');
         });
 
-        // Modal Logic
         btnOpenPrompts.onclick = () => promptModal.classList.add('active');
         btnClosePrompts.onclick = () => promptModal.classList.remove('active');
         promptModal.onclick = (e) => {
@@ -1138,24 +1036,23 @@
                 copyBtn.style.cssText = 'padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;';
                 copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
                 copyBtn.onclick = async () => {
+                    const textToCopy = wrap.dataset.content || '';
+                    if (!textToCopy) return;
                     try {
-                        const textToCopy = wrap.dataset.content || (wrap._assistantInner ? wrap._assistantInner.innerText : '').trim();
-                        if (!textToCopy) return;
-
                         if (navigator.clipboard && navigator.clipboard.writeText) {
                             await navigator.clipboard.writeText(textToCopy);
                         } else {
-                            // Fallback dla kontekstów HTTP / starszych przeglądarek
-                            const textArea = document.createElement("textarea");
-                            textArea.value = textToCopy;
-                            textArea.style.position = "fixed";
-                            textArea.style.left = "-9999px";
-                            textArea.style.top = "0";
-                            document.body.appendChild(textArea);
-                            textArea.focus();
-                            textArea.select();
+                            // Fallback for non‑secure contexts
+                            const textarea = document.createElement('textarea');
+                            textarea.value = textToCopy;
+                            // Prevent scrolling to the bottom
+                            textarea.style.position = 'fixed';
+                            textarea.style.opacity = '0';
+                            document.body.appendChild(textarea);
+                            textarea.focus();
+                            textarea.select();
                             document.execCommand('copy');
-                            textArea.remove();
+                            document.body.removeChild(textarea);
                         }
                         const originalHtml = copyBtn.innerHTML;
                         copyBtn.textContent = '✓';
@@ -1194,8 +1091,6 @@
             if (!userWrap || !userWrap.classList.contains('user')) return;
 
             const userText = userWrap.dataset.content || '';
-
-            // 1. Remove target assistant message and everything following it from DOM
             let current = assistantWrap;
             while (current) {
                 const next = current.nextElementSibling;
@@ -1203,10 +1098,8 @@
                 current = next;
             }
 
-            // 2. Sync server history to state BEFORE the user message that we are about to resend
-            // This ensures the server doesn't have [User, User] when we send the message again.
             const remainingMessages = Array.from(document.querySelectorAll('.msg'));
-            const messagesBeforeUser = remainingMessages.slice(0, -1); // Everything except the last User message
+            const messagesBeforeUser = remainingMessages.slice(0, -1);
 
             try {
                 await fetch("{{ url_for('anonymize_web.import_chat') }}", {
@@ -1219,7 +1112,6 @@
                     })
                 });
 
-                // 3. Now send the user text again
                 const assistantWrapNew = addMessage('assistant', '', {streaming: true});
                 const inner = assistantWrapNew._assistantInner;
                 spinner.classList.add('active');
@@ -1262,8 +1154,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                const errorMsg = addMessage('assistant', `Error: ${err}`);
-                errorMsg.dataset.content = `Error: ${err}`;
+                addMessage('assistant', `Error: ${err}`);
             } finally {
                 spinner.classList.remove('active');
                 btnSend.disabled = false;
@@ -1347,6 +1238,11 @@
             const text = chatInput.value.trim();
             if (!text) return;
             addMessage('user', text);
+
+            {#chatInput.value = '';#}
+            chatInput.style.height = 'auto';
+            updateInputStats()
+
             const assistantWrap = addMessage('assistant', '', {streaming: true});
             const assistantInner = assistantWrap._assistantInner;
             spinner.classList.add('active');
@@ -1354,7 +1250,7 @@
             try {
                 const formData = new FormData(e.target);
                 formData.append('system_prompt', sysPromptInput.value);
-                const resp = await fetch(e.target.action, {method: 'POST', body: new FormData(e.target)});
+                const resp = await fetch(e.target.action, {method: 'POST', body: formData});
                 if (!resp.body) {
                     const txt = await resp.text();
                     assistantInner.innerHTML = marked.parse(txt);
@@ -1384,6 +1280,7 @@
             } finally {
                 spinner.classList.remove('active');
                 chatInput.value = '';
+                chatInput.style.height = 'auto';
                 updateInputStats();
                 autoResize();
                 saveState();
