@@ -1250,7 +1250,7 @@
             try {
                 const formData = new FormData(e.target);
                 formData.append('system_prompt', sysPromptInput.value);
-                const resp = await fetch(e.target.action, {method: 'POST', body: new FormData(e.target)});
+                const resp = await fetch(e.target.action, {method: 'POST', body: formData});
                 if (!resp.body) {
                     const txt = await resp.text();
                     assistantInner.innerHTML = marked.parse(txt);

@@ -179,8 +179,6 @@ def chat_message():
 
     system_prompt = request.form.get("system_prompt", "").strip()
 
-    print(f"System prompt: '{system_prompt}'")
-
     # Sprawdzenie czy rozpoczęto nowy czat
     new_chat = request.form.get("new_chat") == "true"
     if new_chat:
@@ -313,9 +311,9 @@ def import_chat():
         # Basic validation of message structure
         for msg in history:
             if (
-                    not isinstance(msg, dict)
-                    or "role" not in msg
-                    or "content" not in msg
+                not isinstance(msg, dict)
+                or "role" not in msg
+                or "content" not in msg
             ):
                 return jsonify({"ok": False, "error": "Invalid message format"}), 400
 
