@@ -1123,8 +1123,24 @@
                 copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
                 copyBtn.onclick = async () => {
                     try {
-                        const textToCopy = wrap.dataset.content || bubble.innerText.replace(/✓|↻/g, '').trim();
-                        await navigator.clipboard.writeText(textToCopy);
+                        const textToCopy = wrap.dataset.content || (wrap._assistantInner ? wrap._assistantInner.innerText : '').trim();
+                        if (!textToCopy) return;
+
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            await navigator.clipboard.writeText(textToCopy);
+                        } else {
+                            // Fallback dla kontekstów HTTP / starszych przeglądarek
+                            const textArea = document.createElement("textarea");
+                            textArea.value = textToCopy;
+                            textArea.style.position = "fixed";
+                            textArea.style.left = "-9999px";
+                            textArea.style.top = "0";
+                            document.body.appendChild(textArea);
+                            textArea.focus();
+                            textArea.select();
+                            document.execCommand('copy');
+                            textArea.remove();
+                        }
                         const originalHtml = copyBtn.innerHTML;
                         copyBtn.textContent = '✓';
                         setTimeout(() => copyBtn.innerHTML = originalHtml, 2000);
