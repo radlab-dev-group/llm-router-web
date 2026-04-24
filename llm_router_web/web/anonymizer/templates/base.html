@@ -310,6 +310,39 @@
             flex-direction: column;
             gap: 0.5rem;
         }
+
+        /* Dodajemy x-cloak, aby zapobiec miganiu modali przed inicjalizacją Alpine.js */
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.7); /* Głęboki ciemny kolor dla lepszego kontrastu */
+            backdrop-filter: blur(12px);
+            display: flex; /* Zmieniamy na flex jako domyślny dla centrowania */
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Specjalny styl dla modala powitalnego */
+        .welcome-modal {
+            background: linear-gradient(135deg, var(--bg-glass), var(--bg-input));
+            border: 1px solid var(--border-glass);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 3rem 2rem;
+            border-radius: 32px;
+            text-align: center;
+            max-width: 550px;
+            width: 90%;
+            animation: modalAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
     </style>
 </head>
 <body>
@@ -335,6 +368,10 @@
            class="nav-item {% if request.endpoint == 'anonymize_web.show_form' %}active{% endif %}">Anonymize</a>
         <a href="{{ url_for('anonymize_web.show_chat') }}"
            class="nav-item {% if request.endpoint == 'anonymize_web.show_chat' %}active{% endif %}">Chat</a>
+        <a href="{{ url_for('anonymize_web.show_privacy') }}"
+           class="nav-item {% if request.endpoint == 'anonymize_web.show_privacy' %}active{% endif %}">Prywatność</a>
+        <a href="{{ url_for('anonymize_web.show_terms') }}"
+           class="nav-item {% if request.endpoint == 'anonymize_web.show_terms' %}active{% endif %}">Regulamin</a>
 
         <div style="width: 1px; height: 20px; background: var(--border-glass); margin: 0 4px;"></div>
 
@@ -345,6 +382,36 @@
         </button>
     </div>
 </header>
+
+<!-- Terms Acceptance Overlay (Alpine.js version) -->
+{% if request.endpoint not in ['anonymize_web.show_terms', 'anonymize_web.show_privacy'] %}
+    <div x-data="{ accepted: localStorage.getItem('terms_accepted') === 'true' }"
+         x-show="!accepted"
+         x-transition.opacity
+         class="welcome-overlay"
+         style="z-index: 2000; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: flex !important;"
+         @keydown.window.escape="accepted = true">
+
+        <div class="modal-content" style="max-width: 600px; text-align: center; animation: modalAppear 0.3s ease-out;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">👋</div>
+            <h2 style="margin-bottom: 1rem; color: var(--accent);">Witaj w LLM-Router Anonymizer</h2>
+            <p style="margin-bottom: 2rem; line-height: 1.6; color: var(--text-main);">
+                Zanim zaczniesz korzystać z narzędzi, prosimy o zapoznanie się z naszym
+                <a href="{{ url_for('anonymize_web.show_terms') }}" target="_blank"
+                   style="color: var(--accent); font-weight: 600;">regulaminem</a>
+                oraz <a href="{{ url_for('anonymize_web.show_privacy') }}" target="_blank"
+                        style="color: var(--accent); font-weight: 600;">polityką prywatności</a>.
+                <br><br>
+                Używając aplikacji, akceptujesz zasady przetwarzania danych w celu ich anonimizacji.
+            </p>
+            <button @click="accepted = true; localStorage.setItem('terms_accepted', 'true')"
+                    class="btnx primary"
+                    style="padding: 0.8rem 2rem; font-size: 1rem; cursor: pointer;">
+                Akceptuję i wchodzę 🚀
+            </button>
+        </div>
+    </div>
+{% endif %}
 
 <div class="app-container">
     <main class="app-main">

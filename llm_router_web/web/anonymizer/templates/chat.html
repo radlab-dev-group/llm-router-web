@@ -234,6 +234,30 @@
             border-color: rgba(34, 197, 94, 0.4);
         }
 
+        .pill-danger {
+            background: #ef4444;
+            color: #fff !important;
+            border: 1px solid #b91c1c;
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+            animation: pulse-danger 3s 3;
+        }
+
+        @keyframes pulse-danger {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            70% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
         .session-warning {
             color: #fca5a5;
             font-weight: 600;
@@ -708,6 +732,51 @@
         </div>
     </div>
 
+    <!-- Privacy Warning Modal -->
+    <div class="modal-overlay" id="privacy-warning-modal">
+        <div class="modal-content" style="max-width: 500px; text-align: center; border-top: 5px solid #ef4444;">
+            <div class="modal-header" style="justify-content: center; color: #ef4444;">
+                    <span style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        Ostrzeżenie o prywatności
+                    </span>
+            </div>
+            <div style="margin: 1.5rem 0; line-height: 1.6; color: var(--text-main);">
+                <p style="font-weight: 700; margin-bottom: 1rem; font-size: 1.1rem;">Właśnie wyłączyłeś maskowanie
+                    danych!</p>
+                <p>
+                    Wybierając opcję <strong style="color: var(--accent);">"No anonymization"</strong>, wszystkie Twoje
+                    wiadomości zostaną wysłane do modelu AI w formie jawnej.
+                    Oznacza to, że wszelkie dane wrażliwe, takie jak:
+                </p>
+                <ul style="text-align: left; display: inline-block; margin: 1rem 0; color: var(--text-main); opacity: 0.9;">
+                    <li style="margin-bottom: 0.3rem;">• Imiona i nazwiska,</li>
+                    <li style="margin-bottom: 0.3rem;">• Adresy e-mail i numery telefonów,</li>
+                    <li style="margin-bottom: 0.3rem;">• Nazwy firm i konkretne lokalizacje,</li>
+                    <li style="margin-bottom: 0.3rem;">• Wszelkie inne dane osobowe (PII).</li>
+                </ul>
+                <p style="margin-top: 1rem;">
+                    zostaną przesłane do dostawcy modelu i mogą zostać wykorzystane do trenowania
+                    przyszłych wersji AI.
+                    <br><strong style="display: block; margin-top: 0.5rem;">Czy na pewno chcesz kontynuować bez
+                    ochrony?</strong>
+                </p>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+                <button type="button" class="btnx" id="btn-cancel-no-anno" style="flex: 1;">Wróć do ochrony</button>
+                <button type="button" class="btnx danger" id="btn-confirm-no-anno" style="flex: 1; font-weight: 700;">
+                    Tak, ryzykuję
+                </button>
+            </div>
+        </div>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         const chatInput = document.getElementById('chat-input');
@@ -732,7 +801,12 @@
         const btnOpenPrompts = document.getElementById('btn-open-prompts');
         const btnClosePrompts = document.getElementById('btn-close-prompts');
 
+        const privacyWarningModal = document.getElementById('privacy-warning-modal');
+        const btnConfirmNoAnno = document.getElementById('btn-confirm-no-anno');
+        const btnCancelNoAnno = document.getElementById('btn-cancel-no-anno');
+
         let currentChatId = null;
+        let prevAlgoValue = null;
 
         function autoResize() {
             chatInput.style.height = 'auto';
@@ -758,7 +832,10 @@
         function updateSessionStatus() {
             const statusEl = document.getElementById('session-status');
             if (algoSelect.value === 'no_anno') {
-                statusEl.innerHTML = '<span class="session-warning">⚠️ Sesja bez anonimizacji</span>';
+                statusEl.innerHTML = `
+                        <span class="session-warning" style="display:flex; align-items:center; gap:0.6rem;">
+                           <span class="pill pill-danger">SESJA BEZ ANONIMIZACJI</span>
+                        </span>`;
             } else {
                 const algoText = algoSelect.options[algoSelect.selectedIndex].text;
                 statusEl.innerHTML = `Bezpieczna sesja <span class="pill pill-success">${algoText}</span>`;
@@ -914,10 +991,35 @@
         });
         sysPromptInput.addEventListener('input', saveState);
         modelSelect.addEventListener('change', saveState);
+
         algoSelect.addEventListener('change', () => {
+            if (algoSelect.value === 'no_anno') {
+                // Store current value to revert if canceled
+                prevAlgoValue = [...algoSelect.options].find(o => o.selected === false && o.value !== 'no_anno')?.value || 'fast';
+                // Correctly capture the value before the change was finalized by the user
+                // Actually, let's find the previous value from state or a variable
+                privacyWarningModal.classList.add('active');
+            } else {
+                saveState();
+                updateSessionStatus();
+            }
+        });
+
+        // Handle Privacy Modal Actions
+        btnConfirmNoAnno.onclick = () => {
+            privacyWarningModal.classList.remove('active');
             saveState();
             updateSessionStatus();
-        });
+        };
+
+        btnCancelNoAnno.onclick = () => {
+            // Revert to previous value
+            const previousValue = localStorage.getItem('chat_last_algo') || 'fast';
+            algoSelect.value = previousValue;
+            privacyWarningModal.classList.remove('active');
+            updateSessionStatus();
+        };
+
         localHistoryEnabled.addEventListener('change', saveState);
         historySearch.addEventListener('input', renderHistoryList);
 

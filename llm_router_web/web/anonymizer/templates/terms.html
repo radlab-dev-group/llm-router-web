@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+    <style>
+        .terms-container {
+            max-width: 900px;
+            margin: 0 auto;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .terms-card {
+            padding: 2.5rem;
+            line-height: 1.8;
+        }
+
+        .terms-section {
+            margin-bottom: 2rem;
+        }
+
+        .terms-section h3 {
+            color: var(--accent);
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .terms-list {
+            padding-left: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .terms-list li {
+            margin-bottom: 0.7rem;
+        }
+
+        .warning-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 16px;
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            color: var(--text-main);
+        }
+    </style>
+
+    <div class="terms-container">
+        <div class="card terms-card">
+            <div class="terms-section" style="text-align: center; margin-bottom: 3rem;">
+                <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">📜 Regulamin Serwisu</h2>
+                <p class="sub">Zasady korzystania z narzędzia LLM-Router Anonymizer</p>
+            </div>
+
+            <div class="terms-section">
+                <h3>1. Postanowienia Ogólne</h3>
+                <p>
+                    Narzędzie <strong>LLM-Router Anonymizer</strong> jest aplikacją webową służącą do maskowania danych
+                    wrażliwych
+                    w tekście przed przesłaniem go do modeli językowych (LLM). Korzystanie z aplikacji jest bezpłatne i
+                    dobrowolne.
+                </p>
+            </div>
+
+            <div class="terms-section">
+                <h3>2. Odpowiedzialność za dane</h3>
+                <p>
+                    Użytkownik jest w pełni odpowiedzialny za treść przesyłanych danych. Aplikacja dąży do maksymalnego
+                    zabezpieczenia
+                    prywatności poprzez anonimizację, jednakże:
+                </p>
+                <ul class="terms-list">
+                    <li>Algorytmy maskowania mogą nie wykryć 100% danych wrażliwych.</li>
+                    <li>Wyłączenie anonimizacji (opcja "No anonymization") powoduje wysłanie danych w formie jawnej.
+                    </li>
+                    <li>Użytkownik przyjmuje do wiadomości, że dane mogą być przetwarzane przez zewnętrznych dostawców
+                        modeli AI.
+                    </li>
+                </ul>
+                <div class="warning-box">
+                    <strong>UWAGA:</strong> Aplikacja nie gwarantuje pełnej zgodności z RODO w przypadku błędnej
+                    konfiguracji
+                    lub świadomego wyłączenia maskowania przez użytkownika.
+                </div>
+            </div>
+
+            <div class="terms-section">
+                <h3>3. Sposób działania i przechowywanie</h3>
+                <p>
+                    Aplikacja działa w modelu "stateless" w zakresie treści: teksty nie są zapisywane w bazie danych na
+                    serwerze.
+                    Historia czatów jest przechowywana lokalnie w przeglądarce użytkownika (LocalStorage) lub w
+                    tymczasowej sesji.
+                </p>
+            </div>
+
+            <div class="terms-section">
+                <h3>4. Akceptacja</h3>
+                <p>
+                    Korzystanie z serwisu jest równoznaczne z akceptacją niniejszego regulaminu oraz polityki
+                    prywatności.
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
