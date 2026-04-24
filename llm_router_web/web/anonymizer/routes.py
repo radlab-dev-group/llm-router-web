@@ -3,11 +3,18 @@
 """
 Flask blueprint for the text anonymization web interface.
 
-Provides endpoints for:
-* anonymization form
-* anonymization processing
-* chat UI
-* model catalogue (proxy to the LLM‑Router `/models` endpoint)
+This module defines the routing logic for the anonymization web application,
+providing a bridge between the user interface and the backend services
+(PII Service and LLM-Router). It handles text processing requests,
+maintains chat sessions, and provides a model catalogue.
+
+Endpoints provided:
+    - /: GET (show form), POST (process anonymization)
+    - /chat: GET (show chat UI)
+    - /chat/message: POST (handle and stream chat messages)
+    - /chat/finalize: POST (save assistant response to session)
+    - /chat/import: POST (import chat history)
+    - /models: GET (fetch available models)
 """
 
 import json
@@ -40,7 +47,13 @@ anonymize_bp = Blueprint(
 
 @anonymize_bp.route("/", methods=["GET"])
 def show_form():
-    """Render the anonymization form."""
+    """
+    Render the main anonymization input form.
+
+    Returns:
+        The rendered 'anonymize.html' template containing the text input
+        and algorithm selection options.
+    """
     return render_template(
         "anonymize.html",
         api_host=current_app.config["LLM_ROUTER_HOST"],
@@ -50,7 +63,17 @@ def show_form():
 
 @anonymize_bp.route("/", methods=["POST"])
 def process_text():
-    """Send text to the external anonymization service and render the result."""
+    """
+    Process the submitted text for anonymization based on the selected algorithm.
+
+    This method extracts the text, chosen algorithm, and model name from the
+    request form. Depending on the algorithm, it delegates the task to
+    the PII service or the LLM-Router.
+
+    Returns:
+        A rendered 'anonymize_result_partial.html' template containing
+        the anonymized text and the mapping of original values to masks.
+    """
     raw_text = request.form.get("text", "")
     if not raw_text:
         return "⚠️ No text provided.", 400
@@ -61,8 +84,19 @@ def process_text():
     router_host = current_app.config["LLM_ROUTER_HOST"].rstrip("/")
     pii_host = current_app.config["PII_SERVICE_HOST"].rstrip("/")
 
-    # Helper to call the PII service
-    def call_pii_service(text, model) -> Dict | str:
+    def call_pii_service(text: str, model: str) -> Dict | str:
+        """
+        Helper to call the PII (Personally Identifiable Information) service.
+
+        Args:
+            text (str): The text to be anonymized.
+            model (str): The PII model name to use.
+
+        Returns:
+            Dict: The response from the PII service containing anonymized text
+                  and mappings if successful.
+            str: An error message if the request fails.
+        """
         labels = ["LOCATION", "PERSON"]
         try:
             # Analogous to pii/index.html call
@@ -81,8 +115,19 @@ def process_text():
         except Exception as e:
             return f"❌ PII Service Error: {e}"
 
-    # Helper to call the Router service
-    def call_router_service(text, model, endpoint):
+    def call_router_service(text: str, model: str, endpoint: str):
+        """
+        Helper to call the LLM-Router service.
+
+        Args:
+            text (str): The text to process.
+            model (str): The model name to use.
+            endpoint (str): The specific API endpoint on the router.
+
+        Returns:
+            Dict: The JSON response from the router service.
+            str: An error message if the request fails.
+        """
         try:
             resp = requests.post(
                 f"{router_host}{endpoint}",
@@ -163,7 +208,12 @@ def process_text():
 # ----------------------------------------------------------------------
 @anonymize_bp.route("/chat", methods=["GET"])
 def show_chat():
-    """Render the dedicated chat page."""
+    """
+    Render the dedicated chat interface page.
+
+    Returns:
+        The rendered 'chat.html' template.
+    """
     return render_template(
         "chat.html",
         api_host=current_app.config["LLM_ROUTER_HOST"],
@@ -172,14 +222,23 @@ def show_chat():
 
 @anonymize_bp.route("/chat/message", methods=["POST"])
 def chat_message():
-    """Forward a chat message to the LLM‑Router and stream the reply."""
+    """
+    Forward a chat message to the LLM-Router and stream the response back.
+
+    This method handles user input, manages the session-based chat history,
+    and implements a streaming response using a generator to ensure
+    the UI updates in real-time.
+
+    Returns:
+        A streaming Response object containing the LLM's output.
+    """
     user_msg = request.form.get("message", "")
     if not user_msg:
         return "⚠️ No message provided.", 400
 
     system_prompt = request.form.get("system_prompt", "").strip()
 
-    # Sprawdzenie czy rozpoczęto nowy czat
+    # Check if a new chat has been started
     new_chat = request.form.get("new_chat") == "true"
     if new_chat:
         session["chat_history"] = []
@@ -187,17 +246,19 @@ def chat_message():
     algorithm = request.form.get("algorithm", "fast")
     model_name = request.form.get("model_name", "").strip()
 
-    # Pobranie historii z sesji lub inicjalizacja nowej listy
+    # Retrieve history from session or initialize a new list
     history = session.get("chat_history", [])
     history.append({"role": "user", "content": user_msg})
 
-    # WAŻNE: przy domyślnej sesji cookie nie da się zapisać zmian "po streamie"
-    # (nagłówki są wysyłane zanim generator skończy). Zapisujemy więc historię
-    # użytkownika OD RAZU, a odpowiedź asystenta dopiszemy osobnym requestem (finalize).
+    # IMPORTANT: With the default cookie-based session, it is not possible to
+    # save changes "after the stream" (because headers are sent before
+    # the generator finishes). Therefore, we save the user's history
+    # IMMEDIATELY, and the assistant's response will be added via a
+    # separate request (finalize).
     session["chat_history"] = history
     session.modified = True
 
-    # Build the payload for the LLM‑Router.
+    # Build the payload for the LLM-Router.
     # If a system prompt is provided, prepend it as a message with role "system".
     payload_messages = []
     if system_prompt:
@@ -227,7 +288,7 @@ def chat_message():
             error_msg = (
                 resp.json()
                 .get("error", {})
-                .get("message", f"LLM‑Router returned {resp.status_code}")
+                .get("message", f"LLM-Router returned {resp.status_code}")
             )
             return (
                 Response(
@@ -245,6 +306,12 @@ def chat_message():
         return Response(error_html, mimetype="text/html"), 502
 
     def generate():
+        """
+        Generator that parses the LLM-Router's SSE stream and yields text chunks.
+
+        Yields:
+            str: A chunk of text from the LLM response.
+        """
         for line in resp.iter_lines(decode_unicode=True):
             if not line:
                 continue
@@ -276,10 +343,14 @@ def chat_message():
 @anonymize_bp.route("/chat/finalize", methods=["POST"])
 def chat_finalize():
     """
-    Persist assistant response in session.
+    Persist the final assistant response in the session.
 
     This is required when using Flask's default cookie-based session:
-    you cannot modify session after streaming starts (headers already sent).
+    you cannot modify the session after streaming starts because the
+    HTTP headers have already been sent to the client.
+
+    Returns:
+        A JSON response indicating whether the history was successfully updated.
     """
     try:
         payload = request.get_json(force=True) or {}
@@ -301,6 +372,13 @@ def chat_finalize():
 def import_chat():
     """
     Import chat history from a JSON payload and save it to the session.
+
+    Args:
+        JSON payload containing a 'history' list of messages.
+
+    Returns:
+        A JSON response indicating success or a specific error if the
+        payload format is invalid.
     """
     try:
         data = request.get_json(force=True) or {}
@@ -330,8 +408,13 @@ def import_chat():
 @anonymize_bp.route("/models", methods=["GET"])
 def models():
     """
-    Retrieve the list of available models from the external LLM‑Router.
-    The frontend calls this endpoint (e.g. via `fetch`) to fill the model dropdown.
+    Retrieve the list of available models from the external LLM-Router.
+
+    The frontend calls this endpoint (e.g. via `fetch`) to dynamically
+    populate the model selection dropdown menus.
+
+    Returns:
+        A JSON response containing the list of available model names.
     """
     external_url = f"{current_app.config['LLM_ROUTER_HOST'].rstrip('/')}" "/models"
     try:
@@ -344,7 +427,7 @@ def models():
     try:
         data = resp.json()
     except ValueError:
-        current_app.logger.error("Models endpoint returned non‑JSON.")
+        current_app.logger.error("Models endpoint returned non-JSON.")
         return jsonify({"models": []}), 500
 
     models = data.get("models") or data.get("data") or []
