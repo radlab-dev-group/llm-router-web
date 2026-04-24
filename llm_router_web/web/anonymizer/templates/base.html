@@ -316,7 +316,7 @@
             display: none !important;
         }
 
-        .modal-overlay {
+        .welcome-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -388,7 +388,7 @@
     <div x-data="{ accepted: localStorage.getItem('terms_accepted') === 'true' }"
          x-show="!accepted"
          x-transition.opacity
-         class="modal-overlay"
+         class="welcome-overlay"
          style="z-index: 2000; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: flex !important;"
          @keydown.window.escape="accepted = true">
 
