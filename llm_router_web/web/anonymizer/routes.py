@@ -37,6 +37,13 @@ from flask import (
 
 from .constants import GENAI_MODEL_ANON, DEFAULT_PII_MODEL_NAME
 
+def _t(key):
+    """Helper function to translate strings within routes.py"""
+    lang = session.get("lang", "pl")
+    translations = current_app.config.get("TRANSLATIONS", {})
+    texts = translations.get(lang, translations.get("en", {}))
+    return texts.get(key, f"NO TRANSLATION: {key}")
+
 # Blueprint configuration
 anonymize_bp = Blueprint(
     "anonymize_web",

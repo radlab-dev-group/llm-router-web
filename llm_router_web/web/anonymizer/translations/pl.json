@@ -75,12 +75,21 @@
   "terms_sec1_title": "1. Postanowienia Ogólne",
   "terms_sec1_text": "Narzędzie LLM-Router Anonymizer jest aplikacją webową służącą do maskowania danych wrażliwych w tekście przed przesłaniem go do modeli językowych (LLM).",
   "terms_sec2_title": "2. Odpowiedzialność za dane",
-  "terms_sec2_text": "Użytkownik jest w pełni odpowiedzialny za treść przesyłanych danych. Algorytmy maskowania mogą nie wykryć 100% danych wrażliwych.",
+  "terms_sec2_text": "Użytkownik jest w pełni odpowiedzialny za treść przesyłanych danych.",
+  "terms_sec2_li1": "Algorytmy maskowania mogą nie wykryć 100% danych wrażliwych.",
+  "terms_sec2_li2": "Wyłączenie anonimizacji powoduje wysłanie danych w formie jawnej.",
+  "terms_sec2_li3": "Dane mogą być przetwarzane przez zewnętrznych dostawców modeli AI.",
   "terms_sec2_warning": "UWAGA: Aplikacja nie gwarantuje pełnej zgodności z RODO w przypadku świadomego wyłączenia maskowania.",
   "terms_sec3_title": "3. Sposób działania i przechowywanie",
   "terms_sec3_text": "Aplikacja działa w modelu \"stateless\". Teksty nie są zapisywane w bazie danych na serwerze.",
   "terms_sec4_title": "4. Akceptacja",
   "terms_sec4_text": "Korzystanie z serwisu jest równoznaczne z akceptacją niniejszego regulaminu oraz polityki prywatności.",
   "lang_pl": "PL",
-  "lang_en": "EN"
+  "lang_en": "EN",
+  "error_no_text": "⚠️ Nie podano tekstu.",
+  "error_no_message": "⚠️ Nie podano wiadomości.",
+  "js_rename_prompt": "Nowa nazwa rozmowy:",
+  "js_delete_confirm": "Usunąć tę rozmowę?",
+  "js_new_chat_confirm": "Rozpocząć nową rozmowę?",
+  "js_sync_error": "Błąd synchronizacji: "
 }

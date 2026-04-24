@@ -75,12 +75,21 @@
   "terms_sec1_title": "1. General Provisions",
   "terms_sec1_text": "The LLM-Router Anonymizer is a web application used to mask sensitive data in text before sending it to language models (LLM).",
   "terms_sec2_title": "2. Responsibility for Data",
-  "terms_sec2_text": "The user is fully responsible for the content of the data sent. Masking algorithms may not detect 100% of sensitive data.",
+  "terms_sec2_text": "The user is fully responsible for the content of the data sent.",
+  "terms_sec2_li1": "Masking algorithms may not detect 100% of sensitive data.",
+  "terms_sec2_li2": "Disabling anonymization causes data to be sent in plain text.",
+  "terms_sec2_li3": "Data may be processed by external AI model providers.",
   "terms_sec2_warning": "WARNING: The application does not guarantee full GDPR compliance if masking is consciously disabled.",
   "terms_sec3_title": "3. Operation and Storage",
   "terms_sec3_text": "The application operates in a \"stateless\" model. Texts are not saved in a database on the server.",
   "terms_sec4_title": "4. Acceptance",
   "terms_sec4_text": "Using the service is equivalent to accepting these terms and the privacy policy.",
   "lang_pl": "PL",
-  "lang_en": "EN"
+  "lang_en": "EN",
+  "error_no_text": "⚠️ No text provided.",
+  "error_no_message": "⚠️ No message provided.",
+  "js_rename_prompt": "New conversation name:",
+  "js_delete_confirm": "Delete this conversation?",
+  "js_new_chat_confirm": "Start a new conversation?",
+  "js_sync_error": "Synchronization error: "
 }

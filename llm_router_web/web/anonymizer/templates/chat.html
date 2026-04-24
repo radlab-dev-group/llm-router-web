@@ -851,7 +851,7 @@
                     body: JSON.stringify({history: chat.messages})
                 });
             } catch (e) {
-                alert('Sync error: ' + e.message);
+                alert('{{ _("js_sync_error") }}' + e.message);
             }
             chatOutput.innerHTML = '';
             chat.messages.forEach(msg => addMessage(msg.role, msg.content));
@@ -863,7 +863,7 @@
         function renameChatById(id) {
             const chats = getLocalChats();
             const oldName = chats[id].name;
-            const newName = prompt('{{ _("Nowa nazwa rozmowy:") }}', oldName);
+            const newName = prompt('{{ _("js_rename_prompt") }}', oldName);
             if (newName && newName.trim()) {
                 chats[id].name = newName.trim();
                 saveLocalChats(chats);
@@ -873,7 +873,7 @@
         }
 
         function deleteChatById(id) {
-            if (!confirm('{{ _("Usunąć tę rozmowę?") }}')) return;
+            if (!confirm('{{ _("js_delete_confirm") }}')) return;
             const chats = getLocalChats();
             delete chats[id];
             saveLocalChats(chats);
@@ -1189,7 +1189,7 @@
         });
 
         btnNewChat.addEventListener('click', () => {
-            if (!confirm('{{ _("Start a new conversation?") }}')) return;
+            if (!confirm('{{ _("js_new_chat_confirm") }}')) return;
             newChatFlag.value = 'true';
             currentChatId = null;
             currentChatTitle.textContent = '{{ _("chat_title") }}';
