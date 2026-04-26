@@ -1,0 +1,60 @@
+.privacy-container, .terms-container {
+    max-width: 900px;
+    margin: 0 auto;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.privacy-card, .terms-card {
+    padding: 2.5rem;
+    line-height: 1.8;
+}
+
+.privacy-section, .terms-section {
+    margin-bottom: 2rem;
+}
+
+.privacy-section h3, .terms-section h3 {
+    color: var(--accent);
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.privacy-section p, .privacy-section li, .terms-section p, .terms-section li {
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+.privacy-list, .terms-list {
+    padding-left: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.privacy-list li, .terms-list li {
+    margin-bottom: 0.5rem;
+}
+
+.terms-list li {
+    margin-bottom: 0.7rem;
+}
+
+.highlight-box {
+    background: var(--bg-input);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    padding: 1.2rem;
+    margin-top: 1rem;
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+.warning-box {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 16px;
+    padding: 1.2rem;
+    margin: 1.5rem 0;
+    color: var(--text-main);
+}

@@ -1,54 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-    <style>
-        .privacy-container {
-            max-width: 900px;
-            margin: 0 auto;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .privacy-card {
-            padding: 2.5rem;
-            line-height: 1.8;
-        }
-
-        .privacy-section {
-            margin-bottom: 2rem;
-        }
-
-        .privacy-section h3 {
-            color: var(--accent);
-            font-size: 1.4rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .privacy-section p, .privacy-section li {
-            color: var(--text-main);
-            font-size: 1rem;
-        }
-
-        .privacy-list {
-            padding-left: 1.2rem;
-            margin-bottom: 1rem;
-        }
-
-        .privacy-list li {
-            margin-bottom: 0.5rem;
-        }
-
-        .highlight-box {
-            background: var(--bg-input);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 1.2rem;
-            margin-top: 1rem;
-            font-style: italic;
-            color: var(--text-muted);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
 
     <div class="privacy-container">
         <div class="card privacy-card">

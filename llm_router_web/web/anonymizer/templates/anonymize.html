@@ -1,108 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-    <style>
-        .anon-workspace {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            margin: 0 auto;
-        }
-
-        .workspace-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            padding: 0 0.5rem;
-        }
-
-        .workspace-title h2 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .workspace-title .sub {
-            margin-top: 0.3rem;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        .workspace-controls {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-shrink: 0;
-        }
-
-        .editor-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-            align-items: stretch;
-            height: calc(100dvh - 260px);
-            max-height: calc(100dvh - 260px);
-            min-height: 320px;
-        }
-
-        @media (min-width: 820px) {
-            .editor-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        .editor-pane {
-            display: grid;
-            grid-template-rows: auto 1fr;
-            padding: 1.5rem;
-            gap: 1rem;
-            overflow: hidden;
-            height: 100%;
-            min-height: 0;
-            border: 1px solid var(--border-glass);
-            border-radius: 24px;
-            background: var(--bg-glass);
-            backdrop-filter: blur(16px);
-            box-shadow: 0 8px 32px var(--shadow-glass);
-        }
-
-        .pane-label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-        }
-
-        .result-area {
-            width: 100%;
-            height: 100%;
-            min-height: 0;
-            border-radius: 12px;
-            border: 1px solid var(--border-glass);
-            background: var(--bg-input);
-            padding: 1rem;
-            color: inherit;
-            outline: none;
-            font-family: inherit;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            box-sizing: border-box;
-            overflow-y: auto !important;
-            overflow-x: hidden;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        #result-wrapper {
-            height: 100%;
-            min-height: 0;
-            overflow: hidden;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/anonymize.css') }}">
 
     <div class="anon-workspace">
         <form id="anonymize-form"
@@ -130,6 +28,8 @@
                 </div>
             </header>
 
+            <div id="anon-progress" class="anon-progress-bar"></div>
+
             <div class="editor-grid">
                 <div class="editor-pane">
                     <div class="pane-label">{{ _('label_original') }}</div>
@@ -142,19 +42,16 @@
                     <div class="pane-label">
                         {{ _('label_result') }}
                         <div style="display:inline-flex; gap:0.4rem; align-items:center; margin-left:0.4rem;">
-                            <button type="button" class="btnx"
-                                    style="font-size:0.7rem; padding:0.2rem 0.6rem;"
+                            <button type="button" class="btnx" style="font-size:0.7rem; padding:0.2rem 0.6rem;"
                                     onclick="copyResult(this)">{{ _('btn_copy_text') }}</button>
-                            <button type="button" class="btnx"
-                                    style="font-size:0.7rem; padding:0.2rem 0.6rem;"
+                            <button type="button" class="btnx" style="font-size:0.7rem; padding:0.2rem 0.6rem;"
                                     onclick="copyMappings(this)">{{ _('btn_copy_mappings') }}</button>
                         </div>
                     </div>
 
                     <div id="result-wrapper">
                         {% if result %}
-                            <div id="result-content"
-                                 class="result-area"
+                            <div id="result-content" class="result-area"
                                  data-mappings='{{ result.mappings | tojson | safe }}'>{{ result.text | e }}</div>
                         {% else %}
                             <div id="result-content" class="result-area"><span
@@ -167,163 +64,7 @@
     </div>
 
     <script>
-        function highlightTags() {
-            const container = document.getElementById('result-content');
-            if (!container) return;
-
-            let mappings = {};
-            const raw = container.getAttribute('data-mappings');
-            if (raw) {
-                try {
-                    mappings = JSON.parse(raw);
-                } catch (e) {
-                    console.warn('Failed to parse mappings', e);
-                }
-            }
-
-            const originalText = container.textContent.trimStart();
-            container.innerHTML = originalText.replace(/(\{[A-Z]{2,}[^}]*\})/g, function (match) {
-                const value = mappings[match] || match;
-                return `<span class="anon-tag" title="${value.replace(/"/g, '&quot;')}">${match.replace(/"/g, '&quot;')}</span>`;
-            });
-        }
-
-        async function copyResult(btn) {
-            const el = document.getElementById('result-content');
-            if (!el) return;
-            const text = el.textContent.trim();
-
-            // Try modern Clipboard API first
-            if (navigator.clipboard && window.isSecureContext) {
-                try {
-                    await navigator.clipboard.writeText(text);
-                    // Show check‑mark icon temporarily
-                    const original = btn.textContent;
-                    btn.textContent = '✓';
-                    setTimeout(() => btn.textContent = original, 2000);
-                    return;
-                } catch (e) {
-                    console.error('Clipboard API failed, trying fallback...', e);
-                }
-            }
-
-            // Fallback for non‑secure contexts
-            try {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.position = "fixed";
-                textArea.style.left = "-9999px";
-                textArea.style.top = "0";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-
-                const successful = document.execCommand('copy');
-                document.body.removeChild(textArea);
-
-                if (successful) {
-                    const original = btn.textContent;
-                    btn.textContent = '✓';
-                    setTimeout(() => btn.textContent = original, 2000);
-                } else {
-                    throw new Error('execCommand copy returned false');
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        async function copyMappings(btn) {
-            const el = document.getElementById('result-content');
-            if (!el) return;
-
-            const raw = el.getAttribute('data-mappings');
-            if (!raw) {
-                console.warn('No mappings data found');
-                return;
-            }
-
-            let mappingsText = '';
-            try {
-                mappingsText = JSON.stringify(JSON.parse(raw), null, 2);
-            } catch (e) {
-                console.error('Failed to parse mappings JSON', e);
-                // fallback: copy raw string
-                mappingsText = raw;
-            }
-
-            // Try modern Clipboard API first
-            if (navigator.clipboard && window.isSecureContext) {
-                try {
-                    await navigator.clipboard.writeText(mappingsText);
-                    const original = btn.textContent;
-                    btn.textContent = '✓';
-                    setTimeout(() => btn.textContent = original, 2000);
-                    return;
-                } catch (e) {
-                    console.error('Clipboard API failed, trying fallback...', e);
-                }
-            }
-
-            // Fallback for non‑secure contexts
-            try {
-                const textarea = document.createElement('textarea');
-                textarea.value = mappingsText;
-                textarea.style.position = 'fixed';
-                textarea.style.left = '-9999px';
-                textarea.style.top = '0';
-                document.body.appendChild(textarea);
-                textarea.focus();
-                textarea.select();
-
-                const successful = document.execCommand('copy');
-                document.body.removeChild(textarea);
-
-                if (successful) {
-                    const original = btn.textContent;
-                    btn.textContent = '✓';
-                    setTimeout(() => btn.textContent = original, 2000);
-                } else {
-                    throw new Error('execCommand copy returned false');
-                }
-            } catch (e) {
-                console.error('All copy methods failed', e);
-            }
-        }
-
-        function clearText() {
-            document.getElementById('input-text').value = '';
-            document.getElementById('result-content').innerHTML = `<span style="opacity:0.5; font-style:italic;">{{ _('result_placeholder') }}</span>`;
-        }
-
-        function syncScroll(source) {
-            const targetId = source.id === 'input-text' ? 'result-content' : 'input-text';
-            const target = document.getElementById(targetId);
-            if (!target) return;
-
-            const sourceMaxScroll = source.scrollHeight - source.clientHeight;
-            if (sourceMaxScroll <= 0) {
-                target.scrollTop = 0;
-                return;
-            }
-            const scrollPercentage = source.scrollTop / sourceMaxScroll;
-            target.scrollTop = scrollPercentage * (target.scrollHeight - target.clientHeight);
-        }
-
-        const inputEl = document.getElementById('input-text');
-        const resultEl = document.getElementById('result-content');
-
-        if (inputEl) inputEl.addEventListener('scroll', e => syncScroll(e.target));
-        if (resultEl) resultEl.addEventListener('scroll', e => syncScroll(e.target));
-
-        document.body.addEventListener('htmx:afterSwap', e => {
-            if (e.detail?.target?.id === 'result-wrapper') {
-                highlightTags();
-                const newResultEl = document.getElementById('result-content');
-                if (newResultEl) newResultEl.addEventListener('scroll', e => syncScroll(e.target));
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', highlightTags);
+        window.ANON_CONFIG = {{ {'result_placeholder': _('result_placeholder')} | tojson }};
     </script>
+    <script src="{{ url_for('static', filename='js/anonymize.js') }}"></script>
 {% endblock %}
