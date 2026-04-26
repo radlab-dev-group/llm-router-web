@@ -373,6 +373,14 @@
     box-shadow: 0 -10px 30px var(--shadow-glass);
 }
 
+#system-prompt {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    max-height: 30vh;
+    resize: vertical;
+}
+
 @keyframes slideUp {
     from {
         opacity: 0;
