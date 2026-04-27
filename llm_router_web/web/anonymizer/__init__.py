@@ -15,7 +15,7 @@ def create_anonymize_app() -> Flask:
         __name__,
         # Share static resources with the main application
         static_folder=os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "static")
+            os.path.join(os.path.dirname(__file__), "static")
         ),
         # Templates are located in web/anonymize/templates
         template_folder=os.path.abspath(
@@ -52,8 +52,8 @@ def create_anonymize_app() -> Flask:
     # Register the helper function as a global in Jinja2 templates
     app.jinja_env.globals.update(_=get_text)
 
-    # ---- Configuration (environment variables) ----
     app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "change-me-anonymizer")
+
     # Address of the external anonymizing service
     app.config["LLM_ROUTER_HOST"] = os.getenv(
         "LLM_ROUTER_HOST", "http://localhost:8000"
@@ -64,7 +64,6 @@ def create_anonymize_app() -> Flask:
         "PII_SERVICE_HOST", "http://localhost:5001"
     )
 
-    # ---- Blueprint registration ----
     app.register_blueprint(anonymize_bp)
 
     @app.route("/", endpoint="index")
@@ -72,7 +71,6 @@ def create_anonymize_app() -> Flask:
         # You can redirect to a form or display a short page
         return redirect(url_for("anonymize_web.show_form"))
 
-    # ---- Simple error handlers (return JSON) ----
     @app.errorhandler(400)
     def handle_400(error):
         return {"error": error.description or "Bad request"}, 400

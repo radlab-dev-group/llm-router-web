@@ -1,48 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-    <style>
-        .terms-container {
-            max-width: 900px;
-            margin: 0 auto;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .terms-card {
-            padding: 2.5rem;
-            line-height: 1.8;
-        }
-
-        .terms-section {
-            margin-bottom: 2rem;
-        }
-
-        .terms-section h3 {
-            color: var(--accent);
-            font-size: 1.4rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .terms-list {
-            padding-left: 1.2rem;
-            margin-bottom: 1rem;
-        }
-
-        .terms-list li {
-            margin-bottom: 0.7rem;
-        }
-
-        .warning-box {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 16px;
-            padding: 1.2rem;
-            margin: 1.5rem 0;
-            color: var(--text-main);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
 
     <div class="terms-container">
         <div class="card terms-card">
@@ -60,9 +18,9 @@
                 <h3>{{ _('terms_sec2_title') }}</h3>
                 <p>{{ _('terms_sec2_text') }}</p>
                 <ul class="terms-list">
-                        <li>{{ _('terms_sec2_li1') }}</li>
-                        <li>{{ _('terms_sec2_li2') }}</li>
-                        <li>{{ _('terms_sec2_li3') }}</li>
+                    <li>{{ _('terms_sec2_li1') }}</li>
+                    <li>{{ _('terms_sec2_li2') }}</li>
+                    <li>{{ _('terms_sec2_li3') }}</li>
                 </ul>
                 <div class="warning-box">{{ _('terms_sec2_warning') }}</div>
             </div>
@@ -75,6 +33,17 @@
             <div class="terms-section">
                 <h3>{{ _('terms_sec4_title') }}</h3>
                 <p>{{ _('terms_sec4_text') }}</p>
+            </div>
+
+            <div class="terms-section">
+                <h3>{{ _('terms_sec5_title') }}</h3>
+                <p>{{ _('terms_sec5_text') }}</p>
+            </div>
+
+            <div class="terms-section">
+                <h3>{{ _('terms_sec6_title') }}</h3>
+                <p>{{ _('terms_sec6_text') }}</p>
+                <div class="warning-box">{{ _('terms_sec2_warning') }}</div>
             </div>
         </div>
     </div>
