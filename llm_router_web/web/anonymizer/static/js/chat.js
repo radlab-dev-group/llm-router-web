@@ -79,6 +79,7 @@
         localStorage.setItem('chat_history_visible', !isHidden);
         if (!isHidden) renderHistoryList();
     }
+    window.toggleHistory = toggleHistory;
 
     function renderHistoryList() {
         const chats = getLocalChats();
