@@ -348,7 +348,7 @@
         autoResize();
         if (localStorage.getItem('chat_last_algo') === 'no_anno') noAnnoModalShowOnNextSend = true;
         const isVisible = localStorage.getItem('chat_history_visible') !== 'false';
-        if (!isVisible) historySidebar.classList.add('hidden'); else renderHistoryList();
+        if (isVisible) { historySidebar.classList.remove('hidden'); renderHistoryList(); } else { historySidebar.classList.add('hidden'); }
         document.getElementById('btn-toggle-history').onclick = toggleHistory;
         document.getElementById('btn-sidebar-new-chat').onclick = () => btnNewChat.click();
         document.getElementById('btn-toggle-sys-prompt').onclick = () => sysPromptPanel.classList.toggle('active');
