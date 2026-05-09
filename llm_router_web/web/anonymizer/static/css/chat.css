@@ -546,3 +546,15 @@
     margin-top: 4px;
     padding-right: 0.5rem;
 }
+.modal-input {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+}
+
+.theme-dark .modal-input:focus {
+    box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.3);
+}

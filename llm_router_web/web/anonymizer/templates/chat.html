@@ -227,6 +227,68 @@
         </div>
     </div>
 
+
+    <!-- Rename Chat Modal -->
+    <div class="modal-overlay" id="rename-chat-modal" style="display:none;">
+        <div class="modal-content" style="max-width: 450px; border-top: 5px solid #63b3ed;">
+            <div class="modal-header" style="justify-content: center; color: #63b3ed;">
+                <span style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    {{ _('rename_chat_title') }}
+                </span>
+            </div>
+            <div style="margin: 1.5rem 0; color: var(--text-main);">
+                <input type="text" id="rename-chat-input" class="modal-input" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-glass); border-radius: 12px; background: var(--bg-input); color: var(--text-main); font-size: 0.95rem; outline: none; transition: border-color 0.2s;" placeholder="{{ _('rename_chat_placeholder') }}">
+            </div>
+            <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+                <button type="button" class="btnx" id="btn-cancel-rename" style="flex: 1;">{{ _('btn_cancel') }}</button>
+                <button type="button" class="btnx primary" id="btn-confirm-rename" style="flex: 1; font-weight: 700;">{{ _('btn_save') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Chat Modal -->
+    <div class="modal-overlay" id="delete-chat-modal" style="display:none;">
+        <div class="modal-content" style="max-width: 450px; text-align: center; border-top: 5px solid #ef4444;">
+            <div class="modal-header" style="justify-content: center; color: #ef4444;">
+                <span style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    {{ _('delete_chat_title') }}
+                </span>
+            </div>
+            <div style="margin: 1.5rem 0; line-height: 1.6; color: var(--text-main);">
+                <p style="font-weight: 700; margin-bottom: 1rem; font-size: 1.1rem;">{{ _('delete_chat_text') }}</p>
+                <p>{{ _('delete_chat_desc') | safe }}</p>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+                <button type="button" class="btnx" id="btn-cancel-delete" style="flex: 1;">{{ _('btn_cancel') }}</button>
+                <button type="button" class="btnx danger" id="btn-confirm-delete" style="flex: 1; font-weight: 700;">{{ _('btn_delete') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Chat Modal -->
+    <div class="modal-overlay" id="new-chat-modal" style="display:none;">
+        <div class="modal-content" style="max-width: 450px; text-align: center; border-top: 5px solid #4ade80;">
+            <div class="modal-header" style="justify-content: center; color: #4ade80;">
+                <span style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    {{ _('new_chat_title') }}
+                </span>
+            </div>
+            <div style="margin: 1.5rem 0; line-height: 1.6; color: var(--text-main);">
+                <p style="font-weight: 700; margin-bottom: 1rem; font-size: 1.1rem;">{{ _('new_chat_text') }}</p>
+                <p>{{ _('new_chat_desc') | safe }}</p>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+                <button type="button" class="btnx" id="btn-cancel-new-chat" style="flex: 1;">{{ _('btn_cancel') }}</button>
+                <button type="button" class="btnx primary" id="btn-confirm-new-chat" style="flex: 1; font-weight: 700;">{{ _('btn_new_chat') }}</button>
+            </div>
+        </div>
+    </div>
     <script>
         window.CHAT_CONFIG = {
             urls: {

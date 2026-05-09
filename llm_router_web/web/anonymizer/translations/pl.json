@@ -107,5 +107,16 @@
   "js_rename_prompt": "Nowa nazwa rozmowy:",
   "js_delete_confirm": "Usunąć tę rozmowę?",
   "js_new_chat_confirm": "Rozpocząć nową rozmowę?",
-  "js_sync_error": "Błąd synchronizacji: "
+  "js_sync_error": "Błąd synchronizacji: ",
+  "btn_cancel": "Anuluj",
+  "btn_save": "Zapisz",
+  "btn_delete": "Usuń",
+  "rename_chat_title": "Zmień nazwę rozmowy",
+  "rename_chat_placeholder": "Nowa nazwa",
+  "delete_chat_title": "Usuń rozmowę",
+  "delete_chat_text": "Czy na pewno chcesz usunąć tę rozmowę?",
+  "delete_chat_desc": "Tej akcji nie można cofnąć.",
+  "new_chat_title": "Nowa rozmowa",
+  "new_chat_text": "Czy na pewno chcesz rozpocząć nową rozmowę?",
+  "new_chat_desc": "Bieżąca rozmowa zostanie zamknięta."
 }

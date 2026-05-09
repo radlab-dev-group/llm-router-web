@@ -107,5 +107,16 @@
   "js_rename_prompt": "New conversation name:",
   "js_delete_confirm": "Delete this conversation?",
   "js_new_chat_confirm": "Start a new conversation?",
-  "js_sync_error": "Synchronization error: "
+  "js_sync_error": "Synchronization error: ",
+  "btn_cancel": "Cancel",
+  "btn_save": "Save",
+  "btn_delete": "Delete",
+  "rename_chat_title": "Rename conversation",
+  "rename_chat_placeholder": "New name",
+  "delete_chat_title": "Delete conversation",
+  "delete_chat_text": "Are you sure you want to delete this conversation?",
+  "delete_chat_desc": "This action cannot be undone.",
+  "new_chat_title": "New conversation",
+  "new_chat_text": "Are you sure you want to start a new conversation?",
+  "new_chat_desc": "The current conversation will be closed."
 }
