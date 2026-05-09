@@ -18,9 +18,9 @@ Endpoints provided:
 """
 
 import json
-import socket
-from typing import Tuple, Dict
 import requests
+
+from typing import Dict
 
 from flask import (
     Blueprint,
