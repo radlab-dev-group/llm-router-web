@@ -134,7 +134,16 @@ def process_text():
                   and mappings if successful.
             str: An error message if the request fails.
         """
-        labels = ["LOCATION", "PERSON"]
+        # labels = ["LOCATION", "PERSON"]
+
+        labels = [
+            "EVENT",
+            "FACILITY",
+            "LOCATION",
+            "ORGANIZATION",
+            "PERSON",
+            "PRODUCT",
+        ]
         try:
             # Analogous to pii/index.html call
             resp = requests.post(
