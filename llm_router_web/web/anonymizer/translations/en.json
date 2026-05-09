@@ -36,6 +36,7 @@
   "stats_chars_words": "Chars: {chars} | Words: {words}",
   "btn_ai_settings": "AI",
   "btn_prompts": "Prompts",
+  "algo_anno": "With anonymization",
   "algo_no_anno": "No anonymization",
   "label_local_history": "Local history",
   "btn_send": "Send",
