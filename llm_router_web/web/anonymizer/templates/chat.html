@@ -203,6 +203,29 @@
             </div>
         </div>
     </div>
+    <div class="modal-overlay" id="no-anno-welcome-modal" style="display:none;">
+        <div class="modal-content" style="max-width: 500px; text-align: center; border-top: 5px solid #f59e0b;">
+            <div class="modal-header" style="justify-content: center; color: #f59e0b;">
+            <span style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round"><path
+                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line
+                        x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                {{ _('no_anno_welcome_title') }}
+            </span>
+            </div>
+            <div style="margin: 1.5rem 0; line-height: 1.6; color: var(--text-main);">
+                <p style="font-weight: 700; margin-bottom: 1rem; font-size: 1.1rem;">{{ _('no_anno_welcome_text') }}</p>
+                <p>{{ _('no_anno_welcome_desc') | safe }}</p>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+                <button type="button" class="btnx" id="btn-keep-no-anno"
+                        style="flex: 1;">{{ _('no_anno_welcome_cancel') }}</button>
+                <button type="button" class="btnx primary" id="btn-enable-anno"
+                        style="flex: 1; font-weight: 700;">{{ _('no_anno_welcome_confirm') }}</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         window.CHAT_CONFIG = {

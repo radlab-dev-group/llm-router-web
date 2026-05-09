@@ -28,6 +28,10 @@
     const btnConfirmNoAnno = document.getElementById('btn-confirm-no-anno');
     const btnCancelNoAnno = document.getElementById('btn-cancel-no-anno');
 
+    const noAnnoWelcomeModal = document.getElementById('no-anno-welcome-modal');
+    const btnEnableAnno = document.getElementById('btn-enable-anno');
+    const btnKeepNoAnno = document.getElementById('btn-keep-no-anno');
+    let noAnnoModalShowOnNextSend = false;
     let currentChatId = null;
 
     function autoResize() {
@@ -222,6 +226,17 @@
         privacyWarningModal.classList.remove('active');
         updateSessionStatus();
     };
+    btnEnableAnno.onclick = async () => {
+        noAnnoWelcomeModal.style.display = 'none';
+        algoSelect.value = 'fast';
+        saveState();
+        updateSessionStatus();
+        await sendMsg(chatInput.value.trim());
+    };
+    btnKeepNoAnno.onclick = async () => {
+        noAnnoWelcomeModal.style.display = 'none';
+        await sendMsg(chatInput.value.trim());
+    };
     localHistoryEnabled.addEventListener('change', saveState);
     historySearch.addEventListener('input', renderHistoryList);
 
@@ -251,6 +266,7 @@
         updateSessionStatus();
         updateInputStats();
         autoResize();
+        if (localStorage.getItem('chat_last_algo') === 'no_anno') noAnnoModalShowOnNextSend = true;
         const isVisible = localStorage.getItem('chat_history_visible') !== 'false';
         if (!isVisible) historySidebar.classList.add('hidden'); else renderHistoryList();
         document.getElementById('btn-toggle-history').onclick = toggleHistory;
@@ -516,6 +532,15 @@
         e.preventDefault();
         const text = chatInput.value.trim();
         if (!text) return;
+        if (algoSelect.value === 'no_anno' && noAnnoModalShowOnNextSend) {
+            noAnnoModalShowOnNextSend = false;
+            noAnnoWelcomeModal.style.display = 'flex';
+            return;
+        }
+        sendMsg(text);
+    });
+
+    async function sendMsg(text) {
         addMessage('user', text);
         chatInput.style.height = 'auto';
         updateInputStats();
@@ -524,7 +549,7 @@
         spinner.classList.add('active');
         btnSend.disabled = true;
         try {
-            const formData = new FormData(e.target);
+            const formData = new FormData(document.getElementById('chat-form'));
             formData.append('system_prompt', sysPromptInput.value);
             const resp = await fetch(urls.chatMessage, {method: 'POST', body: formData});
             if (!resp.body) {
@@ -565,5 +590,5 @@
             chatInput.focus();
             persistCurrentChat();
         }
-    });
+    }
 })();
