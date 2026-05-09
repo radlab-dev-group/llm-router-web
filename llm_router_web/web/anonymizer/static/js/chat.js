@@ -193,6 +193,7 @@
         if (sys) sysPromptInput.value = sys;
         if (locHist !== null) localHistoryEnabled.checked = locHist === 'true';
         if (alg && [...algoSelect.options].some(o => o.value === alg)) algoSelect.value = alg;
+        updateSessionStatus();
         return {mdl, alg};
     }
 
