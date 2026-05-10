@@ -619,7 +619,7 @@ def view_config(config_id):
     inactive_by_family = {}  # {family: [model_names]}
     for fam in all_families:
         fam_inactives = []
-        for mn in (data.get(fam) or {}):
+        for mn in data.get(fam) or {}:
             if mn not in active_set:
                 inactive_set.add(mn)
                 fam_inactives.append(mn)
@@ -646,9 +646,15 @@ def view_config(config_id):
         ),
     }
     return render_template(
-        "view.html", cfg=cfg, data=data, versions=versions, pretty=pretty,
-        active_set=active_set, inactive_set=inactive_set, all_families=all_families,
-        inactive_by_family=inactive_by_family
+        "view.html",
+        cfg=cfg,
+        data=data,
+        versions=versions,
+        pretty=pretty,
+        active_set=active_set,
+        inactive_set=inactive_set,
+        all_families=all_families,
+        inactive_by_family=inactive_by_family,
     )
 
 
