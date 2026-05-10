@@ -14,41 +14,87 @@
         <strong>Description:</strong> {{ cfg.description }}
     </div>
     {% endif %}
-    {% for family in ['google_models', 'openai_models', 'qwen_models'] %}
-    {% for model_name, model_data in (data.get(family) or {}).items() %}
+</div>
+
+<!-- ====== ACTIVE ====== -->
+{% for family_key in all_families %}
+{% set active_list = (data.get("active_models") or {}).get(family_key) or [] %}
+{% if active_list %}
+<div class="panel">
+    <h4 style="margin:0 0 0.75rem 0;">
+        <span style="display:inline-flex;align-items:center;gap:0.5rem;">
+            <span style="color:var(--ok);">&#9679;</span> Active -- {{ family_key }}
+        </span>
+    </h4>
+    {% for model_name in active_list %}
+    {% set model_data = (data.get(family_key) or {}).get(model_name) or {} %}
     {% set providers = model_data.get("providers") or [] %}
     {% if providers %}
-    <div class="panel" style="margin-bottom:1rem;">
-        <h4 style="margin:0 0 0.75rem 0;color:var(--accent);">{{ family }} / {{ model_name }}</h4>
-        <div class="scroll-wrap">
-            <table class="table" style="margin:0;">
-                <thead>
-                <tr>
-                    <th>Provider</th>
-                    <th>Host</th>
-                    <th>Type</th>
-                    <th>Weight</th>
-                    <th>Path</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for p in providers %}
-                <tr>
-                    <td>{{ p.get("id", "") }}</td>
-                    <td>{{ p.get("api_host", "") }}</td>
-                    <td>{{ p.get("api_type", "") }}</td>
-                    <td>{{ p.get("weight", 1.0) }}</td>
-                    <td>{{ p.get("model_path", "") }}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="scroll-wrap">
+        <table class="table" style="margin:0;">
+            <thead><tr><th>Provider</th><th>Host</th><th>Type</th><th>Weight</th><th>Path</th></tr></thead>
+            <tbody>
+            {% for p in providers %}
+            <tr>
+                <td>{{ p.get("id", "") }}</td>
+                <td>{{ p.get("api_host", "") }}</td>
+                <td>{{ p.get("api_type", "") }}</td>
+                <td>{{ p.get("weight", 1.0) }}</td>
+                <td>{{ p.get("model_path", "") }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="padding:0.75rem;color:var(--text-muted);font-size:0.9rem;">
+        <code>{{ model_name }}</code> -- no providers
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+{% endfor %}
+
+<!-- ====== INACTIVE ====== -->
+{% if inactive_by_family %}
+<div class="panel" style="opacity:0.6;">
+    <h4 style="margin:0 0 0.75rem 0;">
+        <span style="display:inline-flex;align-items:center;gap:0.5rem;">
+            <span style="color:var(--danger-soft);">&#9679;</span> Inactive -- total {{ inactive_set|length }} models
+        </span>
+    </h4>
+    {% for family_key in inactive_by_family %}
+    <div style="margin-top:0.75rem;font-weight:600;font-size:0.85rem;color:var(--text-muted);">{{ family_key }} ({{ inactive_by_family[family_key]|length }} models)</div>
+    {% for model_name in inactive_by_family[family_key] %}
+    {% set model_data = (data.get(family_key) or {}).get(model_name) or {} %}
+    {% set providers = model_data.get("providers") or [] %}
+    {% if providers %}
+    <div class="scroll-wrap">
+        <table class="table" style="margin:0;">
+            <thead><tr><th>Provider</th><th>Host</th><th>Type</th><th>Weight</th><th>Path</th></tr></thead>
+            <tbody>
+            {% for p in providers %}
+            <tr>
+                <td>{{ p.get("id", "") }}</td>
+                <td>{{ p.get("api_host", "") }}</td>
+                <td>{{ p.get("api_type", "") }}</td>
+                <td>{{ p.get("weight", 1.0) }}</td>
+                <td>{{ p.get("model_path", "") }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="padding:0.75rem;color:var(--text-muted);font-size:0.9rem;">
+        <code>{{ model_name }}</code> -- no providers
     </div>
     {% endif %}
     {% endfor %}
     {% endfor %}
 </div>
+{% endif %}
 
 <div class="action-row" style="margin-top:1rem;">
     <a class="btnx" href="{{ url_for('edit_config', config_id=cfg.id) }}">Edit</a>

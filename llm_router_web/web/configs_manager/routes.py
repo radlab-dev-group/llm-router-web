@@ -608,6 +608,24 @@ def _get_user_config(config_id):
 def view_config(config_id):
     cfg = _get_user_config(config_id)
     data = to_json(cfg.id)
+
+    # Build active/inactive sets for the template
+    all_families = ["google_models", "openai_models", "qwen_models"]
+    active_set = set()
+    for fam in all_families:
+        for mn in (data.get("active_models") or {}).get(fam, []):
+            active_set.add(mn)
+    inactive_set = set()
+    inactive_by_family = {}  # {family: [model_names]}
+    for fam in all_families:
+        fam_inactives = []
+        for mn in (data.get(fam) or {}):
+            if mn not in active_set:
+                inactive_set.add(mn)
+                fam_inactives.append(mn)
+        if fam_inactives:
+            inactive_by_family[fam] = fam_inactives
+
     versions = (
         ConfigVersion.query.filter_by(config_id=cfg.id)
         .order_by(ConfigVersion.version.desc())
@@ -628,7 +646,9 @@ def view_config(config_id):
         ),
     }
     return render_template(
-        "view.html", cfg=cfg, data=data, versions=versions, pretty=pretty
+        "view.html", cfg=cfg, data=data, versions=versions, pretty=pretty,
+        active_set=active_set, inactive_set=inactive_set, all_families=all_families,
+        inactive_by_family=inactive_by_family
     )
 
 
