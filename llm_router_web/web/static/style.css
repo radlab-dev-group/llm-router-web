@@ -1319,15 +1319,41 @@ code {
 }
 
 /* Provider table column widths */
-.edit-provider-table .col-id    { width: 8%; min-width: 80px; }
-.edit-provider-table .col-host  { width: 16%; min-width: 150px; }
-.edit-provider-table .col-token { width: 8%; min-width: 60px; }
-.edit-provider-table .col-type  { width: 6%; min-width: 45px; }
-.edit-provider-table .col-input { width: 5%; min-width: 50px; }
-.edit-provider-table .col-path  { width: 8%; min-width: 80px; }
-.edit-provider-table .col-weight { width: 5%; min-width: 45px; }
-.edit-provider-table .col-enabled { width: 4%; min-width: 35px; }
-.edit-provider-table .col-actions { width: 12%; min-width: 90px; }
+.edit-provider-table .col-id    { width: 20%; min-width: 100px; }
+.edit-provider-table .col-host  { width: 20%; min-width: 100px; }
+.edit-provider-table .col-token { width: 15%; min-width: 80px; }
+.edit-provider-table .col-type  { width: 5%; min-width: 35px; }
+.edit-provider-table .col-input { width: 4%; min-width: 30px; }
+.edit-provider-table .col-path  { width: 6%; min-width: 50px; }
+.edit-provider-table .col-weight { width: 4%; min-width: 30px; }
+.edit-provider-table .col-enabled { width: 4%; min-width: 30px; }
+.edit-provider-table .col-actions { width: 8%; min-width: 50px; }
+
+/* Token input with eye button inside */
+.edit-provider-table .col-token {
+    position: relative;
+}
+
+.edit-provider-table .col-token input {
+    padding-right: 28px;
+}
+
+.edit-provider-table .col-token .token-eye-btn {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
 
 /* Provider table inputs */
 .edit-provider-table input[type="text"] {

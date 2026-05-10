@@ -50,24 +50,27 @@
 
 <h3>Models and providers</h3>
 
-<div class="grid" style="grid-template-columns: 1fr;">
+<div class="grid" style="grid-template-columns: 1fr;width:100%;">
     {% for fam, models in families.items() %}
     <!-- Add model for this family -->
-    <div class="edit-model-section">
-        <div class="edit-model-header" style="background:var(--accent);color:#fff;border-bottom:none;">
-            <h5 style="color:#fff;font-size:0.85rem;">➕ Add new model to <strong>{{ fam }}</strong></h5>
+    <div style="width:100%;display:flex;flex-direction:column;">
+        <div class="edit-model-section" style="background:var(--bg-glass);border:1px dashed var(--border-glass);border-radius:var(--radius-xl);">
+            <div style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.1);border-bottom:1px solid var(--border-glass);">
+                <h5 style="margin:0;font-size:0.9rem;font-weight:600;color:var(--accent);">➕ Add new model to <strong>{{ fam }}</strong></h5>
+            </div>
             <form hx-post="{{ url_for('add_model', config_id=cfg.id) }}" hx-trigger="submit"
                   hx-swap="none" hx-on="htmx:afterRequest: location.reload()"
-                  style="display:flex;gap:4px;align-items:center;">
+                  style="display:flex;gap:8px;align-items:center;padding:0.75rem 1rem;">
                 <input type="hidden" name="family" value="{{ fam }}">
-                <input type="text" name="name" placeholder="Model name" required
-                       style="padding:0.3rem 0.5rem;border-radius:6px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;font-size:0.8rem;font-family:inherit;min-width:150px;">
-                <button class="btnx" style="background:#fff;color:var(--accent);border-color:#fff;padding:0.25rem 0.6rem;font-size:0.75rem;" type="submit">Add</button>
+                <input type="text" name="name" placeholder="Enter model name..." required
+                       style="padding:0.5rem 0.75rem;border-radius:8px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.85rem;font-family:inherit;min-width:200px;flex:1;">
+                <button class="btnx primary" type="submit" style="padding:0.5rem 1rem;font-size:0.85rem;">➕ Add model</button>
             </form>
         </div>
     </div>
 
     {% for m in models %}
+    <div style="width:100%;display:flex;flex-direction:column;">
     <div class="edit-model-section">
         <div class="edit-model-header">
             <h5>{{ m.name }}</h5>
@@ -112,13 +115,16 @@
                              {method:'POST',headers:{'Content-Type':'application/json'},
                               body:JSON.stringify({host:$event.target.value})})">
                     </td>
-                    <td class="col-token">
+                    <td class="col-token" style="position:relative;">
                         <input :type="masked ? 'password' : 'text'" :value="p.api_token"
                                @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
                              {method:'POST',headers:{'Content-Type':'application/json'},
-                              body:JSON.stringify({api_token:$event.target.value})})">
-                        <button type="button" class="btnx btnx-small"
-                                @click="masked = !masked" style="padding:0.2rem 0.4rem;font-size:0.65rem;">
+                              body:JSON.stringify({api_token:$event.target.value})})"
+                               style="padding-right:28px;">
+                        <button type="button"
+                                @click="masked = !masked"
+                                class="token-eye-btn"
+                                style="font-size:0.85rem;">
                             <span x-text="masked ? '👁' : '👁‍🗨'"></span>
                         </button>
                     </td>
@@ -171,6 +177,42 @@
                     </td>
                 </tr>
                 {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Add provider full form -->
+        <div style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.05);border-top:1px solid var(--border-glass);">
+            <div style="font-size:0.75rem;font-weight:600;color:var(--accent);margin-bottom:0.5rem;">➕ Add new provider</div>
+            <form hx-post="{{ url_for('add_provider', model_id=m.id) }}" hx-trigger="submit"
+                  hx-swap="none" hx-on="htmx:afterRequest: location.reload()"
+                  style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;align-items:center;">
+                <input type="text" name="id" placeholder="Provider ID" required
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="api_host" placeholder="Host" required
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="api_token" placeholder="Token"
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <select name="api_type" style="padding:0.35rem 0.4rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                    <option value="vllm">vllm</option>
+                    <option value="ollama">ollama</option>
+                    <option value="openai">openai</option>
+                    <option value="lmstudio">lmstudio</option>
+                </select>
+                <input type="number" name="input_size" placeholder="In (4096)" min="256" step="256"
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="model_path" placeholder="Path"
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="number" name="weight" placeholder="Wt" step="0.1" value="1.0"
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <div style="display:flex;align-items:center;gap:4px;">
+                    <label style="font-size:0.8rem;color:var(--text-muted);">En:</label>
+                    <input type="checkbox" name="enabled" checked>
+                </div>
+                <button class="btnx primary" type="submit" style="padding:0.35rem 0.7rem;font-size:0.8rem;">➕ Add</button>
+            </form>
+        </div>
+    </div>
                 </tbody>
             </table>
         </div>
