@@ -534,7 +534,7 @@ input[type="number"] {
     top: calc(100% + 8px);
     right: 0;
     min-width: 220px;
-    background: var(--bg-glass);
+    background: rgba(var(--accent-rgb), 0.08);
     border: 1px solid var(--border-glass);
     border-radius: var(--radius-xl);
     backdrop-filter: blur(16px);
@@ -542,6 +542,14 @@ input[type="number"] {
     padding: var(--space-3);
     z-index: 200;
     animation: fadeIn 0.15s ease-out;
+}
+
+.theme-dark .dropdown-content {
+    background: rgba(30, 41, 59, 0.95);
+}
+
+.theme-light .dropdown-content {
+    background: rgba(255, 255, 255, 0.95);
 }
 
 .dropdown-content .btn-small {
@@ -686,7 +694,7 @@ details.model[open] summary::before {
     border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all 0.15s ease;
-    background: transparent;
+    background: rgba(128, 128, 128, 0.06);
     border: 1px solid transparent;
     text-align: left;
     font-family: inherit;
@@ -736,6 +744,7 @@ details.model[open] summary::before {
     font-weight: 500;
     transition: all 0.15s ease;
     border: 1px solid transparent;
+    background: rgba(128, 128, 128, 0.06);
 }
 
 .dropdown-content .config-item:hover {
@@ -783,7 +792,7 @@ details.model[open] summary::before {
     padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border-glass);
-    background: var(--bg-input);
+    background: rgba(128, 128, 128, 0.1);
     color: var(--text-main);
     font-size: 0.8rem;
     font-weight: 500;
@@ -849,7 +858,7 @@ details.model[open] summary::before {
     padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border-glass);
-    background: var(--bg-input);
+    background: rgba(128, 128, 128, 0.1);
     color: var(--text-main);
     font-size: 0.85rem;
     font-weight: 500;
