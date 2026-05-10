@@ -626,7 +626,12 @@ input[type="number"] {
 }
 
 .grid.active-models {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.grid.active-models .panel {
+    min-height: 180px;
 }
 
 /* ===== Details / Summary ===== */
