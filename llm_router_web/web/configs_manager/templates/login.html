@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="panel">
+<div class="panel" style="max-width:400px;margin:2rem auto;">
     <h2>Login</h2>
     <form method="post" class="form">
-        <label>Login
-            <input type="text" name="username" required>
+        <label>Username
+            <input type="text" name="username" required placeholder="Your username" class="inputx">
         </label>
         <label>Password
-            <input type="password" name="password" id="password" required>
-            <label style="display:inline; margin-left:8px;">
+            <input type="password" name="password" id="password" required class="inputx">
+            <label style="display:inline; margin-left:8px; font-weight:normal;">
                 <input type="checkbox" id="togglePassword"> Show password
             </label>
         </label>
         <div class="form-actions">
-            <button class="btn" type="submit">Login</button>
+            <button class="btnx primary" type="submit">Login</button>
         </div>
         <script>
             document.getElementById('togglePassword').addEventListener('change', function (e) {

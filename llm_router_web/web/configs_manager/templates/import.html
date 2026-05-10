@@ -1,27 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="panel">
-    <h2>Import existing configuration</h2>
-    <form method="post" enctype="multipart/form-data" class="form">
-        <label>Name of imported config (optional)
-            <input type="text" name="name" placeholder="e.g. production-1">
+    <h2>Import config</h2>
+    <form method="post" class="form" enctype="multipart/form-data">
+        <label>Upload JSON file
+            <input type="file" name="file" accept=".json" class="inputx">
         </label>
-
-        <label>Additional config info (optional)
-            <textarea name="description" rows="3"
-                      placeholder="Put config description here..."></textarea>
+        <label>Or paste JSON text
+            <textarea name="json" placeholder="Paste your configuration JSON here..." rows="10" class="inputx" style="font-family:var(--font-mono);"></textarea>
         </label>
-
-        <label>JSON File
-            <input type="file" name="file" accept="application/json">
+        <label>Config name (optional, auto-generated if empty)
+            <input type="text" name="name" placeholder="My imported config" class="inputx">
         </label>
-        <p class="muted">Or put JSON below:</p>
-        <label>JSON
-            <textarea name="json" placeholder="{ ... }"></textarea>
+        <label>Description (optional)
+            <textarea name="description" placeholder="Describe this config..." rows="2" class="inputx"></textarea>
         </label>
         <div class="form-actions">
-            <button class="btn" type="submit">Import</button>
-            <a class="btn btn-secondary" href="{{ url_for('index') }}">Cancel</a>
+            <button class="btnx primary" type="submit">Import</button>
+            <a class="btnx btnx-secondary" href="{{ url_for('index') }}">Cancel</a>
         </div>
     </form>
 </div>

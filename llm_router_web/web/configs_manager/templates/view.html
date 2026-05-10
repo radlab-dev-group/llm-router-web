@@ -1,46 +1,58 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Preview: {{ cfg.name }} {% if cfg.is_active %}<span class="badge">ACTIVE</span>{% endif %}</h2>
-
-{% if cfg.description %}
 <div class="panel">
-    <strong>Additional config info:</strong>
-    <p class="muted">{{ cfg.description }}</p>
+    <h2>Config: {{ cfg.name }}</h2>
+    <div style="margin-bottom:1rem;">
+        <span class="muted">Created: {{ cfg.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+        <span class="muted" style="margin-left:1rem;">Updated: {{ cfg.updated_at.strftime("%Y-%m-%d %H:%M") }}</span>
+        {% if cfg.is_active %}
+        <span class="badge" style="margin-left:1rem;">DEFAULT</span>
+        {% endif %}
+    </div>
+    {% if cfg.description %}
+    <div style="margin-bottom:1rem;padding:0.75rem;background:var(--bg-glass);border:1px solid var(--border-glass);border-radius:var(--radius-lg);font-size:0.9rem;">
+        <strong>Description:</strong> {{ cfg.description }}
+    </div>
+    {% endif %}
+    {% for family in ['google_models', 'openai_models', 'qwen_models'] %}
+    {% for model_name, model_data in (data.get(family) or {}).items() %}
+    {% set providers = model_data.get("providers") or [] %}
+    {% if providers %}
+    <div class="panel" style="margin-bottom:1rem;">
+        <h4 style="margin:0 0 0.75rem 0;color:var(--accent);">{{ family }} / {{ model_name }}</h4>
+        <div class="scroll-wrap">
+            <table class="table" style="margin:0;">
+                <thead>
+                <tr>
+                    <th>Provider</th>
+                    <th>Host</th>
+                    <th>Type</th>
+                    <th>Weight</th>
+                    <th>Path</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for p in providers %}
+                <tr>
+                    <td>{{ p.get("id", "") }}</td>
+                    <td>{{ p.get("api_host", "") }}</td>
+                    <td>{{ p.get("api_type", "") }}</td>
+                    <td>{{ p.get("weight", 1.0) }}</td>
+                    <td>{{ p.get("model_path", "") }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
 </div>
-{% endif %}
 
-<div class="actions">
-    <a class="btn" href="{{ url_for('edit_config', config_id=cfg.id) }}">Edit</a>
-    <a class="btn" href="{{ url_for('export_config', config_id=cfg.id) }}">Export JSON</a>
-    <button class="btn" hx-post="{{ url_for('set_active_config', config_id=cfg.id) }}" hx-swap="none">Set as default
-    </button>
+<div class="action-row" style="margin-top:1rem;">
+    <a class="btnx" href="{{ url_for('edit_config', config_id=cfg.id) }}">Edit</a>
+    <a class="btnx" href="{{ url_for('export_config', config_id=cfg.id) }}">Export</a>
+    <a class="btnx btnx-secondary" href="{{ url_for('index') }}">Back</a>
 </div>
-
-<h3>Active Models</h3>
-<div class="panel">
-    <pre class="pre">{{ pretty.active_models }}</pre>
-</div>
-
-<h3>Models with providers</h3>
-<div class="panel">
-    <details>
-        <summary>Google</summary>
-        <pre class="pre">{{ pretty.google_models }}</pre>
-    </details>
-</div>
-
-<div class="panel">
-    <details>
-        <summary>OpenAI</summary>
-        <pre class="pre">{{ pretty.openai_models }}</pre>
-    </details>
-</div>
-
-<div class="panel">
-    <details>
-        <summary>Qwen</summary>
-        <pre class="pre">{{ pretty.qwen_models }}</pre>
-    </details>
-</div>
-
 {% endblock %}

@@ -1,18 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="panel">
-    <h2>New config from scratch</h2>
+    <h2>Create new config</h2>
     <form method="post" class="form">
-        <label>Name
-            <input type="text" name="name" required>
+        <label>Config name
+            <input type="text" name="name" placeholder="My new config" required class="inputx">
         </label>
-        <label>Additional config info (optional)
-            <textarea name="description" rows="3"
-                      placeholder="Put config description here..."></textarea>
+        <label>Description (optional)
+            <textarea name="description" placeholder="Describe this config..." rows="3" class="inputx"></textarea>
         </label>
         <div class="form-actions">
-            <button class="btn" type="submit">Create</button>
-            <a class="btn btn-secondary" href="{{ url_for('index') }}">Cancel</a>
+            <button class="btnx primary" type="submit">Create config</button>
+            <a class="btnx btnx-secondary" href="{{ url_for('index') }}">Cancel</a>
         </div>
     </form>
 </div>
