@@ -26,13 +26,13 @@
 <div class="panel">
     <h3>All users</h3>
     <div class="scroll-wrap">
-        <table class="table">
+        <table class="table table-users">
             <thead>
             <tr>
                 <th>Username</th>
                 <th>Role</th>
                 <th>Status</th>
-                <th>Action</th>
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -40,35 +40,39 @@
             <tr>
                 <td>{{ u.username }}</td>
                 <td>{{ u.role }}</td>
-                <td>{{ "Active" if u.is_active else "Blocked" }}</td>
                 <td>
-                    <div class="action-row">
-                        <form method="post"
-                              action="{{ url_for('edit_user', user_id=u.id) }}"
-                              style="display:inline;">
-                            <select name="role" class="selectx" style="max-width:80px;">
+                    {% if u.is_active %}
+                    <span class="status-badge active">● Active</span>
+                    {% else %}
+                    <span class="status-badge blocked">● Blocked</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="users-action-col">
+                        <!-- Change role -->
+                        <form method="post" action="{{ url_for('edit_user', user_id=u.id) }}" class="users-action-group">
+                            <span class="ga-label">Role</span>
+                            <select name="role" class="ga-select">
                                 <option value="user" {% if u.role=='user' %}selected{% endif %}>User</option>
                                 <option value="admin" {% if u.role=='admin' %}selected{% endif %}>Admin</option>
                             </select>
-                            <button class="btnx btnx-small" type="submit">Change role</button>
+                            <button class="ga-btn" type="submit">OK</button>
                         </form>
 
-                        <form method="post"
-                              action="{{ url_for('edit_user', user_id=u.id) }}"
-                              style="display:inline;">
-                            <input type="password" name="new_password" placeholder="New password"
-                                   class="inputx" style="max-width:120px;">
-                            <input type="password" name="confirm_password" placeholder="Confirm"
-                                   class="inputx" style="max-width:120px;">
-                            <button class="btnx btnx-small" type="submit">Change password</button>
+                        <!-- Change password -->
+                        <form method="post" action="{{ url_for('edit_user', user_id=u.id) }}" class="users-action-group">
+                            <span class="ga-label">Pass</span>
+                            <input type="password" name="new_password" placeholder="New" class="ga-input">
+                            <input type="password" name="confirm_password" placeholder="Confirm" class="ga-input">
+                            <button class="ga-btn" type="submit">OK</button>
                         </form>
 
-                        <form method="post"
-                              action="{{ url_for('toggle_block_user', user_id=u.id) }}"
-                              style="display:inline;">
-                            <button class="btnx btnx-small {% if not u.is_active %}danger{% endif %}"
+                        <!-- Block / Unblock -->
+                        <form method="post" action="{{ url_for('toggle_block_user', user_id=u.id) }}" class="users-action-group">
+                            <span class="ga-label">Status</span>
+                            <button class="ga-btn {{ 'primary' if not u.is_active else 'danger' }}"
                                     type="submit">
-                                {{ "Unblock" if not u.is_active else "Block" }}
+                                {{ 'Unblock' if not u.is_active else 'Block' }}
                             </button>
                         </form>
                     </div>
