@@ -37,7 +37,7 @@
                 <td>
                     <div class="projects-actions-row">
                         <!-- Rename -->
-                        <form method="post" action="{{ url_for('rename_project', project_id=proj.id) }}" class="projects-action-chip" style="margin:0;">
+                        <form method="post" action="{{ url_for('rename_project', project_id=proj.id) }}" class="projects-action-chip projects-rename-group" style="margin:0;">
                             <span class="pa-label">Rename</span>
                             <div style="display:flex;gap:6px;flex:1;min-width:0;align-items:center;">
                                 <input type="text" name="new_name" placeholder="New name" required class="pa-input flex-grow">

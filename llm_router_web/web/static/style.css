@@ -1117,6 +1117,12 @@ code {
     white-space: nowrap;
 }
 
+.projects-action-chip.ua-pass-group,
+.projects-action-chip.projects-rename-group {
+    flex: 1;
+    min-width: 0;
+}
+
 .projects-action-chip .pa-label {
     font-size: 0.65rem;
     font-weight: 600;
