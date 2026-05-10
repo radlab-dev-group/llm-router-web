@@ -1,69 +1,71 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Projects</h2>
-
 <div class="panel">
-    <h3>Create new project</h3>
+    <h2>Create new project</h2>
     <form method="post" class="form">
         <label>Name
-            <input type="text" name="name" required placeholder="Project name">
+            <input type="text" name="name" required placeholder="Project name" class="inputx">
         </label>
-        <!-- NEW: optional description -->
         <label>Project description (optional)
             <textarea name="description" rows="2"
-                      placeholder="Put description here...."></textarea>
+                      placeholder="Put description here..." class="inputx"></textarea>
         </label>
         <div class="form-actions">
-            <button class="btn" type="submit">Add</button>
+            <button class="btnx primary" type="submit">Add</button>
         </div>
     </form>
 </div>
 
 <div class="panel">
-    <h3>All projects</h3>
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Default</th>
-            <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for proj in user_projects %}
-        <tr>
-            <td>{{ proj.name }}</td>
-            <td class="muted">{{ proj.description }}</td>   <!-- NEW -->
-            <td>{% if proj.is_default %}<span class="badge">DEFAULT</span>{% endif %}</td>
-            <td class="nowrap">
-                <!-- Rename -->
-                <form method="post" action="{{ url_for('rename_project', project_id=proj.id) }}"
-                      style="display:inline;">
-                    <input type="text" name="new_name" placeholder="New name" required
-                           style="width:120px;margin-right:4px;">
-                    <button class="btn btn-small" type="submit">Rename</button>
-                </form>
+    <h2>All projects</h2>
+    <div class="scroll-wrap">
+        <table class="table table-users">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Default</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for proj in user_projects %}
+            <tr>
+                <td>{{ proj.name }}</td>
+                <td class="muted">{{ proj.description }}</td>
+                <td>{% if proj.is_default %}<span class="status-badge active">● DEFAULT</span>{% else %}-{% endif %}</td>
+                <td>
+                    <div class="projects-actions-row">
+                        <!-- Rename -->
+                        <form method="post" action="{{ url_for('rename_project', project_id=proj.id) }}" class="projects-action-chip projects-rename-group" style="margin:0;">
+                            <span class="pa-label">Rename</span>
+                            <div style="display:flex;gap:6px;flex:1;min-width:0;align-items:center;">
+                                <input type="text" name="new_name" placeholder="New name" required class="pa-input flex-grow">
+                                <button class="pa-btn" type="submit">OK</button>
+                            </div>
+                        </form>
 
-                <!-- Delete (only if not default and empty) -->
-                {% if not proj.is_default %}
-                <form method="post" action="{{ url_for('delete_project', project_id=proj.id) }}"
-                      style="display:inline;">
-                    <button class="btn btn-small danger"
-                            type="submit"
-                            onclick="return confirm('Delete project {{ proj.name }}?');">
-                        Delete
-                    </button>
-                </form>
-                {% endif %}
-            </td>
-        </tr>
-        {% else %}
-        <tr>
-            <td colspan="4" class="muted">No projects found.</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+                        <!-- Delete -->
+                        {% if not proj.is_default %}
+                        <form method="post" action="{{ url_for('delete_project', project_id=proj.id) }}" class="projects-action-chip" style="margin:0;">
+                            <span class="pa-label">Delete</span>
+                            <button class="pa-btn danger"
+                                    type="submit"
+                                    onclick="return confirm('Delete project {{ proj.name }}?');">
+                                Remove
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="muted">No projects found.</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

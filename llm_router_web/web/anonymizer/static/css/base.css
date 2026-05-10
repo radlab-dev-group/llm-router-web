@@ -276,6 +276,42 @@ body {
     background: var(--footer-bg);
 }
 
+.app-footer .footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.app-footer .footer-links {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.app-footer .footer-links a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.app-footer .footer-links a:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+.app-footer .footer-sep {
+    color: var(--text-muted);
+    opacity: 0.4;
+    user-select: none;
+}
+
+.app-footer .footer-copy {
+    font-size: 0.75rem;
+    opacity: 0.6;
+}
+
 .flash-container {
     position: fixed;
     top: 5rem;

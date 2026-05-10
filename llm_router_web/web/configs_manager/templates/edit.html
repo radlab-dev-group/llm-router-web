@@ -4,21 +4,18 @@
     <template x-if="!editing">
         <div class="form-inline edit-header">
             <h2>You are editing config: <code x-text="name"></code></h2>
-            <button type="button" class="btn btn-small" @click="editing = true">Rename</button>
+            <button type="button" class="btnx btnx-secondary" @click="editing = true">Rename</button>
         </div>
     </template>
     <template x-if="editing">
         <form method="post" class="form-inline edit-header">
-            <input type="text" name="new_name" x-model="name" required class="col-input">
-            <button class="btn btn-small" type="submit">Save</button>
-            <button type="button" class="btn btn-small btn-secondary" @click="editing = false">Cancel</button>
+            <input type="text" name="new_name" x-model="name" required>
+            <button class="btnx btnx-small" type="submit">Save</button>
+            <button type="button" class="btnx btnx-small btnx-secondary" @click="editing = false">Cancel</button>
         </form>
     </template>
 </div>
 
-<!-- -------------------------------------------------
-     New: optional description (Notatka/Opis) for the config
---------------------------------------------------- -->
 <form method="post" class="form">
     <label>Additional config info (optional)
         <textarea name="description" rows="3"
@@ -44,8 +41,8 @@
     </label>
 
     <div class="form-actions">
-        <button class="btn" type="submit">Save changes</button>
-        <a class="btn btn-secondary" href="{{ url_for('view_config', config_id=cfg.id) }}">Preview</a>
+        <button class="btnx primary" type="submit">Save changes</button>
+        <a class="btnx btnx-secondary" href="{{ url_for('view_config', config_id=cfg.id) }}">Preview</a>
     </div>
 </form>
 
@@ -53,288 +50,181 @@
 
 <h3>Models and providers</h3>
 
-<div class="grid">
+<div class="grid" style="grid-template-columns: 1fr;width:100%;">
     {% for fam, models in families.items() %}
-    <section class="panel">
-        <div class="panel-header">
-            <h4>{{ fam }}</h4>
+    <!-- Add model for this family -->
+    <div style="width:100%;display:flex;flex-direction:column;">
+        <div class="edit-model-section" style="background:var(--bg-glass);border:1px dashed var(--border-glass);border-radius:var(--radius-xl);">
+            <div style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.1);border-bottom:1px solid var(--border-glass);">
+                <h5 style="margin:0;font-size:0.9rem;font-weight:600;color:var(--accent);">➕ Add new model to <strong>{{ fam }}</strong></h5>
+            </div>
+            <form hx-post="{{ url_for('add_model', config_id=cfg.id) }}" hx-trigger="submit"
+                  hx-swap="none" hx-on="htmx:afterRequest: location.reload()"
+                  style="display:flex;gap:8px;align-items:center;padding:0.75rem 1rem;">
+                <input type="hidden" name="family" value="{{ fam }}">
+                <input type="text" name="name" placeholder="Enter model name..." required
+                       style="padding:0.5rem 0.75rem;border-radius:8px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.85rem;font-family:inherit;min-width:200px;flex:1;">
+                <button class="btnx primary" type="submit" style="padding:0.5rem 1rem;font-size:0.85rem;">➕ Add model</button>
+            </form>
         </div>
-        <form hx-post="{{ url_for('add_model', config_id=cfg.id) }}" hx-trigger="submit"
-              hx-swap="none"
-              hx-on="htmx:afterRequest: location.reload()"
-              class="add-model-form">
-            <input type="hidden" name="family" value="{{ fam }}">
-            <input type="text" name="name" placeholder="Model name (e.g. google/gemma-3-12b-it)" required>
-            <button class="btn btn-small" type="submit">Add model</button>
-        </form>
+    </div>
 
-        <hr class="model-separator">
-
-        {% for m in models %}
-        <details class="model">
-            <summary>
-                <strong>{{ m.name }}</strong>
-                <button class="btn btn-small danger"
-                        hx-post="{{ url_for('delete_model', model_id=m.id) }}"
-                        hx-swap="none"
-                        hx-on="htmx:afterRequest: location.reload()"
-                        hx-confirm="Are you sure to delete {{ m.name }}?">Delete
+    {% for m in models %}
+    <div style="width:100%;display:flex;flex-direction:column;">
+    <div class="edit-model-section">
+        <div class="edit-model-header">
+            <h5>{{ m.name }}</h5>
+            <span class="muted" style="font-size:0.75rem;">{{ m.providers|length }} provider{{ m.providers|length != 1 and "s" or "" }}</span>
+            <form hx-post="{{ url_for('delete_model', model_id=m.id) }}" hx-swap="none" hx-on="htmx:afterRequest: location.reload()">
+                <button class="btnx btnx-small danger"
+                        hx-confirm="Delete {{ m.name }}?">
+                    Delete
                 </button>
-            </summary>
+            </form>
+        </div>
 
-            <div class="scroll-wrap">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th class="col-id">ID</th>
-                        <th class="col-host">Host</th>
-                        <th class="col-api">Provider</th>
-                        <th class="col-input">Input</th>
-                        <th>Model path/name</th>
-                        <th class="col-weight">Weight</th>
-                        <th>Token</th>
-                        <th class="col-enabled">Active</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody data-model-id="{{ m.id }}">
-                    {% for p in m.providers|sort(attribute='order') %}
-                    <tr x-data="{ masked: true }"
-                        data-provider-id="{{ p.id }}"
-                        draggable="true">
-                        <td class="col-id">
-                            <input value="{{ p.provider_id }}"
+        <div class="scroll-wrap">
+            <table class="edit-provider-table">
+                <thead>
+                <tr>
+                    <th class="col-id">ID</th>
+                    <th class="col-host">Host</th>
+                    <th class="col-token">Token</th>
+                    <th class="col-type">Type</th>
+                    <th class="col-input">In</th>
+                    <th class="col-path">Path</th>
+                    <th class="col-weight">W</th>
+                    <th class="col-enabled">En</th>
+                    <th class="col-actions">Act</th>
+                </tr>
+                </thead>
+                <tbody data-model-id="{{ m.id }}">
+                {% for p in m.providers|sort(attribute='order') %}
+                <tr x-data="{ masked: true }"
+                    data-provider-id="{{ p.id }}"
+                    draggable="true">
+                    <td class="col-id">
+                        <input value="{{ p.provider_id }}"
+                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
+                             {method:'POST',headers:{'Content-Type':'application/json'},
+                              body:JSON.stringify({provider_id:$event.target.value})})">
+                    </td>
+                    <td class="col-host">
+                        <input value="{{ p.api_host }}"
+                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
+                             {method:'POST',headers:{'Content-Type':'application/json'},
+                              body:JSON.stringify({host:$event.target.value})})">
+                    </td>
+                    <td class="col-token" style="position:relative;">
+                        <input :type="masked ? 'password' : 'text'" :value="p.api_token"
+                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
+                             {method:'POST',headers:{'Content-Type':'application/json'},
+                              body:JSON.stringify({api_token:$event.target.value})})"
+                               style="padding-right:28px;">
+                        <button type="button"
+                                @click="masked = !masked"
+                                class="token-eye-btn"
+                                style="font-size:0.85rem;">
+                            <span x-text="masked ? '👁' : '👁‍🗨'"></span>
+                        </button>
+                    </td>
+                    <td class="col-type">
+                        <select @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
+                             {method:'POST',headers:{'Content-Type':'application/json'},
+                              body:JSON.stringify({api_type:$event.target.value})})">
+                            <option value="vllm" {% if p.api_type=='vllm' %}selected{% endif %}>vllm</option>
+                            <option value="ollama" {% if p.api_type=='ollama' %}selected{% endif %}>ollama</option>
+                            <option value="openai" {% if p.api_type=='openai' %}selected{% endif %}>openai</option>
+                            <option value="lmstudio" {% if p.api_type=='lmstudio' %}selected{% endif %}>lmstudio</option>
+                        </select>
+                    </td>
+                    <td class="col-input">
+                        <input type="number" value="{{ p.input_size }}" min="256" step="256"
+                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
+                             {method:'POST',headers:{'Content-Type':'application/json'},
+                              body:JSON.stringify({input_size:$event.target.value})})">
+                    </td>
+                    <td class="col-path">
+                        <input value="{{ p.model_path }}"
+                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
+                             {method:'POST',headers:{'Content-Type':'application/json'},
+                              body:JSON.stringify({model_path:$event.target.value})})">
+                    </td>
+                    <td class="col-weight">
+                        <input type="number" step="0.1" value="{{ p.weight }}"
+                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
+                             {method:'POST',headers:{'Content-Type':'application/json'},
+                              body:JSON.stringify({weight:$event.target.value})})">
+                    </td>
+                    <td class="col-enabled">
+                        <div class="enabled-toggle">
+                            <input type="checkbox"
+                                   {% if p.enabled %}checked{% endif %}
                                    @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                                 {method:'POST',headers:{'Content-Type':'application/json'},
-                                  body:JSON.stringify({provider_id:$event.target.value})})">
-                        </td>
-                        <td class="col-host">
-                            <input value="{{ p.api_host }}"
-                                   @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                                 {method:'POST',headers:{'Content-Type':'application/json'},
-                                  body:JSON.stringify({api_host:$event.target.value})})">
-                        </td>
-                        <td class="col-api">
-                            <select
-                                    @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
                                 {method:'POST',headers:{'Content-Type':'application/json'},
-                                 body:JSON.stringify({api_type:$event.target.value})})">
-                                {% for t in ['vllm','openai','ollama', 'llmstudio'] %}
-                                <option value="{{ t }}" {% if p.api_type== t %}selected{% endif %}>{{ t }}</option>
-                                {% endfor %}
-                            </select>
-                        </td>
-                        <td class="col-input">
-                            <input type="number" min="1" value="{{ p.input_size }}"
-                                   @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                                 {method:'POST',headers:{'Content-Type':'application/json'},
-                                  body:JSON.stringify({input_size:parseInt($event.target.value)})})">
-                        </td>
-                        <td>
-                            <input value="{{ p.model_path or '' }}"
-                                   @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                                 {method:'POST',headers:{'Content-Type':'application/json'},
-                                  body:JSON.stringify({model_path:$event.target.value})})">
-                        </td>
-                        <td class="col-weight">
-                            <input type="number" step="0.01" min="0" max="1" value="{{ '%.2f'|format(p.weight) }}"
-                                   @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                                 {method:'POST',headers:{'Content-Type':'application/json'},
-                                  body:JSON.stringify({weight:parseFloat($event.target.value)})})">
-                        </td>
-                        <td>
-                            <div class="token-field">
-                                <input :type="masked ? 'password' : 'text'" value="{{ p.api_token }}"
-                                       @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                                     {method:'POST',headers:{'Content-Type':'application/json'},
-                                      body:JSON.stringify({api_token:$event.target.value})})">
-                                <button class="btn btn-small" type="button"
-                                        @click="masked = !masked"
-                                        x-text="masked ? 'Show' : 'Hide'">
-                                </button>
-                            </div>
-                        </td>
-                        <td class="col-enabled">
-                            <input type="checkbox" {% if p.enabled %}checked{% endif %}
-                                   @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                                 {method:'POST',headers:{'Content-Type':'application/json'},
-                                  body:JSON.stringify({enabled:$event.target.checked})})">
-                        </td>
-                        <td class="nowrap">
-                            <button class="btn btn-small danger"
+                                 body:JSON.stringify({enabled:$event.target.checked})})">
+                        </div>
+                    </td>
+                    <td class="col-actions">
+                        <div class="provider-actions">
+                            <button class="btnx btnx-small danger"
                                     hx-post="{{ url_for('delete_provider', provider_id=p.id) }}"
                                     hx-swap="none"
-                                    hx-on="htmx:afterRequest: location.reload()"
-                                    hx-confirm="Are you sure to delete provider {{ p.provider_id }}">
-                                Delete
+                                    hx-on="htmx:afterRequest: location.reload()">
+                                Del
                             </button>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="9" class="muted">No providers found.</td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <details>
-                <summary class="clickable">➕ Add model provider</summary>
-                <form class="provider-form" onsubmit="return addProvider{{ m.id }}(event)">
-                    <div class="panel">
-                        <div class="token-field">
-                            <label for="ptype-{{ m.id }}" class="chk">Provider:</label>
-                            <select id="ptype-{{ m.id }}" class="col-api">
-                                <option value="vllm">vllm</option>
-                                <option value="openai">openai</option>
-                                <option value="ollama">ollama</option>
-                                <option value="ollama">llmstudio</option>
-                            </select>
-                            <input type="text" placeholder="Unique ID of provider for {{ m.name }}" id="pid-{{ m.id }}"
-                                   class="col-input">
                         </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-                        <div class="token-field">
-                            <input type="url" placeholder="API host (e.g. https://api.example.com)"
-                                   id="phost-{{ m.id }}" onchange="generateIdIfMissing{{ m.id }}()"
-                                   required>
-                            <select id="phostpreset-{{ m.id }}" class="col-api" onchange="setHost{{ m.id }}()">
-                                <option value="">Custom</option>
-                                <option value="https://api.openai.com">OpenAI</option>
-                                <option value="https://generativelanguage.googleapis.com/v1beta2">Google OpenAI
-                                    Compatible
-                                </option>
-                            </select>
-                            <button type="button" class="btn btn-small" onclick="checkHost{{ m.id }}()">Check</button>
-                        </div>
-
-                        <span id="host-status-{{ m.id }}" class="muted"></span>
-
-                        <div class="token-field" x-data="{ masked: true }">
-                            <input :type="masked ? 'password' : 'text'"
-                                   placeholder="API token (needed only when provider requires the API Key)"
-                                   id="ptoken-{{ m.id }}" class="col-input">
-                            <button class="btn btn-small" type="button" @click="masked = !masked"
-                                    x-text="masked ? 'Show' : 'Hide'"></button>
-                        </div>
-
-                        <input type="text"
-                               placeholder="Model path or name (optional - used to redirect to this model name)"
-                               id="ppath-{{ m.id }}" class="col-input">
-
-                        <label for="psize-{{ m.id }}" class="chk">input size:</label>
-                        <input type="number" placeholder="Input size" id="psize-{{ m.id }}" value="4096" min="1"
-                               class="col-input">
-
-
-                        <label for="pweight-{{ m.id }}" class="chk">weight:</label>
-                        <input type="number" step="0.01" min="0" max="1" placeholder="Weight (0‑1)"
-                               id="pweight-{{ m.id }}" value="1.0" class="col-weight">
-
-                        <label class="chk"><input type="checkbox" id="penabled-{{ m.id }}" checked> enabled</label>
-
-
-                    </div>
-                    <button class="btn btn-small" type="submit">Add</button>
-                </form>
-                <script>
-                    async function addProvider{{ m.id }}(e){
-                      e.preventDefault();
-                      const payload = {
-                        id: document.getElementById('pid-{{ m.id }}').value,
-                        api_host: document.getElementById('phost-{{ m.id }}').value,
-                        api_type: document.getElementById('ptype-{{ m.id }}').value,
-                        input_size: parseInt(document.getElementById('psize-{{ m.id }}').value || "4096"),
-                        model_path: document.getElementById('ppath-{{ m.id }}').value,
-                        weight: parseFloat(document.getElementById('pweight-{{ m.id }}').value || "1.0"),
-                        api_token: document.getElementById('ptoken-{{ m.id }}').value,
-                        enabled: document.getElementById('penabled-{{ m.id }}').checked
-                      };
-                      const res = await fetch('{{ url_for("add_provider", model_id=m.id) }}', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                      });
-                      if(res.ok){ location.reload(); } else { alert("Error while adding provider"); }
-                    }
-
-                    // Generates a provider ID from model name + host if ID field is empty
-                    function generateIdIfMissing{{ m.id }}(){
-                        const hostInput = document.getElementById('phost-{{ m.id }}');
-                        const idInput = document.getElementById('pid-{{ m.id }}');
-                        if (!idInput.value.trim()){
-                            const modelName = "{{ m.name }}".replace(/[^a-zA-Z0-9]/g, '');
-                            const hostPart = hostInput.value.replace(/^https?:\/\//, '').replace(/[^a-zA-Z0-9]/g, '');
-                            if (modelName && hostPart){
-                                idInput.value = `${modelName}_${hostPart}`;
-                            }
-                        }
-                    }
-
-                    // New helper – ustawia wartość hosta na podstawie wybranego preset’u
-                    function setHost{{ m.id }}(){
-                        const preset = document.getElementById('phostpreset-{{ m.id }}');
-                        const hostInput = document.getElementById('phost-{{ m.id }}');
-                        hostInput.value = preset.value;
-                        generateIdIfMissing{{ m.id }}();
-                    }
-
-                    async function checkHost{{ m.id }}(){
-                        const host = document.getElementById('phost-{{ m.id }}').value;
-                        const statusEl = document.getElementById('host-status-{{ m.id }}');
-
-                        if (!host) {
-                            statusEl.textContent = 'Please enter a host URL first.';
-                            statusEl.style.color = 'var(--danger)';
-                            return;
-                        }
-
-                        statusEl.textContent = 'Checking...';
-                        statusEl.style.color = 'var(--muted)';
-
-                        try {
-                            const resp = await fetch('{{ url_for("check_host") }}', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ url: host })
-                            });
-
-                            const data = await resp.json();
-
-                            // If the request succeeded (i.e., the host responded), show OK.
-                            // Any network error will be caught by the catch block below.
-                            if (resp.ok || typeof data.status === 'number') {
-                                statusEl.textContent = 'OK! Host is available!';
-                                statusEl.style.color = 'var(--ok)';
-                            } else {
-                                // Unexpected situation – treat as error.
-                                const errMsg = data.error || 'Unable to reach the host.';
-                                statusEl.textContent = errMsg;
-                                statusEl.style.color = 'var(--danger)';
-                            }
-                        } catch (e) {
-                            console.error(e);
-                            statusEl.textContent = 'Unable to reach the host. Check the URL or server connectivity.';
-                            statusEl.style.color = 'var(--danger)';
-                        }
-                    }
-                </script>
-            </details>
-        </details>
-        <hr class="model-divider">
-        {% else %}
-        <p class="muted">No models found.</p>
-        {% endfor %}
-    </section>
+        <!-- Add provider full form -->
+        <div style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.05);border-top:1px solid var(--border-glass);">
+            <div style="font-size:0.75rem;font-weight:600;color:var(--accent);margin-bottom:0.5rem;">➕ Add new provider</div>
+            <form hx-post="{{ url_for('add_provider', model_id=m.id) }}" hx-trigger="submit"
+                  hx-swap="none" hx-on="htmx:afterRequest: location.reload()"
+                  style="display:grid;grid-template-columns:20% 20% 15% 5% 1fr 6% 4% 4% 6%;gap:8px;align-items:center;">
+                <input type="text" name="id" placeholder="Provider ID" required
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="api_host" placeholder="Host" required
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="api_token" placeholder="Token"
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <select name="api_type" style="padding:0.35rem 0.4rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                    <option value="vllm">vllm</option>
+                    <option value="ollama">ollama</option>
+                    <option value="openai">openai</option>
+                    <option value="lmstudio">lmstudio</option>
+                </select>
+                <input type="number" name="input_size" placeholder="In (4096)" min="256" step="256"
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="model_path" placeholder="Path"
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="number" name="weight" placeholder="Wt" step="0.1" value="1.0"
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <div style="display:flex;align-items:center;gap:4px;">
+                    <label style="font-size:0.8rem;color:var(--text-muted);">En:</label>
+                    <input type="checkbox" name="enabled" checked>
+                </div>
+                <button class="btnx primary" type="submit" style="padding:0.35rem 0.7rem;font-size:0.8rem;">➕ Add</button>
+            </form>
+        </div>
+    </div>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
     {% endfor %}
 </div>
 
-<div class="actions">
-    <a class="btn" href="{{ url_for('export_config', config_id=cfg.id) }}">Export config</a>
-    <button class="btn" hx-post="{{ url_for('set_active_config', config_id=cfg.id) }}" hx-swap="none">Set as default
-    </button>
-    <a class="btn btn-secondary" href="{{ url_for('view_config', config_id=cfg.id) }}">Preview</a>
+<div class="form-actions" style="margin-top:1rem;">
+    <a class="btnx" href="{{ url_for('export_config', config_id=cfg.id) }}">Export</a>
+    <button class="btnx" hx-post="{{ url_for('set_active_config', config_id=cfg.id) }}" hx-swap="none">Set as default</button>
+    <a class="btnx btnx-secondary" href="{{ url_for('view_config', config_id=cfg.id) }}">Preview</a>
 </div>
 
 <hr class="model-divider">
@@ -350,7 +240,7 @@
     <table class="table" id="versions"></table>
 </div>
 
-<button class="btn btn-small" id="toggle-history" style="display:none;">
+<button class="btnx btnx-secondary" id="toggle-history" style="display:none;">
     Show full history
 </button>
 
@@ -374,7 +264,7 @@
                 <td>${new Date(v.created_at).toLocaleString()}</td>
                 <td>${v.note || ''}</td>
                 <td>
-                    <button class="btn btn-small"
+                    <button class="btnx btnx-small"
                             hx-post="/configs/${configId}/versions/${v.version}/restore"
                             hx-trigger="click"
                             hx-swap="none"
@@ -454,7 +344,7 @@
                 const newOrder = rows.map(r => parseInt(r.dataset.providerId));
 
                 const modelId = tbody.dataset.modelId;
-                fetch(`/models/${modelId}/providers/reorder`, {
+                fetch('/models/' + modelId + '/providers/reorder', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ order: newOrder })

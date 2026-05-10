@@ -18,9 +18,9 @@ Endpoints provided:
 """
 
 import json
-import socket
-from typing import Tuple, Dict
 import requests
+
+from typing import Dict
 
 from flask import (
     Blueprint,
@@ -35,7 +35,7 @@ from flask import (
     url_for,
 )
 
-from .constants import GENAI_MODEL_ANON, DEFAULT_PII_MODEL_NAME
+from .constants import DEFAULT_PII_MODEL_NAME
 
 
 def _t(key):
@@ -134,7 +134,16 @@ def process_text():
                   and mappings if successful.
             str: An error message if the request fails.
         """
-        labels = ["LOCATION", "PERSON"]
+        # labels = ["LOCATION", "PERSON"]
+
+        labels = [
+            "EVENT",
+            "FACILITY",
+            "LOCATION",
+            "ORGANIZATION",
+            "PERSON",
+            "PRODUCT",
+        ]
         try:
             # Analogous to pii/index.html call
             resp = requests.post(
@@ -193,16 +202,6 @@ def process_text():
             result.setdefault("mappings", {})[_k] = _v
     elif algorithm == "fast":
         result = call_router_service(raw_text, model_name, "/api/fast_text_mask")
-
-    elif algorithm == "genai":
-        if not GENAI_MODEL_ANON:
-            return render_template(
-                "anonymize_result_partial.html",
-                result={"error": "genai model is not set"},
-            )
-        result = call_router_service(
-            raw_text, model_name, "/api/anonymize_text_genai"
-        )
 
     else:
         return render_template(

@@ -1,43 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="panel">
-    <h2>Create first admin account</h2>
+<div class="panel" style="max-width:500px;margin:2rem auto;">
+    <h2>Setup administrator account</h2>
     <form method="post" class="form">
-        <label>Login
-            <input type="text" name="username" required>
+        <label>Username
+            <input type="text" name="username" required placeholder="Admin username" class="inputx">
         </label>
         <label>Password
-            <div class="password-container">
-                <input type="password" name="password" id="password" required>
-                <span class="toggle-password" data-target="password">👁️</span>
-            </div>
+            <input type="password" name="password" required class="inputx">
         </label>
         <label>Confirm password
-            <div class="password-container">
-                <input type="password" name="password_confirm" id="password_confirm" required>
-                <span class="toggle-password" data-target="password_confirm">👁️</span>
-            </div>
+            <input type="password" name="confirm_password" required class="inputx">
         </label>
-
         <div class="form-actions">
-            <button class="btn" type="submit">Create admin user</button>
+            <button class="btnx primary" type="submit">Create admin</button>
         </div>
     </form>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const toggleButtons = document.querySelectorAll('.toggle-password');
-
-        toggleButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const targetId = this.getAttribute('data-target');
-                const input = document.getElementById(targetId);
-                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                input.setAttribute('type', type);
-                this.textContent = type === 'password' ? '👁️' : '🔒';
-            });
-        });
-    });
-</script>
 {% endblock %}

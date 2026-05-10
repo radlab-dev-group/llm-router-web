@@ -28,6 +28,22 @@
     const btnConfirmNoAnno = document.getElementById('btn-confirm-no-anno');
     const btnCancelNoAnno = document.getElementById('btn-cancel-no-anno');
 
+    const noAnnoWelcomeModal = document.getElementById('no-anno-welcome-modal');
+    const btnEnableAnno = document.getElementById('btn-enable-anno');
+    const btnKeepNoAnno = document.getElementById('btn-keep-no-anno');
+    const renameChatModal = document.getElementById('rename-chat-modal');
+    const renameChatInput = document.getElementById('rename-chat-input');
+    const btnConfirmRename = document.getElementById('btn-confirm-rename');
+    const btnCancelRename = document.getElementById('btn-cancel-rename');
+    const deleteChatModal = document.getElementById('delete-chat-modal');
+    const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+    const btnCancelDelete = document.getElementById('btn-cancel-delete');
+    const newChatModal = document.getElementById('new-chat-modal');
+    const btnConfirmNewChat = document.getElementById('btn-confirm-new-chat');
+    const btnCancelNewChat = document.getElementById('btn-cancel-new-chat');
+    let pendingRenameId = null;
+    let pendingDeleteChatId = null;
+    let noAnnoModalShowOnNextSend = false;
     let currentChatId = null;
 
     function autoResize() {
@@ -75,6 +91,7 @@
         localStorage.setItem('chat_history_visible', !isHidden);
         if (!isHidden) renderHistoryList();
     }
+    window.toggleHistory = toggleHistory;
 
     function renderHistoryList() {
         const chats = getLocalChats();
@@ -134,27 +151,57 @@
     function renameChatById(id) {
         const chats = getLocalChats();
         const oldName = chats[id].name;
-        const newName = prompt(texts.jsRenamePrompt || 'New name:', oldName);
-        if (newName && newName.trim()) {
-            chats[id].name = newName.trim();
-            saveLocalChats(chats);
-            if (currentChatId === id) currentChatTitle.textContent = chats[id].name;
-            renderHistoryList();
-        }
+        pendingRenameId = id;
+        renameChatInput.value = oldName;
+        renameChatModal.style.display = 'flex';
+        setTimeout(() => renameChatInput.focus(), 100);
     }
 
     function deleteChatById(id) {
-        if (!confirm(texts.jsDeleteConfirm || 'Delete?')) return;
-        const chats = getLocalChats();
-        delete chats[id];
-        saveLocalChats(chats);
-        if (currentChatId === id) {
-            currentChatId = null;
-            btnNewChat.click();
-        }
-        renderHistoryList();
+        pendingDeleteChatId = id;
+        deleteChatModal.style.display = 'flex';
     }
 
+    function confirmRenameChat() {
+        const newName = renameChatInput.value.trim();
+        if (!newName) return;
+        const chats = getLocalChats();
+        chats[pendingRenameId].name = newName;
+        saveLocalChats(chats);
+        if (currentChatId === pendingRenameId) currentChatTitle.textContent = newName;
+        renderHistoryList();
+        renameChatModal.style.display = 'none';
+        pendingRenameId = null;
+    }
+
+
+    function confirmDeleteChat() {
+        const chats = getLocalChats();
+        delete chats[pendingDeleteChatId];
+        saveLocalChats(chats);
+        if (currentChatId === pendingDeleteChatId) {
+            currentChatId = null;
+            currentChatTitle.textContent = texts.chatTitle || 'Chat';
+            chatOutput.innerHTML = '';
+            chatOutput.appendChild(chatEmpty);
+            chatEmpty.style.display = '';
+            newChatFlag.value = 'true';
+        }
+        renderHistoryList();
+        deleteChatModal.style.display = 'none';
+        pendingDeleteChatId = null;
+    }
+
+    function confirmNewChat() {
+        newChatFlag.value = 'true';
+        currentChatId = null;
+        currentChatTitle.textContent = texts.chatTitle || 'Chat';
+        chatOutput.innerHTML = '';
+        chatOutput.appendChild(chatEmpty);
+        chatEmpty.style.display = '';
+        renderHistoryList();
+        newChatModal.style.display = 'none';
+    }
     function persistCurrentChat() {
         if (!localHistoryEnabled.checked) return;
         const messages = Array.from(document.querySelectorAll('.msg')).map(msg => ({
@@ -193,6 +240,7 @@
         if (sys) sysPromptInput.value = sys;
         if (locHist !== null) localHistoryEnabled.checked = locHist === 'true';
         if (alg && [...algoSelect.options].some(o => o.value === alg)) algoSelect.value = alg;
+        updateSessionStatus();
         return {mdl, alg};
     }
 
@@ -221,6 +269,54 @@
         privacyWarningModal.classList.remove('active');
         updateSessionStatus();
     };
+    btnEnableAnno.onclick = async () => {
+        noAnnoWelcomeModal.style.display = 'none';
+        algoSelect.value = 'fast';
+        saveState();
+        updateSessionStatus();
+        await sendMsg(chatInput.value.trim());
+    };
+    btnKeepNoAnno.onclick = async () => {
+        noAnnoWelcomeModal.style.display = 'none';
+        await sendMsg(chatInput.value.trim());
+    };
+
+    // Rename chat modal
+    btnCancelRename.onclick = () => {
+        renameChatModal.style.display = 'none';
+        pendingRenameId = null;
+    };
+    btnConfirmRename.onclick = confirmRenameChat;
+    renameChatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') confirmRenameChat();
+        if (e.key === 'Escape') renameChatModal.style.display = 'none';
+    });
+
+    // Delete chat modal
+    btnCancelDelete.onclick = () => {
+        deleteChatModal.style.display = 'none';
+        pendingDeleteChatId = null;
+    };
+    btnConfirmDelete.onclick = confirmDeleteChat;
+    deleteChatModal.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') deleteChatModal.style.display = 'none';
+    });
+
+    // New chat modal
+    btnCancelNewChat.onclick = () => {
+        newChatModal.style.display = 'none';
+    };
+    btnConfirmNewChat.onclick = confirmNewChat;
+    newChatModal.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') newChatModal.style.display = 'none';
+    });
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.style.display = 'none';
+        });
+    });
     localHistoryEnabled.addEventListener('change', saveState);
     historySearch.addEventListener('input', renderHistoryList);
 
@@ -250,8 +346,9 @@
         updateSessionStatus();
         updateInputStats();
         autoResize();
+        if (localStorage.getItem('chat_last_algo') === 'no_anno') noAnnoModalShowOnNextSend = true;
         const isVisible = localStorage.getItem('chat_history_visible') !== 'false';
-        if (!isVisible) historySidebar.classList.add('hidden'); else renderHistoryList();
+        if (isVisible) { historySidebar.classList.remove('hidden'); renderHistoryList(); } else { historySidebar.classList.add('hidden'); }
         document.getElementById('btn-toggle-history').onclick = toggleHistory;
         document.getElementById('btn-sidebar-new-chat').onclick = () => btnNewChat.click();
         document.getElementById('btn-toggle-sys-prompt').onclick = () => sysPromptPanel.classList.toggle('active');
@@ -441,14 +538,7 @@
     });
 
     btnNewChat.addEventListener('click', () => {
-        if (!confirm(texts.jsNewChatConfirm || 'New chat?')) return;
-        newChatFlag.value = 'true';
-        currentChatId = null;
-        currentChatTitle.textContent = texts.chatTitle || 'Chat';
-        chatOutput.innerHTML = '';
-        chatOutput.appendChild(chatEmpty);
-        chatEmpty.style.display = '';
-        renderHistoryList();
+        newChatModal.style.display = 'flex';
     });
 
     const btnExport = document.getElementById('btn-export-chat');
@@ -515,6 +605,15 @@
         e.preventDefault();
         const text = chatInput.value.trim();
         if (!text) return;
+        if (algoSelect.value === 'no_anno' && noAnnoModalShowOnNextSend) {
+            noAnnoModalShowOnNextSend = false;
+            noAnnoWelcomeModal.style.display = 'flex';
+            return;
+        }
+        sendMsg(text);
+    });
+
+    async function sendMsg(text) {
         addMessage('user', text);
         chatInput.style.height = 'auto';
         updateInputStats();
@@ -523,7 +622,7 @@
         spinner.classList.add('active');
         btnSend.disabled = true;
         try {
-            const formData = new FormData(e.target);
+            const formData = new FormData(document.getElementById('chat-form'));
             formData.append('system_prompt', sysPromptInput.value);
             const resp = await fetch(urls.chatMessage, {method: 'POST', body: formData});
             if (!resp.body) {
@@ -564,5 +663,5 @@
             chatInput.focus();
             persistCurrentChat();
         }
-    });
+    }
 })();

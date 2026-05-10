@@ -1,85 +1,92 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>User management</h2>
+
 <div class="panel">
     <h3>Create new user</h3>
     <form method="post" class="form">
-        <label>Login
-            <input type="text" name="username" required>
+        <label>Username
+            <input type="text" name="username" required placeholder="New username" class="inputx">
         </label>
         <label>Password
-            <input type="password" name="password" required>
+            <input type="password" name="password" required class="inputx">
         </label>
         <label>Role
-            <select name="role">
+            <select name="role" class="selectx">
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
             </select>
         </label>
         <div class="form-actions">
-            <button class="btn" type="submit">Add</button>
+            <button class="btnx primary" type="submit">Add</button>
         </div>
     </form>
 </div>
 
 <div class="panel">
     <h3>All users</h3>
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Login</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for u in users %}
-        <tr>
-            <td>{{ u.username }}</td>
-            <td>{{ u.role }}</td>
-            <td>{{ "Active" if u.is_active else "Blocked" }}</td>
-            <td class="nowrap">
-                <form method="post"
-                      action="{{ url_for('edit_user', user_id=u.id) }}"
-                      style="display:inline;">
-                    <select name="role" style="margin-right:4px; max-width:80px;">
-                        <option value="user" {% if u.role==
-                        'user' %}selected{% endif %}>User</option>
-                        <option value="admin" {% if u.role==
-                        'admin' %}selected{% endif %}>Admin</option>
-                    </select>
-                    <button class="btn btn-small" type="submit" style="margin-right:12px;">Change role</button>
-                </form>
+    <div class="scroll-wrap">
+        <table class="table table-users">
+            <thead>
+            <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td>{{ u.role }}</td>
+                <td>
+                    {% if u.is_active %}
+                    <span class="status-badge active">● Active</span>
+                    {% else %}
+                    <span class="status-badge blocked">● Blocked</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="users-actions-row">
+                        <!-- Role -->
+                        <form method="post" action="{{ url_for('edit_user', user_id=u.id) }}" class="users-action-chip" style="margin:0;">
+                            <span class="ua-label">Role</span>
+                            <select name="role" class="ua-select">
+                                <option value="user" {% if u.role=='user' %}selected{% endif %}>User</option>
+                                <option value="admin" {% if u.role=='admin' %}selected{% endif %}>Admin</option>
+                            </select>
+                            <button class="ua-btn" type="submit">OK</button>
+                        </form>
 
-                <!-- Password change form -->
-                <form method="post"
-                      action="{{ url_for('edit_user', user_id=u.id) }}"
-                      style="display:inline;">
-                    <input type="password" name="new_password" placeholder="Nowe hasło"
-                           style="max-width:120px; padding:4px 8px; border-radius:4px;">
-                    <input type="password" name="confirm_password" placeholder="Powtórz hasło"
-                           style="max-width:120px; padding:4px 8px; border-radius:4px; margin-left:4px;">
-                    <button class="btn btn-small" type="submit">Change password</button>
-                </form>
+                        <!-- Password -->
+                        <form method="post" action="{{ url_for('edit_user', user_id=u.id) }}" class="users-action-chip ua-pass-group" style="margin:0;">
+                            <span class="ua-label">Pass</span>
+                            <div class="ua-pass-inputs">
+                                <input type="password" name="new_password" placeholder="New" class="ua-input">
+                                <input type="password" name="confirm_password" placeholder="Confirm" class="ua-input">
+                            </div>
+                            <button class="ua-btn" type="submit">OK</button>
+                        </form>
 
-                <!-- Block / Unblock button -->
-                <form method="post"
-                      action="{{ url_for('toggle_block_user', user_id=u.id) }}"
-                      style="display:inline;">
-                    <button class="btn btn-small {% if not u.is_active %}danger{% endif %}"
-                            type="submit">
-                        {{ "Unblock" if not u.is_active else "Block" }}
-                    </button>
-                </form>
-            </td>
-        </tr>
-        {% else %}
-        <tr>
-            <td colspan="4">No users found.</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+                        <!-- Block / Unblock -->
+                        <form method="post" action="{{ url_for('toggle_block_user', user_id=u.id) }}" class="users-action-chip" style="margin:0;">
+                            <span class="ua-label">Status</span>
+                            <button class="ua-btn {{ 'primary' if not u.is_active else 'danger' }}"
+                                    type="submit">
+                                {{ 'Unblock' if not u.is_active else 'Block' }}
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="muted">No users found.</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}
