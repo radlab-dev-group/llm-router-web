@@ -1105,6 +1105,79 @@ code {
     scrollbar-width: thin;
     scrollbar-color: var(--border-glass) transparent;
 }
+/* ===== Projects action groups ===== */
+.projects-action-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+.projects-action-chip .pa-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.projects-action-chip .pa-input {
+    border-radius: 4px;
+    border: 1px solid var(--border-glass);
+    background: var(--bg-input);
+    padding: 4px 8px;
+    color: var(--text-main);
+    font-size: 0.8rem;
+    font-family: inherit;
+}
+
+.projects-action-chip .pa-input.flex-grow {
+    flex: 1;
+    min-width: 0;
+}
+
+.projects-action-chip .pa-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-glass);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.72rem;
+    font-family: inherit;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.projects-action-chip .pa-btn:hover {
+    filter: brightness(1.1);
+}
+
+.projects-action-chip .pa-btn.danger {
+    background: var(--danger);
+    color: #fff;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.projects-action-chip .pa-btn.danger:hover {
+    filter: brightness(1.15);
+}
+
+.projects-actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
 /* ===== Users table (4-column layout) ===== */
 .table-users {
     width: 100%;

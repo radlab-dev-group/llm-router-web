@@ -19,13 +19,13 @@
 <div class="panel">
     <h2>All projects</h2>
     <div class="scroll-wrap">
-        <table class="table">
+        <table class="table table-users">
             <thead>
             <tr>
                 <th>Name</th>
                 <th>Description</th>
                 <th>Default</th>
-                <th>Action</th>
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -33,22 +33,26 @@
             <tr>
                 <td>{{ proj.name }}</td>
                 <td class="muted">{{ proj.description }}</td>
-                <td>{% if proj.is_default %}<span class="badge">DEFAULT</span>{% endif %}</td>
+                <td>{% if proj.is_default %}<span class="status-badge active">● DEFAULT</span>{% else %}-{% endif %}</td>
                 <td>
-                    <div class="action-row">
-                        <form method="post" action="{{ url_for('rename_project', project_id=proj.id) }}"
-                              style="display:inline;">
-                            <input type="text" name="new_name" placeholder="New name" required
-                                   class="inputx" style="width:120px;">
-                            <button class="btnx btnx-small" type="submit">Rename</button>
+                    <div class="projects-actions-row">
+                        <!-- Rename -->
+                        <form method="post" action="{{ url_for('rename_project', project_id=proj.id) }}" class="projects-action-chip" style="margin:0;">
+                            <span class="pa-label">Rename</span>
+                            <div style="display:flex;gap:6px;flex:1;min-width:0;align-items:center;">
+                                <input type="text" name="new_name" placeholder="New name" required class="pa-input flex-grow">
+                                <button class="pa-btn" type="submit">OK</button>
+                            </div>
                         </form>
+
+                        <!-- Delete -->
                         {% if not proj.is_default %}
-                        <form method="post" action="{{ url_for('delete_project', project_id=proj.id) }}"
-                              style="display:inline;">
-                            <button class="btnx btnx-small danger"
+                        <form method="post" action="{{ url_for('delete_project', project_id=proj.id) }}" class="projects-action-chip" style="margin:0;">
+                            <span class="pa-label">Delete</span>
+                            <button class="pa-btn danger"
                                     type="submit"
                                     onclick="return confirm('Delete project {{ proj.name }}?');">
-                                Delete
+                                Remove
                             </button>
                         </form>
                         {% endif %}
