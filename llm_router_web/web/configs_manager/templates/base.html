@@ -35,21 +35,28 @@
         <!-- Project selector -->
         <div class="dropdown" x-data="{ open: false }" x-cloak>
             <button type="button" class="btnx" @click="open = !open" @keydown.escape.window="open = false">
-                📁 Project: {{ current_project_name }}
+                <span>📁</span> {{ current_project_name }}
             </button>
             <div class="dropdown-content" x-show="open" @click.outside="open = false">
-                <div class="panel" style="display:flex;flex-direction:column;gap:4px;border:none;background:transparent;box-shadow:none;">
-                    <label>Choose project</label>
+                <div style="display:flex;flex-direction:column;gap:4px;border:none;background:transparent;box-shadow:none;padding:0;">
+                    <div class="settings-label">Choose project</div>
                     {% for proj in user_projects %}
                     <form method="post" action="{{ url_for('select_project', project_id=proj.id) }}" style="margin:0;">
                         <button type="submit"
-                                class="btnx btnx-small{% if proj.id == session.get('project_id') %} primary{% endif %}">
-                            {{ proj.name }}
+                                class="project-item{% if proj.id == session.get('project_id') %} active{% endif %}">
+                            <span class="project-icon">📂</span>
+                            <span class="project-name">{{ proj.name }}</span>
+                            <span class="project-check">
+                                {% if proj.id == session.get('project_id') %}✓{% else %}{% endif %}
+                            </span>
                         </button>
                     </form>
                     {% endfor %}
                 </div>
-                <a class="btnx btnx-small" href="{{ url_for('manage_projects') }}">📂 Manage projects</a>
+                <div class="dropdown-divider"></div>
+                <a class="config-item" href="{{ url_for('manage_projects') }}">
+                    <span class="config-icon">📂</span> Manage projects
+                </a>
             </div>
         </div>
 
@@ -59,12 +66,18 @@
                     class="btnx{% if config_active %} primary{% endif %}"
                     @click="open = !open"
                     @keydown.escape.window="open = false">
-                📋 Configs
+                <span>📋</span> Configs
             </button>
             <div class="dropdown-content" x-show="open" @click.outside="open = false">
-                <a class="btnx btnx-small" href="{{ url_for('new_config') }}">🆕 New config</a>
-                <a class="btnx btnx-small" href="{{ url_for('import_config') }}">📥 Import config</a>
-                <a class="btnx btnx-small" href="{{ url_for('list_configs') }}">📑 Show all</a>
+                <a class="config-item" href="{{ url_for('new_config') }}">
+                    <span class="config-icon">🆕</span> New config
+                </a>
+                <a class="config-item" href="{{ url_for('import_config') }}">
+                    <span class="config-icon">📥</span> Import config
+                </a>
+                <a class="config-item" href="{{ url_for('list_configs') }}">
+                    <span class="config-icon">📑</span> Show all
+                </a>
             </div>
         </div>
 
@@ -72,10 +85,12 @@
         <!-- Manage users -->
         <div class="dropdown" x-data="{ open: false }" x-cloak>
             <button type="button" class="btnx" @click="open = !open" @keydown.escape.window="open = false">
-                👥 Users
+                <span>👥</span> Users
             </button>
             <div class="dropdown-content" x-show="open" @click.outside="open = false">
-                <a class="btnx btnx-small" href="{{ url_for('admin_users') }}">👤 Manage users</a>
+                <a class="config-item" href="{{ url_for('admin_users') }}">
+                    <span class="config-icon">👤</span> Manage users
+                </a>
             </div>
         </div>
         {% endif %}
@@ -86,22 +101,39 @@
                 ⚙️
             </button>
             <div class="dropdown-content" x-show="open" @click.outside="open = false">
-                <div class="panel" style="display:flex;flex-direction:column;gap:8px;border:none;background:transparent;box-shadow:none;">
-                    <label>Theme</label>
-                    <div style="display:flex;gap:4px;">
-                        <button class="btnx btnx-small"
-                                :class="theme === 'dark' ? 'primary' : ''"
-                                @click="theme = 'dark'">🌙 Dark</button>
-                        <button class="btnx btnx-small"
-                                :class="theme === 'light' ? 'primary' : ''"
-                                @click="theme = 'light'">☀️ Light</button>
+                <div class="user-info">
+                    <div class="user-avatar">{{ session.get('username', 'U')[0]|upper }}</div>
+                    <div>
+                        <div class="user-name">{{ session.get('username', 'User') }}</div>
+                        <div class="user-role">{{ session.get('role', 'user') }}</div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-label">Theme</div>
+                    <div class="theme-options">
+                        <button class="theme-btn"
+                                :class="theme === 'dark' ? 'active' : ''"
+                                @click="theme = 'dark'">
+                            🌙 Dark
+                        </button>
+                        <button class="theme-btn"
+                                :class="theme === 'light' ? 'active' : ''"
+                                @click="theme = 'light'">
+                            ☀️ Light
+                        </button>
                     </div>
                 </div>
 
-                <div class="panel" style="display:flex;flex-direction:column;gap:8px;border:none;background:transparent;box-shadow:none;">
-                    <label>User: {{ session.get('username') }}</label>
-                    <a class="btnx btnx-small" href="{{ url_for('change_password') }}">🔒 Change password</a>
-                    <a class="btnx btnx-small danger" href="{{ url_for('logout') }}">🚪 Logout</a>
+                <div class="settings-section">
+                    <div class="user-actions">
+                        <a class="user-action-btn" href="{{ url_for('change_password') }}">
+                            <span>🔒</span> Change password
+                        </a>
+                        <a class="user-action-btn danger" href="{{ url_for('logout') }}">
+                            <span>🚪</span> Logout
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
