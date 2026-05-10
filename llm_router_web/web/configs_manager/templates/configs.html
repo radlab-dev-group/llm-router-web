@@ -7,6 +7,7 @@
             <thead>
             <tr>
                 <th>Name</th>
+                <th>Description</th>
                 <th>Created at</th>
                 <th>Last update</th>
                 <th>Status</th>
@@ -17,6 +18,7 @@
             {% for c in configs %}
             <tr>
                 <td>{{ c.name }}</td>
+                <td class="muted" style="max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ c.description or '' }}">{{ c.description or '—' }}</td>
                 <td>{{ c.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
                 <td>{{ c.updated_at.strftime("%Y-%m-%d %H:%M") }}</td>
                 <td>{% if c.is_active %}<span class="badge">DEFAULT</span>{% else %}-{% endif %}</td>
@@ -43,7 +45,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="5">No configs found.</td>
+                <td colspan="6" class="muted">No configs found.</td>
             </tr>
             {% endfor %}
             </tbody>

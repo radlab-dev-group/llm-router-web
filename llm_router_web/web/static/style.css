@@ -495,19 +495,22 @@ input[type="number"] {
 }
 
 .table-configs th:nth-child(1),
-.table-configs td:nth-child(1) { width: 15%; }
+.table-configs td:nth-child(1) { width: 12%; }
 
 .table-configs th:nth-child(2),
-.table-configs td:nth-child(2) { width: 10%; }
+.table-configs td:nth-child(2) { width: 35%; }
 
 .table-configs th:nth-child(3),
 .table-configs td:nth-child(3) { width: 10%; }
 
 .table-configs th:nth-child(4),
-.table-configs td:nth-child(4) { width: 8%; }
+.table-configs td:nth-child(4) { width: 10%; }
 
 .table-configs th:nth-child(5),
-.table-configs td:nth-child(5) { width: 57%; }
+.table-configs td:nth-child(5) { width: 13%; }
+
+.table-configs th:nth-child(6),
+.table-configs td:nth-child(6) { width: 20%; }
 
 .table td {
     padding: var(--space-3);
