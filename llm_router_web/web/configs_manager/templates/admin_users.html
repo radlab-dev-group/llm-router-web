@@ -48,29 +48,31 @@
                     {% endif %}
                 </td>
                 <td>
-                    <div class="users-action-col">
-                        <!-- Change role -->
-                        <form method="post" action="{{ url_for('edit_user', user_id=u.id) }}" class="users-action-group">
-                            <span class="ga-label">Role</span>
-                            <select name="role" class="ga-select">
+                    <div class="users-actions-row">
+                        <!-- Role -->
+                        <form method="post" action="{{ url_for('edit_user', user_id=u.id) }}" class="users-action-chip" style="margin:0;">
+                            <span class="ua-label">Role</span>
+                            <select name="role" class="ua-select">
                                 <option value="user" {% if u.role=='user' %}selected{% endif %}>User</option>
                                 <option value="admin" {% if u.role=='admin' %}selected{% endif %}>Admin</option>
                             </select>
-                            <button class="ga-btn" type="submit">OK</button>
+                            <button class="ua-btn" type="submit">OK</button>
                         </form>
 
-                        <!-- Change password -->
-                        <form method="post" action="{{ url_for('edit_user', user_id=u.id) }}" class="users-action-group">
-                            <span class="ga-label">Pass</span>
-                            <input type="password" name="new_password" placeholder="New" class="ga-input">
-                            <input type="password" name="confirm_password" placeholder="Confirm" class="ga-input">
-                            <button class="ga-btn" type="submit">OK</button>
+                        <!-- Password -->
+                        <form method="post" action="{{ url_for('edit_user', user_id=u.id) }}" class="users-action-chip ua-pass-group" style="margin:0;">
+                            <span class="ua-label">Pass</span>
+                            <div class="ua-pass-inputs">
+                                <input type="password" name="new_password" placeholder="New" class="ua-input">
+                                <input type="password" name="confirm_password" placeholder="Confirm" class="ua-input">
+                            </div>
+                            <button class="ua-btn" type="submit">OK</button>
                         </form>
 
                         <!-- Block / Unblock -->
-                        <form method="post" action="{{ url_for('toggle_block_user', user_id=u.id) }}" class="users-action-group">
-                            <span class="ga-label">Status</span>
-                            <button class="ga-btn {{ 'primary' if not u.is_active else 'danger' }}"
+                        <form method="post" action="{{ url_for('toggle_block_user', user_id=u.id) }}" class="users-action-chip" style="margin:0;">
+                            <span class="ua-label">Status</span>
+                            <button class="ua-btn {{ 'primary' if not u.is_active else 'danger' }}"
                                     type="submit">
                                 {{ 'Unblock' if not u.is_active else 'Block' }}
                             </button>
