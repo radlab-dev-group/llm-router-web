@@ -148,7 +148,7 @@ p { margin: 0 0 var(--space-3) 0; }
 
 .app-main {
     width: 100%;
-    max-width: 2000px;
+    max-width: none;
     animation: fadeIn 0.3s ease-out;
 }
 
@@ -623,6 +623,9 @@ input[type="number"] {
 .grid {
     display: grid;
     gap: var(--space-4);
+    width: 100%;
+    max-width: none;
+    margin: 0 auto;
 }
 
 .grid.active-models {
@@ -1254,8 +1257,16 @@ code {
 
 /* ===== Model card in edit page ===== */
 .edit-models-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: none;
+    margin: 0 auto;
     gap: 16px;
+}
+
+.edit-model-section {
+    width: 100% !important;
 }
 
 .edit-model-section {
