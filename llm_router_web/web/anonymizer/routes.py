@@ -35,8 +35,6 @@ from flask import (
     url_for,
 )
 
-from .constants import DEFAULT_PII_MODEL_NAME
-
 
 def _t(key):
     """Helper function to translate strings within routes.py"""
@@ -119,46 +117,35 @@ def process_text():
     model_name = request.form.get("model_name", "").strip()
 
     router_host = current_app.config["LLM_ROUTER_HOST"].rstrip("/")
-    pii_host = current_app.config["PII_SERVICE_HOST"].rstrip("/")
+    router_services_host = current_app.config["LLM_ROUTER_SERVICES_HOST"].rstrip("/")
 
-    def call_pii_service(text: str, model: str) -> Dict | str:
+    def call_pii_masker_service(text: str, endpoint: str) -> Dict | str:
         """
-        Helper to call the PII (Personally Identifiable Information) service.
+        Helper to call the maskers PII classifier service.
+
+        Calls /api/maskers/pii which returns {"anonymized": str, "mappings": dict}.
 
         Args:
             text (str): The text to be anonymized.
-            model (str): The PII model name to use.
+            endpoint (str): The specific API endpoint on the router services.
 
         Returns:
-            Dict: The response from the PII service containing anonymized text
+            Dict: The response from the masker service containing anonymized text
                   and mappings if successful.
             str: An error message if the request fails.
         """
-        # labels = ["LOCATION", "PERSON"]
-
-        labels = [
-            "EVENT",
-            "FACILITY",
-            "LOCATION",
-            "ORGANIZATION",
-            "PERSON",
-            "PRODUCT",
-        ]
         try:
-            # Analogous to pii/index.html call
             resp = requests.post(
-                f"{pii_host}/predict_and_anonymize",
-                json={
-                    "text": text,
-                    "model": model or DEFAULT_PII_MODEL_NAME,
-                    "labels": labels,
-                },
+                f"{router_services_host}{endpoint}",
+                json={"text": text},
                 timeout=60,
             )
             resp.raise_for_status()
-            return resp.json()
+            data = resp.json()
+            data["text"] = data.get("anonymized")["text"]
+            return data
         except Exception as e:
-            return f"❌ PII Service Error: {e}"
+            return f"❌ Masker Service Error: {e}"
 
     def call_router_service(text: str, model: str, endpoint: str):
         """
@@ -186,10 +173,10 @@ def process_text():
 
     # Logic for the selected algorithm
     if algorithm == "pii_masking":
-        result = call_pii_service(raw_text, model_name)
+        result = call_pii_masker_service(raw_text, "/api/maskers/pii")
 
     elif algorithm == "fast+pii":
-        pii_result = call_pii_service(raw_text, model_name)
+        pii_result = call_pii_masker_service(raw_text, "/api/maskers/pii")
         if isinstance(pii_result, str):
             pii_result = {}
 

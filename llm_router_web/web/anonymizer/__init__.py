@@ -54,14 +54,14 @@ def create_anonymize_app() -> Flask:
 
     app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "change-me-anonymizer")
 
-    # Address of the external anonymizing service
+    # Address of the llm-router API
     app.config["LLM_ROUTER_HOST"] = os.getenv(
         "LLM_ROUTER_HOST", "http://localhost:8000"
     )
 
-    # Address of the PII anonymization service
-    app.config["PII_SERVICE_HOST"] = os.getenv(
-        "PII_SERVICE_HOST", "http://localhost:5001"
+    # Address of the llm-router-services API
+    app.config["LLM_ROUTER_SERVICES_HOST"] = os.getenv(
+        "LLM_ROUTER_SERVICES_HOST", "http://localhost:5000"
     )
 
     app.register_blueprint(anonymize_bp)
