@@ -5,6 +5,8 @@ COPY . /srv/llm-router-web
 
 WORKDIR /srv/llm-router-web
 
+RUN apt update && apt install -y vim inetutils-ping curl htop
+
 RUN cp docker/entrypoint.sh entrypoint.sh && chmod +x entrypoint.sh
 RUN pip3 install -r requirements.txt
 
