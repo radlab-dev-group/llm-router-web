@@ -94,8 +94,8 @@ python app_anonymizer.py
 - `LLM_ROUTER_WEB_ANO_HOST` – Bind address (default: `0.0.0.0`)
 - `LLM_ROUTER_WEB_ANO_PORT` – Port (default: `8082`)
 - `LLM_ROUTER_WEB_ANO_DEBUG` – Debug mode (default: `true`)
-- `LLM_ROUTER_HOST` – LLM Router API endpoint (default: `http://192.168.100.65:8080`)
-- `LLM_ROUTER_GENAI_MODEL_ANONYMISATION` – Model for GenAI anonymization (default: `gtp-oss:120b`)
+- `LLM_ROUTER_HOST` – LLM Router API endpoint (default: `http://localhost:8080`)
+- `LLM_ROUTER_SERVICES_HOST` – LLM Router API endpoint (default: `http://localhost:5000`)
 
 **Default URL:** http://localhost:8082/anonymize
 
