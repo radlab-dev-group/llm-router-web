@@ -2,6 +2,82 @@
     const CONFIG = window.ANON_CONFIG || {};
     const resultPlaceholder = CONFIG.resultPlaceholder || 'Wynik pojawi się tutaj po przetworzeniu...';
 
+    // ---- Drag-and-drop file loading ----
+    const dropZone = document.getElementById('drop-zone');
+    const dropOverlay = document.getElementById('drop-overlay');
+    const inputEl = document.getElementById('input-text');
+
+    function hideDropOverlay() {
+        if (dropOverlay) dropOverlay.classList.remove('is-visible');
+    }
+
+    function showDropOverlay() {
+        if (dropOverlay) dropOverlay.classList.add('is-visible');
+    }
+
+    // Hide overlay when user starts typing
+    if (inputEl) {
+        inputEl.addEventListener('input', hideDropOverlay);
+    }
+
+    if (dropZone) {
+        let isDragging = false;
+
+        dropZone.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Only show if coming from outside the zone
+            if (!isDragging && (!e.relatedTarget || !dropZone.contains(e.relatedTarget))) {
+                isDragging = true;
+                showDropOverlay();
+            }
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isDragging && (!e.relatedTarget || !dropZone.contains(e.relatedTarget))) {
+                isDragging = false;
+                hideDropOverlay();
+            }
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        dropZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            isDragging = false;
+            hideDropOverlay();
+
+            const files = e.dataTransfer?.files;
+            if (!files?.length) return;
+
+            for (const file of files) {
+                // Skip binary files (images, video, audio, executables)
+                if (file.type && (
+                    file.type.startsWith('image/') ||
+                    file.type.startsWith('video/') ||
+                    file.type.startsWith('audio/') ||
+                    file.type.startsWith('application/octet-stream')
+                )) {
+                    continue;
+                }
+
+                try {
+                    const text = await file.text();
+                    if (inputEl) {
+                        inputEl.value += (inputEl.value ? '\n\n' : '') + text;
+                    }
+                } catch {
+                    // Skip files that can't be read as text
+                }
+            }
+        });
+    }
+
     function highlightTags() {
         const container = document.getElementById('result-content');
         if (!container) return;
@@ -78,6 +154,7 @@
     function clearText() {
         document.getElementById('input-text').value = '';
         document.getElementById('result-content').innerHTML = `<span style="opacity:0.5; font-style:italic;">${resultPlaceholder}</span>`;
+        if (dropOverlay) dropOverlay.classList.add('is-visible');
     }
 
     function syncScroll(source) {
@@ -98,7 +175,6 @@
     window.copyResult = copyResult;
     window.copyMappings = copyMappings;
 
-    const inputEl = document.getElementById('input-text');
     const resultEl = document.getElementById('result-content');
 
     if (inputEl) inputEl.addEventListener('scroll', e => syncScroll(e.target));
