@@ -31,11 +31,18 @@
             <div id="anon-progress" class="anon-progress-bar"></div>
 
             <div class="editor-grid">
-                <div class="editor-pane">
+                <div class="editor-pane" id="drop-zone">
                     <div class="pane-label">{{ _('label_original') }}</div>
                     <textarea name="text" id="input-text"
                               placeholder="{{ _('placeholder_input') }}" required
                               class="input-textarea"></textarea>
+                    <div id="drop-overlay" class="drop-overlay" hidden style="display:none">
+                        <div class="drop-overlay-bg"></div>
+                        <div class="drop-overlay-content">
+                            <span class="drop-icon">📄</span>
+                            <span class="drop-text">{{ _('drop_text') }}</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="editor-pane">

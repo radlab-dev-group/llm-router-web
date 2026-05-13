@@ -66,19 +66,19 @@ The UI is reachable at `http://localhost:5000/anonymize`.
 
 ```shell script
 LLM_ROUTER_HOST=http://localhost:8000 \
-PII_SERVICE_HOST=http://localhost:5001 \
-gunicorn -w 4 -b 0.0.0.0:8082 "web.anonymizer:create_anonymize_app()"
+  LLM_ROUTER_SERVICES_HOST=http://localhost:5000 \
+  gunicorn -w 4 -b 0.0.0.0:8082 "web.anonymizer:create_anonymize_app()"
 ```
 
 ## Configuration
 
 Configuration is managed via environment variables:
 
-| Variable           | Description                               | Default                 |
-|:-------------------|:------------------------------------------|:------------------------|
-| `FLASK_SECRET_KEY` | Secret key for Flask session signing      | `change-me-anonymizer`  |
-| `LLM_ROUTER_HOST`  | Base URL of the LLM-Router service        | `http://localhost:8000` |
-| `PII_SERVICE_HOST` | Base URL of the PII anonymization service | `http://localhost:5001` |
+| Variable                   | Description                          | Default                 |
+|:---------------------------|:-------------------------------------|:------------------------|
+| `FLASK_SECRET_KEY`         | Secret key for Flask session signing | `change-me-anonymizer`  |
+| `LLM_ROUTER_HOST`          | Base URL of the llm-router api       | `http://localhost:8000` |
+| `LLM_ROUTER_SERVICES_HOST` | Base URL of the llm-royer-services   | `http://localhost:5000` |
 
 ## Endpoints Overview
 

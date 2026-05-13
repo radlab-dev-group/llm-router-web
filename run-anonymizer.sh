@@ -16,16 +16,20 @@
 HOST="${LLM_ROUTER_WEB_ANO_HOST:-0.0.0.0}"
 PORT="${LLM_ROUTER_WEB_ANO_PORT:-8082}"
 DEBUG="${LLM_ROUTER_WEB_ANO_DEBUG:-true}"
-ROUTER_HOST="${LLM_ROUTER_HOST:-"http://192.168.100.65:8080"}"
-PII_SERVICE_HOST="${PII_SERVICE_HOST:-"http://192.168.100.71:5001"}"
+# -------------------------------------------------------------------------
+# llm-router api:
+LLM_ROUTER_HOST="${LLM_ROUTER_HOST:-"http://192.168.100.65:8080"}"
+# -------------------------------------------------------------------------
+# llm-router-services api:
+LLM_ROUTER_SERVICES_HOST="${LLM_ROUTER_SERVICES_HOST:-"http://192.168.100.65:5000"}"
 
 # -------------------------------------------------------------------------
 # Export the variables so the Flask app (app.py) can read them.
 export LLM_ROUTER_WEB_ANO_HOST="$HOST"
 export LLM_ROUTER_WEB_ANO_PORT="$PORT"
 export LLM_ROUTER_WEB_ANO_DEBUG="$DEBUG"
-export LLM_ROUTER_HOST="$ROUTER_HOST"
-export PII_SERVICE_HOST="$PII_SERVICE_HOST"
+export LLM_ROUTER_HOST="$LLM_ROUTER_HOST"
+export LLM_ROUTER_SERVICES_HOST="$LLM_ROUTER_SERVICES_HOST"
 
 # -------------------------------------------------------------------------
 # Run the app with gunicorn.
