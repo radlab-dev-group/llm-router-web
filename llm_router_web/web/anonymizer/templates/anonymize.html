@@ -18,9 +18,9 @@
 
                 <div class="workspace-controls">
                     <select name="algorithm" class="selectx">
+                        <option value="fast+pii">{{ _('algo_hybrid') }}</option>
                         <option value="fast" selected>{{ _('algo_fast') }}</option>
                         <option value="pii_masking">{{ _('algo_pii') }}</option>
-                        <option value="fast+pii">{{ _('algo_hybrid') }}</option>
                     </select>
                     <span id="loading-spinner" class="spinnerx"></span>
                     <button type="button" class="btnx" onclick="clearText()">{{ _('btn_clear') }}</button>
