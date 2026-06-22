@@ -9,7 +9,7 @@
   "welcome_title": "Welcome to LLM-Router Anonymizer",
   "welcome_text": "Before you start using the tools, please read our <a href='/anonymize/terms' target='_blank'>Terms of Service</a> and <a href='/anonymize/privacy' target='_blank'>Privacy Policy</a>.<br><br>By using the application, you accept the data processing rules for anonymization purposes.",
   "welcome_button": "Accept and Enter 🚀",
-  "github_link": "GitHub",
+  "github_link": "LLM-Router",
   "model_link": "Model",
   "fastmasker_link": "FastMasker",
   "footer_text": "© 2026 LLM‑Router Anonymizer — Privacy in AI Communication",
