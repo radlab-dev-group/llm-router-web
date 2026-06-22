@@ -10,6 +10,8 @@
   "welcome_text": "Zanim zaczniesz korzystać z narzędzi, prosimy o zapoznanie się z naszym <a href='/anonymize/terms' target='_blank'>regulaminem</a> oraz <a href='/anonymize/privacy' target='_blank'>polityką prywatności</a>.<br><br>Używając aplikacji, akceptujesz zasady przetwarzania danych w celu ich anonimizacji.",
   "welcome_button": "Akceptuję i wchodzę 🚀",
   "github_link": "GitHub",
+  "model_link": "Model",
+  "fastmasker_link": "FastMasker",
   "footer_text": "© 2026 LLM‑Router Anonymizer — Prywatność w komunikacji z AI",
   "anon_title": "🔒 Anonimizacja Tekstu",
   "anon_sub": "Usuń dane wrażliwe przed wysłaniem tekstu do modelu AI.",
