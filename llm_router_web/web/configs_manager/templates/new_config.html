@@ -1,17 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="panel">
-    <h2>Create new config</h2>
-    <form method="post" class="form">
-        <label>Config name
-            <input type="text" name="name" placeholder="My new config" required class="inputx">
-        </label>
-        <label>Description (optional)
-            <textarea name="description" placeholder="Describe this config..." rows="3" class="inputx"></textarea>
-        </label>
-        <div class="form-actions">
+<div class="page-header">
+    <div class="page-title-group">
+        <h1 class="page-title">New Configuration</h1>
+        <p class="page-subtitle">Create a fresh configuration for your LLM router.</p>
+    </div>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    {% if import_host %}
+    <div class="badge" style="background: var(--ok); color: white; margin-bottom: 1.5rem; display: block; text-align: center;">
+        Pre-populating with discovered {{ import_type }} provider at {{ import_host }}:{{ import_port }}
+    </div>
+    {% endif %}
+
+    <form method="post" class="settings-section">
+        <div class="form-group">
+            <label for="name" class="settings-label">Config name</label>
+            <input type="text" id="name" name="name" placeholder="My new config" required 
+                   class="input-main" value="{{ 'discovered-' + import_type if import_type else '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="description" class="settings-label">Description (optional)</label>
+            <textarea id="description" name="description" placeholder="Describe this config..." rows="3" 
+                      class="input-main"></textarea>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <a class="btnx" href="{{ url_for('index') }}">Cancel</a>
             <button class="btnx primary" type="submit">Create config</button>
-            <a class="btnx btnx-secondary" href="{{ url_for('index') }}">Cancel</a>
         </div>
     </form>
 </div>

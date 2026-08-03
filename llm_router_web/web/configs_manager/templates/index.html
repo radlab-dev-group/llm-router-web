@@ -1,61 +1,79 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="panel">
-    <h2>Create new config</h2>
-    <div class="action-row" style="margin-top:1rem;">
-        <a class="btnx primary" href="{{ url_for('new_config') }}">🆕 New config (from scratch)</a>
-        <a class="btnx" href="{{ url_for('import_config') }}">📥 Load existing config</a>
-        <a class="btnx" href="{{ url_for('list_configs') }}">📑 Show defined configs</a>
+<div class="page-header">
+    <div class="page-title-group">
+        <h1 class="page-title">{{ _('brand_name') }}</h1>
+        <p class="page-subtitle">Welcome back! Manage your LLM routing configurations here.</p>
+    </div>
+    <div class="page-actions">
+        <a href="{{ url_for('discover') }}" class="btnx primary">
+            {{ _('btn_discover') }}
+        </a>
     </div>
 </div>
 
-<div class="panel">
-    <h2>List of defined configs</h2>
+<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+    <div class="card">
+        <h3 class="settings-label">Quick Actions</h3>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+            <a href="{{ url_for('new_config') }}" class="btnx" style="justify-content: flex-start;">
+                <span>🆕</span> New config (from scratch)
+            </a>
+            <a href="{{ url_for('import_config') }}" class="btnx" style="justify-content: flex-start;">
+                <span>📥</span> Load existing config
+            </a>
+            <a href="{{ url_for('list_configs') }}" class="btnx" style="justify-content: flex-start;">
+                <span>📑</span> Show all defined configs
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 class="settings-label">Current Project</h3>
+        <div style="margin-top: 1rem;">
+            <div style="font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem;">📁 {{ current_project_name }}</div>
+            <p class="muted" style="font-size: 0.9rem;">You are currently working in this project. All new configurations will be saved here.</p>
+            <a href="{{ url_for('manage_projects') }}" class="btnx" style="margin-top: 0.5rem; font-size: 0.8rem;">
+                Switch project
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 class="settings-label">Recent Configurations</h3>
+        <a href="{{ url_for('list_configs') }}" style="font-size: 0.8rem; color: var(--accent);">View all</a>
+    </div>
+    
     <div class="scroll-wrap">
         <table class="table">
             <thead>
             <tr>
                 <th>Config name</th>
                 <th>Last modification</th>
-                <th>Preview</th>
-                <th>Edit</th>
-                <th>Export</th>
-                <th>Set as default</th>
-                <th>Delete</th>
-                <th>Is default</th>
+                <th>Status</th>
+                <th>Action</th>
             </tr>
             </thead>
             <tbody>
-            {% for c in configs %}
+            {% for c in configs[:5] %}
             <tr>
-                <td>{{ c.name }}</td>
-                <td>{{ c.updated_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
-                <td><a class="btnx btnx-small" href="{{ url_for('view_config', config_id=c.id) }}">Preview</a></td>
-                <td><a class="btnx btnx-small" href="{{ url_for('edit_config', config_id=c.id) }}">Edit</a></td>
-                <td><a class="btnx btnx-small" href="{{ url_for('export_config', config_id=c.id) }}">Export</a></td>
+                <td><strong>{{ c.name }}</strong></td>
+                <td style="font-size: 0.8rem; color: var(--text-muted);">{{ c.updated_at.strftime("%Y-%m-%d %H:%M") }}</td>
                 <td>
-                    <button class="btnx btnx-small"
-                            hx-post="{{ url_for('set_active_config', config_id=c.id) }}"
-                            hx-swap="none"
-                            hx-on="htmx:afterRequest: window.location.reload()">
-                        Set as default
-                    </button>
+                    {% if c.is_active %}<span class="badge" style="background: var(--ok); color: white;">DEFAULT</span>{% else %}<span class="muted">-</span>{% endif %}
                 </td>
                 <td>
-                    <form method="post" action="{{ url_for('delete_config', config_id=c.id) }}" style="display:inline;">
-                        <button class="btnx btnx-small danger" type="submit"
-                                onclick="return confirm('Are you sure you want to delete config {{ c.name }}?');">
-                            Delete
-                        </button>
-                    </form>
-                </td>
-                <td class="nowrap">
-                    {% if c.is_active %}<span class="badge">DEFAULT</span>{% else %}-{% endif %}
+                    <div class="action-row" style="gap: 0.5rem;">
+                        <a class="btnx btnx-small" href="{{ url_for('view_config', config_id=c.id) }}">Preview</a>
+                        <a class="btnx btnx-small" href="{{ url_for('edit_config', config_id=c.id) }}">Edit</a>
+                    </div>
                 </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="8" class="muted">No configuration found.</td>
+                <td colspan="4" class="muted" style="text-align: center; padding: 2rem;">No configuration found.</td>
             </tr>
             {% endfor %}
             </tbody>

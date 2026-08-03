@@ -18,7 +18,7 @@ with LLMs. It acts as a bridge between the user and the backend anonymization se
 ### 🔒 Text Anonymization Form
 
 - **Multi-Algorithm Support**: `Fast Masking`, `PII Masking`, and `Fast + PII`.
-- **Advanced UI**: Real-time result highlighting, one-click copying, and synchronized scrolling.
+- **Advanced UI**: Modern "glassmorphism" design (shared with **Configs Manager**), real-time result highlighting, one-click copying, and synchronized scrolling.
 - **HTMX-powered**: Asynchronous processing.
 
 ### 💬 Interactive Anonymized Chat

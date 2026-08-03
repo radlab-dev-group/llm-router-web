@@ -21,6 +21,9 @@ Web interface for managing LLM Router configurations and text anonymization.
     - Configure providers (API hosts, tokens, weights, input sizes)
     - Version control with restore capability
 - **Active Model Selection**: Choose which models to activate
+- **🌐 i18n**: Support for Polish and English languages
+- **🔍 Discovery**: Scan network hosts for LLM providers (Ollama, vLLM, etc.)
+- **Modern UI**: Unified design with the Anonymizer module
 
 Read the module [README](llm_router_web/web/configs_manager/README.md)
 
@@ -30,6 +33,8 @@ Read the module [README](llm_router_web/web/configs_manager/README.md)
 - **Chat Interface**: Interactive chat with optional anonymization
 - **Model Selection**: Browse and select available LLM models
 - **Real-time Processing**: Direct integration with LLM Router API
+- **🌐 i18n**: Support for Polish and English languages
+- **Modern UI**: Unified design with the Config Manager module
 
 Read the module [README](llm_router_web/web/anonymizer/README.md)
 
@@ -108,6 +113,7 @@ python app_anonymizer.py
 | `/`                          | GET      | Configuration list (home)   |
 | `/login`                     | GET/POST | User login                  |
 | `/logout`                    | GET      | User logout                 |
+| `/set_lang/<lang>`           | GET      | Change language             |
 | `/setup`                     | GET/POST | Initial admin setup         |
 | `/admin/users`               | GET/POST | User management (admin)     |
 | `/projects`                  | GET/POST | Project management          |
@@ -124,6 +130,7 @@ python app_anonymizer.py
 | `/models/<id>/providers/add` | POST     | Add provider                |
 | `/providers/<id>/update`     | POST     | Update provider             |
 | `/providers/<id>/delete`     | POST     | Delete provider             |
+| `/discover`                  | GET/POST | Discover LLM providers      |
 
 ### Anonymizer
 
@@ -131,6 +138,7 @@ python app_anonymizer.py
 |---------------------------|--------|----------------------------|
 | `/anonymize/`             | GET    | Anonymization form         |
 | `/anonymize/`             | POST   | Process text anonymization |
+| `/anonymize/set_lang/<lang>` | GET    | Change language            |
 | `/anonymize/chat`         | GET    | Chat interface             |
 | `/anonymize/chat/message` | POST   | Send chat message          |
 | `/anonymize/models`       | GET    | List available models      |

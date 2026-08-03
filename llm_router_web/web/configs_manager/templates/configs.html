@@ -1,7 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="panel">
-    <h2>All defined configs</h2>
+<div class="page-header">
+    <div class="page-title-group">
+        <h1 class="page-title">{{ _('nav_configs') }}</h1>
+        <p class="page-subtitle">Manage your LLM-router configurations for project: {{ current_project_name }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{{ url_for('new_config') }}" class="btnx primary">
+            <span>🆕</span> New config
+        </a>
+        <a href="{{ url_for('import_config') }}" class="btnx">
+            <span>📥</span> Import config
+        </a>
+    </div>
+</div>
+
+<div class="card">
     <div class="scroll-wrap">
         <table class="table table-configs">
             <thead>
