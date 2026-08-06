@@ -100,7 +100,7 @@
                 </thead>
                 <tbody data-model-id="{{ m.id }}">
                 {% for p in m.providers|sort(attribute='order') %}
-                <tr x-data="{ masked: false, token: '{{ p.api_token }}' }"
+                <tr x-data="{ masked: true, token: '{{ p.api_token }}' }"
                     data-provider-id="{{ p.id }}"
                     draggable="true">
                     <td class="col-id">
