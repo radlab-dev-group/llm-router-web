@@ -36,7 +36,12 @@ from .utils import (
     export_config_to_file,
     discover_host,
 )
-from .constants import VALID_FAMILIES
+
+def _get_families(cfg_id):
+    """Return all unique families for a config from Model and ActiveModel tables."""
+    m = {r.family for r in Model.query.filter_by(config_id=cfg_id).all()}
+    a = {r.family for r in ActiveModel.query.filter_by(config_id=cfg_id).all()}
+    return sorted(m | a)
 
 bp = Blueprint(
     "web",
@@ -583,8 +588,8 @@ def import_config():
         db.session.add(cfg)
         db.session.flush()  # obtain cfg.id before adding models/providers
 
-        # ---- 7️⃣  Load models & providers (unchanged logic) -------------------
-        for fam in ["google_models", "openai_models", "qwen_models", "anthropic_models", "speakleash_models", "llama_models", "mistral_models", "radlab_models", "min_max_models", "semantic_routing"]:
+        # ---- 7️⃣  Load models & providers from imported JSON ---------------
+        for fam in (k for k in data if k != "active_models"):
             for mname, mval in (data.get(fam) or {}).items():
                 m = Model(config_id=cfg.id, family=fam, name=mname)
                 db.session.add(m)
@@ -603,9 +608,9 @@ def import_config():
                         )
                     )
 
-        # ---- 8️⃣  Active models (unchanged) ----------------------------------
+        # ---- 8️⃣  Active models from imported JSON --------------------------
         active = data.get("active_models") or {}
-        for fam in ["google_models", "openai_models", "qwen_models", "anthropic_models", "speakleash_models", "llama_models", "mistral_models", "radlab_models", "min_max_models", "semantic_routing"]:
+        for fam in active:
             for mname in active.get(fam, []):
                 db.session.add(
                     ActiveModel(config_id=cfg.id, family=fam, model_name=mname)
@@ -638,7 +643,7 @@ def view_config(config_id):
     data = to_json(cfg.id)
 
     # Build active/inactive sets for the template
-    all_families = ["google_models", "openai_models", "qwen_models", "anthropic_models", "speakleash_models", "llama_models", "mistral_models", "radlab_models", "min_max_models", "semantic_routing"]
+    all_families = _get_families(cfg.id) or []
     active_set = set()
     for fam in all_families:
         for mn in (data.get("active_models") or {}).get(fam, []):
@@ -649,7 +654,7 @@ def view_config(config_id):
         fam_inactives = []
         for mn in data.get(fam) or {}:
             if mn not in active_set:
-                inactive_set.add(mn)
+                inactive_set.add(f"{fam}/{mn}")
                 fam_inactives.append(mn)
         if fam_inactives:
             inactive_by_family[fam] = fam_inactives
@@ -659,20 +664,10 @@ def view_config(config_id):
         .order_by(ConfigVersion.version.desc())
         .all()
     )
-    pretty = {
-        "active_models": json.dumps(
-            data.get("active_models", {}), ensure_ascii=False, indent=2
-        ),
-        "google_models": json.dumps(
-            data.get("google_models", {}), ensure_ascii=False, indent=2
-        ),
-        "openai_models": json.dumps(
-            data.get("openai_models", {}), ensure_ascii=False, indent=2
-        ),
-        "qwen_models": json.dumps(
-            data.get("qwen_models", {}), ensure_ascii=False, indent=2
-        ),
-    }
+    pretty = {}
+    for fam in all_families:
+        if data.get(fam):
+            pretty[fam] = json.dumps(data.get(fam, {}), ensure_ascii=False, indent=2)
     return render_template(
         "view.html",
         cfg=cfg,
@@ -720,8 +715,11 @@ def edit_config(config_id):
             flash("Configuration description updated.", "success")
 
         note = request.form.get("note", "")
-        # Update active models (unchanged)
-        for fam in ["google_models", "openai_models", "qwen_models", "anthropic_models", "speakleash_models", "llama_models", "mistral_models", "radlab_models", "min_max_models", "semantic_routing"]:
+        # Update active models from form data
+        fam_list = _get_families(cfg.id)
+        if not fam_list:
+            fam_list = []
+        for fam in fam_list:
             ActiveModel.query.filter_by(config_id=cfg.id, family=fam).delete()
             for mname in request.form.getlist(f"{fam}[]"):
                 db.session.add(
@@ -731,13 +729,14 @@ def edit_config(config_id):
         snapshot_version(cfg.id, note=note or "Updated active models")
         return redirect(url_for("web.edit_config", config_id=cfg.id))
 
+    fam_list = _get_families(cfg.id) or []
     families = {
         fam: Model.query.filter_by(config_id=cfg.id, family=fam).all()
-        for fam in ["google_models", "openai_models", "qwen_models", "anthropic_models", "speakleash_models", "llama_models", "mistral_models", "radlab_models", "min_max_models", "semantic_routing"]
+        for fam in fam_list
     }
     actives = {
         fam: [a.model_name for a in cfg.actives if a.family == fam]
-        for fam in ["google_models", "openai_models", "qwen_models", "anthropic_models", "speakleash_models", "llama_models", "mistral_models", "radlab_models", "min_max_models", "semantic_routing"]
+        for fam in fam_list
     }
     return render_template(
         "edit.html",
@@ -755,7 +754,7 @@ def add_model(config_id: int):
     cfg = _get_user_config(config_id)
     fam = request.form.get("family")
     name = request.form.get("name", "").strip()
-    if fam not in VALID_FAMILIES or not name:
+    if not name:
         abort(400, description="Invalid data")
     if Model.query.filter_by(config_id=cfg.id, family=fam, name=name).first():
         abort(400, description="Model already exists")
@@ -943,7 +942,7 @@ def restore_version(config_id, version):
     # --------------------------------------------------------------
     # 2️⃣  Re‑create models & their providers from the snapshot
     # --------------------------------------------------------------
-    for fam in ["google_models", "openai_models", "qwen_models"]:
+    for fam in (k for k in data if k != "active_models"):
         for mname, mval in (data.get(fam) or {}).items():
             m = Model(config_id=cfg.id, family=fam, name=mname)
             db.session.add(m)
@@ -965,9 +964,9 @@ def restore_version(config_id, version):
                 )
 
     # --------------------------------------------------------------
-    # 3️⃣  Re‑create active‑model entries
+    # 3️⃣  Re‑create active‑model entries from snapshot
     # --------------------------------------------------------------
-    for fam in ["google_models", "openai_models", "qwen_models"]:
+    for fam in (data.get("active_models") or {}):
         for mname in data.get("active_models", {}).get(fam) or []:
             db.session.add(
                 ActiveModel(config_id=cfg.id, family=fam, model_name=mname)

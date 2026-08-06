@@ -6,23 +6,25 @@ from flask import send_file
 from datetime import datetime
 from sqlalchemy import func, inspect, text
 
-from .models import db, Config, ConfigVersion, Model
+from .models import db, Config, ConfigVersion, Model, ActiveModel
 
 
 def to_json(config_id: int) -> dict:
     """Serialize a configuration to a JSON‑compatible dict."""
     cfg = Config.query.get_or_404(config_id)
-    out = {
-        "google_models": {},
-        "openai_models": {},
-        "qwen_models": {},
-        "active_models": {
-            "google_models": [],
-            "openai_models": [],
-            "qwen_models": [],
-        },
-    }
-    families = ["google_models", "openai_models", "qwen_models"]
+
+    # Discover all families dynamically from DB
+    fam_set = {r.family for r in Model.query.filter_by(config_id=cfg.id).all()} | \
+              {r.family for r in ActiveModel.query.filter_by(config_id=cfg.id).all()}
+    families = sorted(fam_set) or []
+
+    out = {}
+    active_models = {}
+    for fam in families:
+        out[fam] = {}
+        active_models[fam] = []
+    out["active_models"] = active_models
+
     for fam in families:
         for m in Model.query.filter_by(config_id=cfg.id, family=fam).all():
             providers = []
@@ -44,10 +46,12 @@ def to_json(config_id: int) -> dict:
                         }
                     )
             out[fam][m.name] = {"providers": providers}
+
     for fam in families:
-        out["active_models"][fam] = [
+        active_models[fam] = [
             a.model_name for a in cfg.actives if a.family == fam
         ]
+
     return out
 
 
