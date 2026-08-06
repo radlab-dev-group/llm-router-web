@@ -504,7 +504,7 @@ def new_config():
             project_id=proj_id,
         )
         db.session.add(cfg)
-        
+
         # If we come from discovery, we can pre-add the provider
         if import_host and import_port and import_type:
             # We'll just create the config and let the user add models in the edit page,
@@ -514,17 +514,24 @@ def new_config():
 
         db.session.commit()
         snapshot_version(cfg.id, note="Created empty config")
-        
+
         # Redirect with import params if they exist to the edit page
-        return redirect(url_for("web.edit_config", config_id=cfg.id, 
-                               import_host=import_host, 
-                               import_port=import_port, 
-                               import_type=import_type))
-    
-    return render_template("new_config.html", 
-                           import_host=import_host, 
-                           import_port=import_port, 
-                           import_type=import_type)
+        return redirect(
+            url_for(
+                "web.edit_config",
+                config_id=cfg.id,
+                import_host=import_host,
+                import_port=import_port,
+                import_type=import_type,
+            )
+        )
+
+    return render_template(
+        "new_config.html",
+        import_host=import_host,
+        import_port=import_port,
+        import_type=import_type,
+    )
 
 
 @bp.route("/configs/import", methods=["GET", "POST"])
@@ -1018,8 +1025,5 @@ def discover():
             results = discover_host(host)
 
     return render_template(
-        "discover.html",
-        results=results,
-        host=host,
-        title="Discover Hosts"
+        "discover.html", results=results, host=host, title="Discover Hosts"
     )

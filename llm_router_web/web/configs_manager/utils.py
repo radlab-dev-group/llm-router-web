@@ -167,12 +167,14 @@ def discover_host(host: str, timeout: float = 1.0):
                         found_models.append(m["id"])
 
                 if found_models:
-                    results.append({
-                        "api_type": api_type,
-                        "host": host,
-                        "port": port,
-                        "models": found_models
-                    })
+                    results.append(
+                        {
+                            "api_type": api_type,
+                            "host": host,
+                            "port": port,
+                            "models": found_models,
+                        }
+                    )
             except Exception:
                 continue
     return results

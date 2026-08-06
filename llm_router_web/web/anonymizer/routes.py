@@ -290,7 +290,9 @@ def chat_message():
     )
 
     try:
-        resp = requests.post(external_url, json=payload, headers=headers, timeout=600, stream=True)
+        resp = requests.post(
+            external_url, json=payload, headers=headers, timeout=600, stream=True
+        )
         resp.raise_for_status()
     except Exception as exc:
         return (

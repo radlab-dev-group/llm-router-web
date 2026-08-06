@@ -61,7 +61,9 @@ def create_config_manager_app() -> Flask:
         texts = app.config["TRANSLATIONS"].get(
             lang, app.config["TRANSLATIONS"].get("en", {})
         )
-        text = texts.get(key, key)  # Fallback to key itself instead of NO TRANSLATION
+        text = texts.get(
+            key, key
+        )  # Fallback to key itself instead of NO TRANSLATION
         return text.format(**kwargs) if kwargs else text
 
     app.jinja_env.globals.update(_=get_text)
