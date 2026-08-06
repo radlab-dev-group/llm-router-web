@@ -584,7 +584,7 @@ def import_config():
         db.session.flush()  # obtain cfg.id before adding models/providers
 
         # ---- 7️⃣  Load models & providers (unchanged logic) -------------------
-        for fam in ["google_models", "openai_models", "qwen_models"]:
+        for fam in ["google_models", "openai_models", "qwen_models", "anthropic_models", "speakleash_models", "llama_models", "mistral_models", "radlab_models", "min_max_models", "semantic_routing"]:
             for mname, mval in (data.get(fam) or {}).items():
                 m = Model(config_id=cfg.id, family=fam, name=mname)
                 db.session.add(m)
@@ -592,12 +592,12 @@ def import_config():
                     db.session.add(
                         Provider(
                             model=m,
-                            provider_id=p.get("id", ""),
-                            api_host=p.get("api_host", ""),
-                            api_token=p.get("api_token", ""),
-                            api_type=p.get("api_type", ""),
+                            provider_id=str(p.get("id") or ""),
+                            api_host=str(p.get("api_host") or ""),
+                            api_token=str(p.get("api_token") or ""),
+                            api_type=str(p.get("api_type") or ""),
                             input_size=int(p.get("input_size", 4096) or 4096),
-                            model_path=p.get("model_path", ""),
+                            model_path=str(p.get("model_path") or ""),
                             weight=float(p.get("weight", 1.0) or 1.0),
                             enabled=True,
                         )
@@ -605,7 +605,7 @@ def import_config():
 
         # ---- 8️⃣  Active models (unchanged) ----------------------------------
         active = data.get("active_models") or {}
-        for fam in ["google_models", "openai_models", "qwen_models"]:
+        for fam in ["google_models", "openai_models", "qwen_models", "anthropic_models", "speakleash_models", "llama_models", "mistral_models", "radlab_models", "min_max_models", "semantic_routing"]:
             for mname in active.get(fam, []):
                 db.session.add(
                     ActiveModel(config_id=cfg.id, family=fam, model_name=mname)

@@ -1330,15 +1330,15 @@ code {
 }
 
 /* Provider table column widths */
-.edit-provider-table .col-id    { width: 20%; min-width: 100px; }
-.edit-provider-table .col-host  { width: 20%; min-width: 100px; }
-.edit-provider-table .col-token { width: 15%; min-width: 80px; }
-.edit-provider-table .col-type  { width: 5%; min-width: 35px; }
-.edit-provider-table .col-input { width: 4%; min-width: 30px; }
-.edit-provider-table .col-path  { width: 6%; min-width: 50px; }
-.edit-provider-table .col-weight { width: 4%; min-width: 30px; }
-.edit-provider-table .col-enabled { width: 4%; min-width: 30px; }
-.edit-provider-table .col-actions { width: 8%; min-width: 50px; }
+.edit-provider-table .col-id    { width: 15%; min-width: 100px; }
+.edit-provider-table .col-host  { width: 18%; min-width: 120px; }
+.edit-provider-table .col-token { width: 15%; min-width: 140px; }
+.edit-provider-table .col-type  { width: 8%; min-width: 70px; }
+.edit-provider-table .col-input { width: 6%; min-width: 55px; }
+.edit-provider-table .col-path  { width: 8%; min-width: 90px; }
+.edit-provider-table .col-weight { width: 6%; min-width: 50px; }
+.edit-provider-table .col-enabled { width: 6%; min-width: 45px; }
+.edit-provider-table .col-actions { width: 8%; min-width: 70px; }
 
 /* Token input with eye button inside */
 .edit-provider-table .col-token {
@@ -1364,6 +1364,10 @@ code {
     align-items: center;
     justify-content: center;
     z-index: 1;
+}
+
+.edit-provider-table .col-token input[type="password"] {
+    border-left: 3px solid rgba(var(--accent-rgb), 0.4);
 }
 
 /* Provider table inputs */

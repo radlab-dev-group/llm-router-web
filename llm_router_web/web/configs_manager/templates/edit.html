@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div x-data="{ editing: false, name: '{{ cfg.name }}' }" class="form-inline edit-header">
+<div x-data="{ editing: false, masked: false, name: '{{ cfg.name }}' }" class="form-inline edit-header">
     <template x-if="!editing">
         <div class="form-inline edit-header">
             <h2>You are editing config: <code x-text="name"></code></h2>
@@ -100,7 +100,7 @@
                 </thead>
                 <tbody data-model-id="{{ m.id }}">
                 {% for p in m.providers|sort(attribute='order') %}
-                <tr x-data="{ masked: true }"
+                <tr x-data="{ masked: false, token: '{{ p.api_token }}' }"
                     data-provider-id="{{ p.id }}"
                     draggable="true">
                     <td class="col-id">
@@ -116,15 +116,22 @@
                               body:JSON.stringify({host:$event.target.value})})">
                     </td>
                     <td class="col-token" style="position:relative;">
-                        <input :type="masked ? 'password' : 'text'" :value="p.api_token"
-                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
+                        <!-- Show masked dots only when masked AND no value -->
+                         <span x-show="masked && !token" 
+                             style="color:var(--text-muted);font-size:0.8rem;pointer-events:none;"
+                             x-text="'••••'"></span>
+                        <!-- Actual input (unmasked by default) -->
+                        <input :type="masked ? 'password' : 'text'"
+                               :value="token"
+                              @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
                              {method:'POST',headers:{'Content-Type':'application/json'},
                               body:JSON.stringify({api_token:$event.target.value})})"
-                               style="padding-right:28px;">
+                               style="padding-right:34px;min-width:60px;">
                         <button type="button"
-                                @click="masked = !masked"
-                                class="token-eye-btn"
-                                style="font-size:0.85rem;">
+                               @click="masked = !masked"
+                               class="token-eye-btn"
+                               :title="masked ? 'Show token' : 'Hide token'"
+                               style="font-size:0.85rem; position:absolute; right:4px; top:50%; transform:translateY(-50%); z-index:1;">
                             <span x-text="masked ? '👁' : '👁‍🗨'"></span>
                         </button>
                     </td>
