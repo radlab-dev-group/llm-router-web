@@ -11,26 +11,30 @@
 # -------------------------------------------------------------------------
 #   LLM_ROUTER_WEB_ANO_HOST   – address to bind (default: 0.0.0.0)
 #   LLM_ROUTER_WEB_ANO_PORT   – numeric port (default: 8082)
-#   LLM_ROUTER_WEB_DEBUG  – truthy value enables Flask debug mode
+#   LLM_ROUTER_WEB_ANO_DEBUG  – truthy value enables Flask debug mode
+#   LLM_ROUTER_API_KEY        – API key for authenticating to llm-router
 # -------------------------------------------------------------------------
 HOST="${LLM_ROUTER_WEB_ANO_HOST:-0.0.0.0}"
 PORT="${LLM_ROUTER_WEB_ANO_PORT:-8082}"
 DEBUG="${LLM_ROUTER_WEB_ANO_DEBUG:-true}"
 # -------------------------------------------------------------------------
-# llm-router api:
+# llm-router ap hosti:
 LLM_ROUTER_HOST="${LLM_ROUTER_HOST:-"http://192.168.100.65:8080"}"
+# llm-router api key:
+LLM_ROUTER_API_KEY="${LLM_ROUTER_API_KEY:-"sk-litm-QRFJ4nNyGJYVcBgD0m1i6bIpPWU0NJy6D8n1KSFp90SKuiKj"}"
 # -------------------------------------------------------------------------
 # llm-router-services api:
 LLM_ROUTER_SERVICES_HOST="${LLM_ROUTER_SERVICES_HOST:-"http://192.168.100.65:5000"}"
-
 # -------------------------------------------------------------------------
 # Export the variables so the Flask app (app.py) can read them.
+#  -> anonymizer web:
 export LLM_ROUTER_WEB_ANO_HOST="$HOST"
 export LLM_ROUTER_WEB_ANO_PORT="$PORT"
 export LLM_ROUTER_WEB_ANO_DEBUG="$DEBUG"
+#  -> LLM Router connection
 export LLM_ROUTER_HOST="$LLM_ROUTER_HOST"
+export LLM_ROUTER_API_KEY="$LLM_ROUTER_API_KEY"
 export LLM_ROUTER_SERVICES_HOST="$LLM_ROUTER_SERVICES_HOST"
-
 # -------------------------------------------------------------------------
 # Run the app with gunicorn.
 #   -w 1           – number of worker processes (adjust as needed)

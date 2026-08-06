@@ -100,7 +100,8 @@ python app_anonymizer.py
 - `LLM_ROUTER_WEB_ANO_PORT` – Port (default: `8082`)
 - `LLM_ROUTER_WEB_ANO_DEBUG` – Debug mode (default: `true`)
 - `LLM_ROUTER_HOST` – LLM Router API endpoint (default: `http://localhost:8080`)
-- `LLM_ROUTER_SERVICES_HOST` – LLM Router API endpoint (default: `http://localhost:5000`)
+- `LLM_ROUTER_SERVICES_HOST` – LLM Router Services endpoint (default: `http://localhost:5000`)
+- `LLM_ROUTER_WEB_ANO_API_KEY` – API key for authenticating requests to the LLM Router _(none)_
 
 **Default URL:** http://localhost:8082/anonymize
 
@@ -134,14 +135,14 @@ python app_anonymizer.py
 
 ### Anonymizer
 
-| Endpoint                  | Method | Description                |
-|---------------------------|--------|----------------------------|
-| `/anonymize/`             | GET    | Anonymization form         |
-| `/anonymize/`             | POST   | Process text anonymization |
+| Endpoint                     | Method | Description                |
+|------------------------------|--------|----------------------------|
+| `/anonymize/`                | GET    | Anonymization form         |
+| `/anonymize/`                | POST   | Process text anonymization |
 | `/anonymize/set_lang/<lang>` | GET    | Change language            |
-| `/anonymize/chat`         | GET    | Chat interface             |
-| `/anonymize/chat/message` | POST   | Send chat message          |
-| `/anonymize/models`       | GET    | List available models      |
+| `/anonymize/chat`            | GET    | Chat interface             |
+| `/anonymize/chat/message`    | POST   | Send chat message          |
+| `/anonymize/models`          | GET    | List available models      |
 
 ## Project Structure
 
