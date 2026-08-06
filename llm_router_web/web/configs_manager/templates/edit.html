@@ -23,15 +23,16 @@
     </label>
 
     <h3>Active Models</h3>
-    <div class="grid active-models">
+    <div class="grid active-models" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
         {% for fam, models in families.items() %}
-        <div class="panel">
+        <div class="panel" style="min-height:auto;max-height:300px;overflow-y:auto;">
             <h4>{{ fam }}</h4>
-            <select name="{{ fam }}[]" multiple size="6" class="w100">
-                {% for m in models %}
-                <option value="{{ m.name }}" {% if m.name in actives[fam] %}selected{% endif %}>{{ m.name }}</option>
-                {% endfor %}
-            </select>
+            {% for m in models %}
+            <label class="active-model-item{{ ' is-active' if m.name in actives[fam] }}" style="display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:3px;cursor:pointer;margin:0;">
+                <input type="checkbox" name="{{ fam }}[]" value="{{ m.name }}" {% if m.name in actives[fam] %}checked{% endif %} onclick="event.stopPropagation();" style="margin:0;height:auto;width:auto;">
+                <span style="font-size:0.8rem;color:var(--text-main);">{{ m.name }}</span>
+            </label>
+            {% endfor %}
         </div>
         {% endfor %}
     </div>

@@ -638,7 +638,7 @@ def view_config(config_id):
     data = to_json(cfg.id)
 
     # Build active/inactive sets for the template
-    all_families = ["google_models", "openai_models", "qwen_models"]
+    all_families = ["google_models", "openai_models", "qwen_models", "anthropic_models", "speakleash_models", "llama_models", "mistral_models", "radlab_models", "min_max_models", "semantic_routing"]
     active_set = set()
     for fam in all_families:
         for mn in (data.get("active_models") or {}).get(fam, []):
@@ -721,7 +721,7 @@ def edit_config(config_id):
 
         note = request.form.get("note", "")
         # Update active models (unchanged)
-        for fam in ["google_models", "openai_models", "qwen_models"]:
+        for fam in ["google_models", "openai_models", "qwen_models", "anthropic_models", "speakleash_models", "llama_models", "mistral_models", "radlab_models", "min_max_models", "semantic_routing"]:
             ActiveModel.query.filter_by(config_id=cfg.id, family=fam).delete()
             for mname in request.form.getlist(f"{fam}[]"):
                 db.session.add(
@@ -733,11 +733,11 @@ def edit_config(config_id):
 
     families = {
         fam: Model.query.filter_by(config_id=cfg.id, family=fam).all()
-        for fam in ["google_models", "openai_models", "qwen_models"]
+        for fam in ["google_models", "openai_models", "qwen_models", "anthropic_models", "speakleash_models", "llama_models", "mistral_models", "radlab_models", "min_max_models", "semantic_routing"]
     }
     actives = {
         fam: [a.model_name for a in cfg.actives if a.family == fam]
-        for fam in ["google_models", "openai_models", "qwen_models"]
+        for fam in ["google_models", "openai_models", "qwen_models", "anthropic_models", "speakleash_models", "llama_models", "mistral_models", "radlab_models", "min_max_models", "semantic_routing"]
     }
     return render_template(
         "edit.html",

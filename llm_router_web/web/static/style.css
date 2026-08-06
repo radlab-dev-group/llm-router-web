@@ -629,12 +629,30 @@ input[type="number"] {
 }
 
 .grid.active-models {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 16px;
 }
 
 .grid.active-models .panel {
     min-height: 180px;
+    overflow: hidden;
+}
+
+.grid.active-models .panel h4 {
+    margin-bottom: 6px;
+}
+
+/* Override global .form label { flex-direction: column } for active model items */
+.grid.active-models .panel > label.active-model-item,
+.grid.active-models .panel label.active-model-item {
+    display: flex !important;
+    align-items: center !important;
+    flex-direction: row !important;
+}
+
+.active-model-item.is-active {
+    background: rgba(var(--accent-rgb),0.1) !important;
+    font-weight: 500;
 }
 
 /* ===== Details / Summary ===== */
