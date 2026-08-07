@@ -691,24 +691,23 @@ def export_config(config_id):
 def edit_config(config_id):
     cfg = _get_user_config(config_id)
     if request.method == "POST":
-        new_name = request.form.get("new_name")
-        # NEW: handle description update
-        new_description = request.form.get("description")
-        if new_name is not None:
-            new_name = new_name.strip()
-            if new_name and new_name != cfg.name:
-                if Config.query.filter_by(
-                    name=new_name, user_id=_current_user_id()
-                ).first():
-                    flash("Configuration name already taken.", "error")
-                else:
-                    cfg.name = new_name
-                    flash("Configuration renamed.", "success")
-                    db.session.commit()
-            # If only renaming, skip further processing
+        # Only process rename/description when those fields are actually
+        # submitted by the rename form (not by sibling forms that share
+        # this page but do not intend to change anything).
+        new_name = request.form.get("new_name", "").strip()
+        if new_name:
+            if Config.query.filter_by(
+                name=new_name, user_id=_current_user_id()
+            ).first():
+                flash("Configuration name already taken.", "error")
+            else:
+                cfg.name = new_name
+                flash("Configuration renamed.", "success")
+            db.session.commit()
             return redirect(url_for("web.edit_config", config_id=cfg.id))
 
-        # Update description (if the field is present)
+        # Update description (only when explicitly submitted)
+        new_description = request.form.get("description")
         if new_description is not None:
             cfg.description = new_description.strip()
             db.session.commit()
@@ -763,6 +762,32 @@ def add_model(config_id: int):
     db.session.commit()
     snapshot_version(cfg.id, note=f"Added model {name}")
     return jsonify({"ok": True, "model_id": m.id})
+
+
+@bp.post("/configs/<int:config_id>/families/add")
+def add_model_family(config_id: int):
+    cfg = _get_user_config(config_id)
+    family_name = request.form.get("family_name", "").strip()
+    if not family_name:
+        abort(400, description="Family name is required.")
+
+    # Check for duplicates across both Model and ActiveModel tables
+    existing_families = {
+        r.family
+        for r in (
+            Model.query.filter_by(config_id=cfg.id).all()
+            + ActiveModel.query.filter_by(config_id=cfg.id).all()
+        )
+    }
+    if family_name in existing_families:
+        abort(400, description=f"Family '{family_name}' already exists.")
+
+    # Create an ActiveModel-only entry so the family appears in the UI immediately
+    new_active = ActiveModel(config_id=cfg.id, family=family_name, model_name=family_name)
+    db.session.add(new_active)
+    db.session.commit()
+    snapshot_version(cfg.id, note=f"Added family {family_name}")
+    return jsonify({"ok": True})
 
 
 @bp.post("/models/<int:model_id>/delete")

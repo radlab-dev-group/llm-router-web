@@ -23,6 +23,18 @@
     </label>
 
     <h3>Active Models</h3>
+
+    <!-- Add new model group (freeform - no hardcoded list) -->
+    <div class="panel" style="margin-bottom:1.5rem;">
+        <form hx-post="{{ url_for('add_model_family', config_id=cfg.id) }}" hx-trigger="submit"
+              hx-swap="none" hx-on="htmx:afterRequest: location.reload()"
+              style="display:flex;gap:8px;align-items:center;padding:0.75rem 1rem;">
+            <input type="text" name="family_name" placeholder="New model group name (e.g. google_models)" required
+                   style="padding:0.5rem 0.75rem;border-radius:8px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.85rem;font-family:inherit;min-width:200px;flex:1;">
+            <button class="btnx primary" type="submit" style="padding:0.5rem 1rem;font-size:0.85rem;">➕ Add new model group</button>
+        </form>
+    </div>
+
     <div class="grid active-models" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
         {% for fam, models in families.items() %}
         <div class="panel" style="min-height:auto;max-height:300px;overflow-y:auto;">
