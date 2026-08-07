@@ -209,18 +209,17 @@
                 </tbody>
             </table>
         </div>
-        <!-- Toggle link for add provider form -->
+        <!-- Toggle link + expandable add provider form (shared x-data scope) -->
         <div style="padding:0.5rem 1.25rem;border-top:1px solid var(--border-glass);"
              x-data="{ showForm: false }">
             <a href="#" x-on:click.prevent="showForm = !showForm"
                style="color:var(--accent);font-size:0.75rem;font-weight:600;text-decoration:none;">
                 <span x-text="showForm ? '✕ Hide provider form' : '➕ Add new provider'">➕ Add new provider</span>
             </a>
-        </div>
-        <!-- Expandable add provider form -->
-        <div x-show="showForm" x-cloak x-transition
-             style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.04);border-top:1px solid var(--border-glass);"
-             :style="showForm ? 'max-height:600px;overflow:auto;' : ''">
+            <!-- Expandable add provider form -->
+            <div x-show="showForm" x-cloak x-transition
+                 style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.04);border-top:1px solid var(--border-glass);"
+                 :style="showForm ? 'max-height:600px;overflow:auto;' : ''">
             <form hx-post="{{ url_for('add_provider', model_id=m.id) }}" hx-trigger="submit"
                   hx-swap="none" hx-on="htmx:afterRequest: showForm = false, location.reload()"
                   style="display:grid;grid-template-columns:20% 20% 15% 5% 1fr 6% 4% 4% 6%;gap:8px;align-items:center;">
@@ -249,6 +248,9 @@
                 <button class="btnx primary" type="submit" style="padding:0.35rem 0.7rem;font-size:0.8rem;">➕ Add</button>
             </form>
         </div>
+        <!-- close expandable form -->
+    </div>
+    <!-- close x-data wrapper -->
     {% endfor %}
     {% endfor %}
 </div>
