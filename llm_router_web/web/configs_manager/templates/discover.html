@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title-group">
+        <h1 class="page-title">{{ _('discover_title') }}</h1>
+        <p class="page-subtitle">{{ _('discover_sub') }}</p>
+    </div>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <form method="post" class="settings-section" hx-boost="true">
+        <div class="form-group">
+            <label for="host" class="settings-label">{{ _('discover_placeholder') }}</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="host" name="host" value="{{ host or 'localhost' }}" 
+                       class="input-main" placeholder="{{ _('discover_placeholder') }}" required
+                       style="flex-grow: 1;">
+                <button type="submit" class="btnx primary">
+                    {{ _('discover_btn_scan') }}
+                </button>
+            </div>
+        </div>
+    </form>
+
+    {% if host %}
+    <div class="divider"></div>
+    
+    <div class="results-section">
+        <h3 class="settings-label">{{ _('discover_results') }}: {{ host }}</h3>
+        
+        {% if results %}
+            <div class="grid" style="grid-template-columns: 1fr; gap: 1rem; margin-top: 1rem;">
+            {% for res in results %}
+                <div class="card" style="background: var(--bg-input); border: 1px solid var(--border-glass);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <span class="badge" style="background: var(--accent); color: var(--bg-main); font-weight: bold;">
+                            {{ res.api_type | upper }}
+                        </span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">
+                            port: {{ res.port }}
+                        </span>
+                    </div>
+                    
+                    <div style="margin-top: 0.5rem;">
+                        <div style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-muted);">
+                            {{ _('discover_found_providers') }}:
+                        </div>
+                        <div style="display: flex; wrap: wrap; gap: 0.5rem;">
+                            {% for model in res.models %}
+                                <div class="badge" style="background: var(--bg-glass); border: 1px solid var(--border-glass);">
+                                    {{ model }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                        <a href="{{ url_for('new_config') }}?import_host={{ host }}&import_port={{ res.port }}&import_type={{ res.api_type }}" 
+                           class="btnx" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
+                            {{ _('discover_add_to_config') }}
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                <p>{{ _('discover_no_results') }}</p>
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

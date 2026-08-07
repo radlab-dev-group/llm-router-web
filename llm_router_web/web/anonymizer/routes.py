@@ -160,10 +160,15 @@ def process_text():
             Dict: The JSON response from the router service.
             str: An error message if the request fails.
         """
+        api_key = current_app.config.get("LLM_ROUTER_API_KEY", "")
+        headers = {}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
         try:
             resp = requests.post(
                 f"{router_host}{endpoint}",
                 json={"text": text, "model_name": model or "gpt-oss:120b"},
+                headers=headers,
                 timeout=600,
             )
             resp.raise_for_status()
@@ -275,12 +280,19 @@ def chat_message():
         "messages": payload_messages,
     }
 
+    api_key = current_app.config.get("LLM_ROUTER_API_KEY", "")
+    headers = {}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
     external_url = (
         f"{current_app.config['LLM_ROUTER_HOST'].rstrip('/')}/v1/chat/completions"
     )
 
     try:
-        resp = requests.post(external_url, json=payload, timeout=600, stream=True)
+        resp = requests.post(
+            external_url, json=payload, headers=headers, timeout=600, stream=True
+        )
         resp.raise_for_status()
     except Exception as exc:
         return (
@@ -398,8 +410,12 @@ def models():
             parsing its response results in a 500 response.
     """
     external_url = f"{current_app.config['LLM_ROUTER_HOST'].rstrip('/')}/models"
+    api_key = current_app.config.get("LLM_ROUTER_API_KEY", "")
+    headers = {}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
     try:
-        resp = requests.get(external_url, timeout=10)
+        resp = requests.get(external_url, timeout=10, headers=headers)
         resp.raise_for_status()
         data = resp.json()
         models = data.get("models") or data.get("data") or []

@@ -64,6 +64,9 @@ def create_anonymize_app() -> Flask:
         "LLM_ROUTER_SERVICES_HOST", "http://localhost:5000"
     )
 
+    # API key for authenticating requests to the LLM-Router service
+    app.config["LLM_ROUTER_API_KEY"] = os.getenv("LLM_ROUTER_API_KEY", "")
+
     app.register_blueprint(anonymize_bp)
 
     @app.route("/", endpoint="index")

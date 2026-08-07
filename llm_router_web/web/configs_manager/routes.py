@@ -34,6 +34,7 @@ from .utils import (
     to_json,
     snapshot_version,
     export_config_to_file,
+    discover_host,
 )
 from .constants import VALID_FAMILIES
 
@@ -481,9 +482,12 @@ def list_configs():
 
 @bp.route("/configs/new", methods=["GET", "POST"])
 def new_config():
+    import_host = request.args.get("import_host")
+    import_port = request.args.get("import_port")
+    import_type = request.args.get("import_type")
+
     if request.method == "POST":
         name = request.form.get("name", "").strip()
-        # NEW: optional description for the config
         description = request.form.get("description", "").strip()
         if not name:
             abort(400, description="Name is required.")
@@ -500,10 +504,34 @@ def new_config():
             project_id=proj_id,
         )
         db.session.add(cfg)
+
+        # If we come from discovery, we can pre-add the provider
+        if import_host and import_port and import_type:
+            # We'll just create the config and let the user add models in the edit page,
+            # but we could also pre-populate it here.
+            # To keep it simple, we just pass the info to the template if needed.
+            pass
+
         db.session.commit()
         snapshot_version(cfg.id, note="Created empty config")
-        return redirect(url_for("web.edit_config", config_id=cfg.id))
-    return render_template("new_config.html")
+
+        # Redirect with import params if they exist to the edit page
+        return redirect(
+            url_for(
+                "web.edit_config",
+                config_id=cfg.id,
+                import_host=import_host,
+                import_port=import_port,
+                import_type=import_type,
+            )
+        )
+
+    return render_template(
+        "new_config.html",
+        import_host=import_host,
+        import_port=import_port,
+        import_type=import_type,
+    )
 
 
 @bp.route("/configs/import", methods=["GET", "POST"])
@@ -965,3 +993,37 @@ def check_host():
         return jsonify({"status": resp.status_code})
     except Exception as exc:  # pragma: no cover
         return jsonify({"error": str(exc)}), 500
+
+
+# ----------------------------------------------------------------------
+# Internationalization (i18n)
+# ----------------------------------------------------------------------
+@bp.route("/set_lang/<lang>", methods=["GET"])
+def set_lang(lang):
+    """Change the application language and redirect back to the previous page."""
+    if lang not in ["pl", "en"]:
+        lang = "pl"
+    session["lang"] = lang
+    return redirect(request.referrer or url_for("index"))
+
+
+# ----------------------------------------------------------------------
+# Discover CLI capabilities
+# ----------------------------------------------------------------------
+@bp.route("/discover", methods=["GET", "POST"])
+@login_required
+def discover():
+    """
+    Web implementation of 'llm-router config discover'.
+    Scans a host for available providers and models.
+    """
+    results = []
+    host = ""
+    if request.method == "POST":
+        host = request.form.get("host", "localhost").strip()
+        if host:
+            results = discover_host(host)
+
+    return render_template(
+        "discover.html", results=results, host=host, title="Discover Hosts"
+    )

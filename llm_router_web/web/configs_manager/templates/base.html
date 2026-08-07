@@ -5,7 +5,7 @@
       :class="{ 'theme-light': theme === 'light', 'theme-dark': theme === 'dark' }">
 <head>
     <meta charset="UTF-8"/>
-    <title>{{ title or "LLM-router Model Configurator" }}</title>
+    <title>{{ title or _('brand_name') }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
@@ -25,75 +25,67 @@
 
 <header class="app-header">
     <a href="{{ url_for('index') }}" class="brand">
-        <span>⚙️</span>
-        <span>LLM-router Configurator</span>
+        <span class="brand-icon">⚙️</span>
+        <span>{{ _('brand_name') }}</span>
     </a>
 
     <div class="nav-menu">
         {% if session.get('user_id') %}
+        
+        <a href="{{ url_for('list_configs') }}"
+           class="nav-item {% if request.endpoint == 'list_configs' %}active{% endif %}">{{ _('nav_configs') }}</a>
+        
+        <a href="{{ url_for('manage_projects') }}"
+           class="nav-item {% if request.endpoint == 'manage_projects' %}active{% endif %}">{{ _('nav_projects') }}</a>
 
-        <!-- Project selector -->
-        <div class="dropdown" x-data="{ open: false }" x-cloak>
-            <button type="button" class="btnx" @click="open = !open" @keydown.escape.window="open = false">
-                <span>📁</span> {{ current_project_name }}
-            </button>
-            <div class="dropdown-content" x-show="open" @click.outside="open = false">
-                <div style="display:flex;flex-direction:column;gap:4px;border:none;background:transparent;box-shadow:none;padding:0;">
-                    <div class="settings-label">Choose project</div>
-                    {% for proj in user_projects %}
-                    <form method="post" action="{{ url_for('select_project', project_id=proj.id) }}" style="margin:0;">
-                        <button type="submit"
-                                class="project-item{% if proj.id == session.get('project_id') %} active{% endif %}">
-                            <span class="project-icon">📂</span>
-                            <span class="project-name">{{ proj.name }}</span>
-                            <span class="project-check">
-                                {% if proj.id == session.get('project_id') %}✓{% else %}{% endif %}
-                            </span>
-                        </button>
-                    </form>
-                    {% endfor %}
-                </div>
-                <div class="dropdown-divider"></div>
-                <a class="config-item" href="{{ url_for('manage_projects') }}">
-                    <span class="config-icon">📂</span> Manage projects
-                </a>
-            </div>
-        </div>
-
-        <!-- Manage configs -->
-        <div class="dropdown" x-data="{ open: false }" x-cloak>
-            <button type="button"
-                    class="btnx{% if config_active %} primary{% endif %}"
-                    @click="open = !open"
-                    @keydown.escape.window="open = false">
-                <span>📋</span> Configs
-            </button>
-            <div class="dropdown-content" x-show="open" @click.outside="open = false">
-                <a class="config-item" href="{{ url_for('new_config') }}">
-                    <span class="config-icon">🆕</span> New config
-                </a>
-                <a class="config-item" href="{{ url_for('import_config') }}">
-                    <span class="config-icon">📥</span> Import config
-                </a>
-                <a class="config-item" href="{{ url_for('list_configs') }}">
-                    <span class="config-icon">📑</span> Show all
-                </a>
-            </div>
-        </div>
+        <a href="{{ url_for('discover') }}"
+           class="nav-item {% if request.endpoint == 'discover' %}active{% endif %}">{{ _('nav_discover') }}</a>
 
         {% if session.get('role') == 'admin' %}
-        <!-- Manage users -->
-        <div class="dropdown" x-data="{ open: false }" x-cloak>
-            <button type="button" class="btnx" @click="open = !open" @keydown.escape.window="open = false">
-                <span>👥</span> Users
-            </button>
-            <div class="dropdown-content" x-show="open" @click.outside="open = false">
-                <a class="config-item" href="{{ url_for('admin_users') }}">
-                    <span class="config-icon">👤</span> Manage users
-                </a>
+        <a href="{{ url_for('admin_users') }}"
+           class="nav-item {% if request.endpoint == 'admin_users' %}active{% endif %}">{{ _('nav_users') }}</a>
+        {% endif %}
+
+        <div style="width: 1px; height: 20px; background: var(--border-glass); margin: 0 4px;"></div>
+
+        <!-- Project selector (inline style) -->
+        <div class="nav-menu" style="background: transparent; border: none; padding: 0; gap: 0.5rem; margin-right: 0.5rem;">
+            <div class="dropdown" x-data="{ open: false }" x-cloak>
+                <button type="button" class="nav-item" @click="open = !open" @keydown.escape.window="open = false"
+                        style="background: transparent; border: none; font-size: 0.8rem; cursor: pointer;">
+                    📁 <span style="margin-left: 4px;">{{ current_project_name }}</span>
+                </button>
+                <div class="dropdown-content" x-show="open" @click.outside="open = false" style="right: auto; left: 0;">
+                    <div style="display:flex;flex-direction:column;gap:4px;border:none;background:transparent;box-shadow:none;padding:0;">
+                        <div class="settings-label" style="padding: 0.5rem;">Choose project</div>
+                        {% for proj in user_projects %}
+                        <form method="post" action="{{ url_for('select_project', project_id=proj.id) }}" style="margin:0;">
+                            <button type="submit"
+                                    class="project-item{% if proj.id == session.get('project_id') %} active{% endif %}"
+                                    style="width: 100%; text-align: left;">
+                                <span class="project-icon">📂</span>
+                                <span class="project-name">{{ proj.name }}</span>
+                                <span class="project-check">
+                                    {% if proj.id == session.get('project_id') %}✓{% else %}{% endif %}
+                                </span>
+                            </button>
+                        </form>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         </div>
-        {% endif %}
+
+        <div style="width: 1px; height: 20px; background: var(--border-glass); margin: 0 4px;"></div>
+
+        <div class="nav-menu" style="background: transparent; border: none; padding: 0; gap: 0.2rem;">
+            <a href="{{ url_for('set_lang', lang='pl') }}"
+               class="nav-item {% if session.get('lang', 'pl') == 'pl' %}active{% endif %}"
+               style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">{{ _('lang_pl') }}</a>
+            <a href="{{ url_for('set_lang', lang='en') }}"
+               class="nav-item {% if session.get('lang') == 'en' %}active{% endif %}"
+               style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">{{ _('lang_en') }}</a>
+        </div>
 
         <!-- Settings dropdown -->
         <div class="dropdown" x-data="{ open: false }" x-cloak>
@@ -140,10 +132,27 @@
 
         {% else %}
         <!-- Not logged in -->
-        <a class="btnx primary" href="{{ url_for('login') }}">Login</a>
+        <div class="nav-menu" style="background: transparent; border: none; padding: 0; gap: 0.2rem;">
+            <a href="{{ url_for('set_lang', lang='pl') }}"
+               class="nav-item {% if session.get('lang', 'pl') == 'pl' %}active{% endif %}"
+               style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">{{ _('lang_pl') }}</a>
+            <a href="{{ url_for('set_lang', lang='en') }}"
+               class="nav-item {% if session.get('lang') == 'en' %}active{% endif %}"
+               style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">{{ _('lang_en') }}</a>
+        </div>
+        <a class="btnx primary" href="{{ url_for('login') }}">{{ _('btn_login') }}</a>
         {% endif %}
     </div>
 </header>
+
+<footer class="app-footer">
+    <div class="footer-content">
+        <div class="footer-links">
+            <a href="https://github.com/radlab-dev-group/llm-router" target="_blank" rel="noopener noreferrer">{{ _('github_link') }}</a>
+        </div>
+        <div class="footer-copy">{{ _('footer_text') }}</div>
+    </div>
+</footer>
 
 <div class="app-container">
     <main class="app-main">

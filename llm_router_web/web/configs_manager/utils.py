@@ -1,5 +1,6 @@
 import io
 import json
+import requests
 
 from flask import send_file
 from datetime import datetime
@@ -88,6 +89,95 @@ def export_config_to_file(config_id: int):
         as_attachment=True,
         download_name="models-config.json",
     )
+
+
+# ---- Discovery Logic (inspired by llm-router CLI) --------------------
+
+PROVIDER_DEFINITIONS = [
+    {
+        "api_type": "ollama",
+        "ports": [11434, 18765],
+        "health_path": "/",
+        "models_path": "/api/tags",
+        "fetch_type": "ollama",
+    },
+    {
+        "api_type": "vllm",
+        "ports": [8000, 7000],
+        "health_path": "/health",
+        "models_path": "/v1/models",
+        "fetch_type": "openai_style",
+    },
+    {
+        "api_type": "lmstudio",
+        "ports": [1234, 1235],
+        "health_path": "/",
+        "models_path": "/v1/models",
+        "fetch_type": "openai_style",
+    },
+    {
+        "api_type": "llamacpp",
+        "ports": [8080],
+        "health_path": "/health",
+        "models_path": "/v1/models",
+        "fetch_type": "openai_style",
+    },
+    {
+        "api_type": "koboldcpp",
+        "ports": [5001],
+        "health_path": "/",
+        "models_path": "/api/v1/models",
+        "fetch_type": "openai_style",
+    },
+    {
+        "api_type": "tabbyapi",
+        "ports": [8080],
+        "health_path": "/health",
+        "models_path": "/v1/models",
+        "fetch_type": "openai_style",
+    },
+]
+
+
+def discover_host(host: str, timeout: float = 1.0):
+    """
+    Scan a host for local LLM providers and return found models.
+    """
+    results = []
+    for prov in PROVIDER_DEFINITIONS:
+        for port in prov["ports"]:
+            api_type = prov["api_type"]
+            health_url = f"http://{host}:{port}{prov['health_path']}"
+            try:
+                resp = requests.get(health_url, timeout=timeout)
+                if resp.status_code >= 500:
+                    continue
+
+                models_url = f"http://{host}:{port}{prov['models_path']}"
+                models_resp = requests.get(models_url, timeout=2.0)
+                models_resp.raise_for_status()
+                data = models_resp.json()
+
+                found_models = []
+                if prov["fetch_type"] == "ollama":
+                    for m in data.get("models", []):
+                        found_models.append(m["name"])
+                else:
+                    for m in data.get("data", []):
+                        found_models.append(m["id"])
+
+                if found_models:
+                    results.append(
+                        {
+                            "api_type": api_type,
+                            "host": host,
+                            "port": port,
+                            "models": found_models,
+                        }
+                    )
+            except Exception:
+                continue
+    return results
 
 
 def _ensure_provider_order_column():

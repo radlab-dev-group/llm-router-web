@@ -1,4 +1,5 @@
 import os
+import json
 
 from flask import Flask, session
 
@@ -34,6 +35,38 @@ def create_config_manager_app() -> Flask:
 
     # ---- Extensions ----------------------------------------------------
     db.init_app(app)
+
+    # ---- Internationalization (i18n) Setup ----
+    translations = {}
+    trans_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "translations")
+    )
+    for lang in ["pl", "en"]:
+        path = os.path.join(trans_dir, f"{lang}.json")
+        try:
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    translations[lang] = json.load(f)
+            else:
+                translations[lang] = {}
+        except Exception as e:
+            print(f"Error loading translation {lang}: {e}")
+            translations[lang] = {}
+
+    app.config["TRANSLATIONS"] = translations
+
+    def get_text(key, **kwargs):
+        """Helper function to retrieve translated text."""
+        lang = session.get("lang", "pl")
+        texts = app.config["TRANSLATIONS"].get(
+            lang, app.config["TRANSLATIONS"].get("en", {})
+        )
+        text = texts.get(
+            key, key
+        )  # Fallback to key itself instead of NO TRANSLATION
+        return text.format(**kwargs) if kwargs else text
+
+    app.jinja_env.globals.update(_=get_text)
 
     # ---- Ensure DB schema (order column) -------------------------------
     with app.app_context():

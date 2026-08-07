@@ -18,7 +18,8 @@ with LLMs. It acts as a bridge between the user and the backend anonymization se
 ### 🔒 Text Anonymization Form
 
 - **Multi-Algorithm Support**: `Fast Masking`, `PII Masking`, and `Fast + PII`.
-- **Advanced UI**: Real-time result highlighting, one-click copying, and synchronized scrolling.
+- **Advanced UI**: Modern "glassmorphism" design (shared with **Configs Manager**), real-time result highlighting,
+  one-click copying, and synchronized scrolling.
 - **HTMX-powered**: Asynchronous processing.
 
 ### 💬 Interactive Anonymized Chat
@@ -67,6 +68,7 @@ The UI is reachable at `http://localhost:5000/anonymize`.
 ```shell script
 LLM_ROUTER_HOST=http://localhost:8000 \
   LLM_ROUTER_SERVICES_HOST=http://localhost:5000 \
+  LLM_ROUTER_API_KEY=your-api-key \
   gunicorn -w 4 -b 0.0.0.0:8082 "web.anonymizer:create_anonymize_app()"
 ```
 
@@ -74,11 +76,12 @@ LLM_ROUTER_HOST=http://localhost:8000 \
 
 Configuration is managed via environment variables:
 
-| Variable                   | Description                          | Default                 |
-|:---------------------------|:-------------------------------------|:------------------------|
-| `FLASK_SECRET_KEY`         | Secret key for Flask session signing | `change-me-anonymizer`  |
-| `LLM_ROUTER_HOST`          | Base URL of the llm-router api       | `http://localhost:8000` |
-| `LLM_ROUTER_SERVICES_HOST` | Base URL of the llm-royer-services   | `http://localhost:5000` |
+| Variable                   | Description                                  | Default                 |
+|:---------------------------|:---------------------------------------------|:------------------------|
+| `FLASK_SECRET_KEY`         | Secret key for Flask session signing         | `change-me-anonymizer`  |
+| `LLM_ROUTER_HOST`          | Base URL of the llm-router api               | `http://localhost:8000` |
+| `LLM_ROUTER_SERVICES_HOST` | Base URL of the llm-royer-services           | `http://localhost:5000` |
+| `LLM_ROUTER_API_KEY`       | API key for authenticating to llm-router api | _(none)_                |
 
 ## Endpoints Overview
 
@@ -125,5 +128,5 @@ web/
 
 ## License
 
-`llm_router_web.anonymizer` is part of the **llm-router** project and is released under the same license
-as the parent repository. See the repository’s `LICENSE` file for details.
+`llm_router_web.anonymizer` is part of the **llm-router** project and is released under the same license as the parent
+repository. See the repository’s `LICENSE` file for details.

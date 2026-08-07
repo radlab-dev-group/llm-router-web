@@ -7,19 +7,33 @@ It provides a Flask‑based UI for managing LLM model configurations, users, and
 
 ## Features
 
+### 🌐 Internationalization (i18n)
+
+- **Multi-language Support**: Full support for Polish (PL) and English (EN).
+- **Dynamic Switching**: Change language via the menu.
+- **Externalized Strings**: All UI texts are stored in JSON files for easy maintenance.
+
+### 🔍 Discovery Host
+
+- **Network Scanning**: Scan local or remote hosts (e.g., localhost, 192.168.x.x) for available LLM providers.
+- **Provider Detection**: Automatically detects Ollama, vLLM, LM Studio, Llama.cpp, KoboldCPP, and TabbyAPI.
+- **One-click Import**: Found models can be directly added to a new or existing configuration.
+
+### 📋 Configuration Management
+
 - **User Management** – Admins can create, edit, block/unblock users and assign roles (`admin` / `user`).
 - **Configuration CRUD** – Create, import, edit, view, export, activate and delete model configurations.
 - **Model & Provider Management** – Add/remove models, manage multiple providers per model, reorder providers via
   drag‑and‑drop.
 - **Versioning** – Automatic snapshot of each change; view history and restore previous versions.
 - **Theme Switching** – Light / dark UI themes toggled client‑side.
-- **Responsive UI** – Built with HTML, CSS, HTMX and Alpine.js for a smooth, single‑page‑like experience.
+- **Responsive UI** – Modern "glassmorphism" design, aligned with the **Anonymizer** module. Built with HTML, CSS, HTMX and Alpine.js for a smooth experience.
 
 ---
 
 ## Installation
 
-The project uses **Python 3.10.6** and **virtualenv**.
+The project uses **Python 3.10+** and **virtualenv**.
 
 ```shell script
 # Clone the repository
@@ -51,14 +65,13 @@ The first run will redirect you to a **setup** page where you must create an ini
 
 ### Running with **gunicorn** (recommended for production)
 
-The project now includes a small launch script that reads the host, port and debug
-mode from environment variables prefixed with `LLM_ROUTER_WEB_`.
+Use the provided launch script in the project root:
 
 ``` bash
 LLM_ROUTER_WEB_CFG_HOST=0.0.0.0 \
 LLM_ROUTER_WEB_CFG_PORT=8081 \
 LLM_ROUTER_WEB_CFG_DEBUG=true \
-./run-llm-router-web.sh
+./run-configs-manager.sh
 ```
 
 * `LLM_ROUTER_WEB_CFG_HOST` – address to bind (default: `0.0.0.0`).
@@ -95,32 +108,34 @@ table (e.g., after a schema change), the helper `_ensure_provider_order_column()
 
 ## Endpoints Overview
 
-| URL                                    | Methods   | Description                                            |
-|----------------------------------------|-----------|--------------------------------------------------------|
-| `/setup`                               | GET, POST | One‑time admin creation (first run).                   |
-| `/login`                               | GET, POST | User authentication.                                   |
-| `/logout`                              | GET       | End session.                                           |
-| `/admin/users`                         | GET, POST | List users / add new user (admin only).                |
-| `/admin/users/<id>/edit`               | POST      | Edit role or password (admin only).                    |
-| `/admin/users/<id>/toggle_block`       | POST      | Block / unblock a user (admin only).                   |
-| `/`                                    | GET       | Dashboard – list of user’s configs.                    |
-| `/configs`                             | GET       | Same as dashboard (alternative view).                  |
-| `/configs/new`                         | GET, POST | Create a new empty configuration.                      |
-| `/configs/import`                      | GET, POST | Import configuration from JSON file or text.           |
-| `/configs/<id>`                        | GET       | Preview configuration (JSON view).                     |
-| `/configs/<id>/export`                 | GET       | Download configuration as `models-config.json`.        |
-| `/configs/<id>/edit`                   | GET, POST | Edit active models, rename config, add providers, etc. |
-| `/configs/<id>/models/add`             | POST      | Add a new model to a configuration.                    |
-| `/models/<id>/delete`                  | POST      | Delete a model.                                        |
-| `/models/<id>/providers/add`           | POST      | Add a provider (JSON payload).                         |
-| `/models/<id>/providers/reorder`       | POST      | Reorder providers (drag‑and‑drop).                     |
-| `/providers/<id>/update`               | POST      | Update provider fields (JSON payload).                 |
-| `/providers/<id>/delete`               | POST      | Delete a provider.                                     |
-| `/configs/<id>/activate`               | POST      | Mark a configuration as the default for the user.      |
-| `/configs/<id>/delete`                 | POST      | Delete a configuration.                                |
-| `/configs/<id>/versions`               | GET       | List version history (JSON).                           |
-| `/configs/<id>/versions/<ver>/restore` | POST      | Restore a previous version.                            |
-| `/check_host`                          | POST      | Verify reachability of an API host (used by the UI).   |
+| URL                                    | Methods    | Description                                            |
+|----------------------------------------|------------|--------------------------------------------------------|
+| `/setup`                               | GET, POST  | One‑time admin creation (first run).                   |
+| `/login`                               | GET, POST  | User authentication.                                   |
+| `/logout`                              | GET        | End session.                                           |
+| `/set_lang/<lang>`                     | GET        | Change UI language (`pl` or `en`).                     |
+| `/admin/users`                         | GET, POST  | List users / add new user (admin only).                |
+| `/admin/users/<id>/edit`               | POST       | Edit role or password (admin only).                    |
+| `/admin/users/<id>/toggle_block`       | POST       | Block / unblock a user (admin only).                   |
+| `/`                                    | GET        | Dashboard – list of user’s configs.                    |
+| `/configs`                             | GET        | Same as dashboard (alternative view).                  |
+| `/configs/new`                         | GET, POST  | Create a new empty configuration.                      |
+| `/configs/import`                      | GET, POST  | Import configuration from JSON file or text.           |
+| `/configs/<id>`                        | GET        | Preview configuration (JSON view).                     |
+| `/configs/<id>/export`                 | GET        | Download configuration as `models-config.json`.        |
+| `/configs/<id>/edit`                   | GET, POST  | Edit active models, rename config, add providers, etc. |
+| `/configs/<id>/models/add`             | POST       | Add a new model to a configuration.                    |
+| `/models/<id>/delete`                  | POST       | Delete a model.                                        |
+| `/models/<id>/providers/add`           | POST       | Add a provider (JSON payload).                         |
+| `/models/<id>/providers/reorder`       | POST       | Reorder providers (drag‑and‑drop).                     |
+| `/providers/<id>/update`               | POST       | Update provider fields (JSON payload).                 |
+| `/providers/<id>/delete`               | POST       | Delete a provider.                                     |
+| `/configs/<id>/activate`               | POST       | Mark a configuration as the default for the user.      |
+| `/configs/<id>/delete`                 | POST       | Delete a configuration.                                |
+| `/configs/<id>/versions`               | GET        | List version history (JSON).                           |
+| `/configs/<id>/versions/<ver>/restore` | POST       | Restore a previous version.                            |
+| `/discover`                            | GET, POST  | Network scan for LLM providers.                        |
+| `/check_host`                          | POST       | Verify reachability of an API host (used by the UI).   |
 
 All routes are protected by session‑based authentication. Admin‑only routes require the `admin` role.
 
