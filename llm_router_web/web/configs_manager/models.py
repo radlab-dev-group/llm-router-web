@@ -50,23 +50,30 @@ class Config(db.Model):
         index=True,
     )
     project_id = db.Column(
-        db.Integer,
-        db.ForeignKey("project.id"),
-        nullable=False,
-        index=True,
+        db.Integer, db.ForeignKey("project.id"), nullable=False, index=True
     )
 
     # Free‑text description for the configuration
     description = db.Column(db.String(500), nullable=False, default="")
 
     # ------------------------------------------------------------------
-    models = db.relationship("Model", backref="config", cascade="all, delete-orphan")
-    actives = db.relationship(
-        "ActiveModel", backref="config", cascade="all, delete-orphan"
+    families = db.relationship(
+        "Family", backref="config", cascade="all, delete-orphan"
+    )
+    models = db.relationship(
+        "Model", backref="config", cascade="all, delete-orphan"
     )
     versions = db.relationship(
         "ConfigVersion", backref="config", cascade="all, delete-orphan"
     )
+
+    def get_active_models(self):
+        """Return all models with is_active=True grouped by family name."""
+        active_by_family = {}
+        for m in self.models:
+            if m.is_active:
+                active_by_family.setdefault(m.family.name, []).append(m.name)
+        return active_by_family
 
 
 class ConfigVersion(db.Model):
@@ -78,13 +85,35 @@ class ConfigVersion(db.Model):
     json_blob = db.Column(db.Text, nullable=False)
 
 
+class Family(db.Model):
+    __tablename__ = "family"
+    id = db.Column(db.Integer, primary_key=True)
+    config_id = db.Column(
+        db.Integer, db.ForeignKey("config.id"), nullable=False, index=True
+    )
+    name = db.Column(db.String(40), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    # One family name per config (UI should prevent duplicates)
+    __table_args__ = (db.UniqueConstraint("config_id", "name"),)
+
+    models = db.relationship("Model", backref="family", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Family {self.name}>"
+
+
 class Model(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    config_id = db.Column(db.Integer, db.ForeignKey("config.id"), nullable=False)
-    family = db.Column(
-        db.String(40), nullable=False
-    )  # google_models | openai_models | qwen_models
+    config_id = db.Column(
+        db.Integer, db.ForeignKey("config.id"), nullable=False, index=True
+    )
+    family_id = db.Column(
+        db.Integer, db.ForeignKey("family.id"), nullable=False
+    )
     name = db.Column(db.String(200), nullable=False)
+    is_active = db.Column(db.Boolean, default=False, nullable=False)
+
     providers = db.relationship(
         "Provider",
         backref="model",
@@ -105,13 +134,6 @@ class Provider(db.Model):
     weight = db.Column(db.Float, default=1.0, nullable=False)
     enabled = db.Column(db.Boolean, default=True, nullable=False)
     order = db.Column(db.Integer, nullable=False, default=0)
-
-
-class ActiveModel(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    config_id = db.Column(db.Integer, db.ForeignKey("config.id"), nullable=False)
-    family = db.Column(db.String(40), nullable=False)
-    model_name = db.Column(db.String(200), nullable=False)
 
 
 class User(db.Model):
