@@ -791,11 +791,30 @@ def edit_config(config_id):
         }
 
     actives = cfg.get_active_models()
+
+    # Pre-compute active/inactive model lists across ALL families (for rendering)
+    all_active = []
+    all_inactive = []
+    for fam_name, fam_data in families.items():
+        for m in fam_data["models"]:
+            entry = {
+                "id": m["id"],
+                "name": m["name"],
+                "is_active": m["is_active"],
+                "family": fam_name,
+            }
+            if m["is_active"]:
+                all_active.append(entry)
+            else:
+                all_inactive.append(entry)
+
     return render_template(
         "edit.html",
         cfg=cfg,
         families=families,
         actives=actives,
+        all_active=all_active,
+        all_inactive=all_inactive,
     )
 
 

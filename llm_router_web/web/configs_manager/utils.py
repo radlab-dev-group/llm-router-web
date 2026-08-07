@@ -34,22 +34,18 @@ def to_json(config_id: int) -> dict:
         for m in fam_obj.models:
             providers = []
             for p in m.providers:
-                if p.enabled:
-                    providers.append(
-                        {
-                            "id": p.provider_id,
-                            "api_host": p.api_host,
-                            "api_token": p.api_token,
-                            "api_type": p.api_type,
-                            "input_size": p.input_size,
-                            "model_path": p.model_path,
-                            **(
-                                {"weight": p.weight}
-                                if p.api_type == "vllm" or p.weight != 1.0
-                                else {}
-                            ),
-                        }
-                    )
+                entry = {
+                    "id": p.provider_id,
+                    "api_host": p.api_host,
+                    "api_token": p.api_token,
+                    "api_type": p.api_type,
+                    "input_size": p.input_size,
+                    "model_path": p.model_path,
+                    "enabled": p.enabled,
+                }
+                if p.api_type == "vllm" or p.weight != 1.0:
+                    entry["weight"] = p.weight
+                providers.append(entry)
             out[fam_name][m.name] = {"providers": providers}
 
             # Collect active models by their is_active flag
