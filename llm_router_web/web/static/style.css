@@ -1315,6 +1315,12 @@ code {
     font-size: 0.75rem;
 }
 
+.edit-model-header .btnx:hover {
+    color: var(--danger) !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+    background: rgba(239, 68, 68, 0.08) !important;
+}
+
 .edit-provider-table {
     width: 100%;
     border-collapse: collapse;
@@ -1347,16 +1353,65 @@ code {
     background: rgba(128, 128, 128, 0.03);
 }
 
-/* Provider table column widths */
-.edit-provider-table .col-id    { width: 15%; min-width: 100px; }
-.edit-provider-table .col-host  { width: 18%; min-width: 120px; }
-.edit-provider-table .col-token { width: 15%; min-width: 140px; }
-.edit-provider-table .col-type  { width: 8%; min-width: 70px; }
-.edit-provider-table .col-input { width: 6%; min-width: 55px; }
-.edit-provider-table .col-path  { width: 8%; min-width: 90px; }
+/* P3: Disabled provider row styling */
+.edit-provider-table tbody tr.disabled {
+    opacity: 0.4;
+    filter: grayscale(60%);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.edit-provider-table tbody tr.disabled .enabled-toggle input[type="checkbox"] {
+    accent-color: var(--text-muted);
+    cursor: default;
+}
+
+/* P4: Token input filled state feedback */
+.edit-provider-table .col-token input.filled {
+    border-color: var(--ok) !important;
+    background: rgba(34, 197, 94, 0.06);
+}
+
+/* P7: Sticky headers on model cards */
+.edit-model-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding-top: 0.5rem;
+    background: linear-gradient(to bottom, var(--bg-glass) 70%, transparent);
+    pointer-events: none;
+}
+
+.edit-model-header > * {
+    pointer-events: auto;
+}
+
+/* P9: Consistent column widths */
+.edit-provider-table .col-id    { width: 14%; min-width: 120px; }
+.edit-provider-table .col-host  { flex: 1; min-width: 150px; }
+.edit-provider-table .col-token { width: 16%; min-width: 140px; }
+.edit-provider-table .col-type  { width: 8%; min-width: 80px; }
+.edit-provider-table .col-input { width: 7%; min-width: 70px; }
+.edit-provider-table .col-path  { width: 9%; min-width: 120px; }
 .edit-provider-table .col-weight { width: 6%; min-width: 50px; }
-.edit-provider-table .col-enabled { width: 6%; min-width: 45px; }
-.edit-provider-table .col-actions { width: 8%; min-width: 70px; }
+.edit-provider-table .col-enabled { width: 5%; min-width: 40px; }
+.edit-provider-table .col-actions { width: 8%; min-width: 40px; }
+
+/* P5: Trash icon for delete button */
+.edit-provider-table .provider-actions button.action-delete {
+    color: var(--danger);
+    border-color: transparent;
+    background: transparent;
+    padding: 0.25rem 0.4rem;
+    font-size: 0.9rem;
+    line-height: 1;
+    transition: all 0.15s ease;
+}
+
+.edit-provider-table .provider-actions button.action-delete:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    transform: scale(1.1);
+}
 
 /* Token input with eye button inside */
 .edit-provider-table .col-token {

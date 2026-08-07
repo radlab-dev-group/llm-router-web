@@ -55,6 +55,7 @@
     {% for fam, models in families.items() %}
     <!-- Add model for this family -->
     <div style="width:100%;display:flex;flex-direction:column;">
+        <hr class="model-separator" style="margin-top:0.5rem;">
         <div class="edit-model-section" style="background:var(--bg-glass);border:1px dashed var(--border-glass);border-radius:var(--radius-xl);">
             <div style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.1);border-bottom:1px solid var(--border-glass);">
                 <h5 style="margin:0;font-size:0.9rem;font-weight:600;color:var(--accent);">➕ Add new model to <strong>{{ fam }}</strong></h5>
@@ -77,9 +78,11 @@
             <h5>{{ m.name }}</h5>
             <span class="muted" style="font-size:0.75rem;">{{ m.providers|length }} provider{{ m.providers|length != 1 and "s" or "" }}</span>
             <form hx-post="{{ url_for('delete_model', model_id=m.id) }}" hx-swap="none" hx-on="htmx:afterRequest: location.reload()">
-                <button class="btnx btnx-small danger"
-                        hx-confirm="Delete {{ m.name }}?">
-                    Delete
+                <button class="btnx btnx-secondary"
+                        style="color:var(--text-muted);border-color:rgba(128,128,128,0.2);"
+                        hx-confirm="Delete {{ m.name }}?"
+                        title="Delete entire model family">
+                    🗑 Delete family
                 </button>
             </form>
         </div>
@@ -88,20 +91,21 @@
             <table class="edit-provider-table">
                 <thead>
                 <tr>
-                    <th class="col-id">ID</th>
-                    <th class="col-host">Host</th>
-                    <th class="col-token">Token</th>
-                    <th class="col-type">Type</th>
-                    <th class="col-input">In</th>
-                    <th class="col-path">Path</th>
-                    <th class="col-weight">W</th>
-                    <th class="col-enabled">En</th>
-                    <th class="col-actions">Act</th>
+                    <th class="col-id" title="Provider ID">ID</th>
+                    <th class="col-host" title="Host address">Host</th>
+                    <th class="col-token" title="API token">Token</th>
+                    <th class="col-type" title="API type">Type</th>
+                    <th class="col-input" title="Maximum input tokens">In</th>
+                    <th class="col-path" title="Model path/name">Path</th>
+                    <th class="col-weight" title="Load balancer weight">W</th>
+                    <th class="col-enabled" title="Enabled">En</th>
+                    <th class="col-actions" title="Actions">Act</th>
                 </tr>
                 </thead>
                 <tbody data-model-id="{{ m.id }}">
                 {% for p in m.providers|sort(attribute='order') %}
-                <tr x-data="{ masked: true, token: '{{ p.api_token }}' }"
+                <tr x-data="{ masked: true, showForm: false, token: '{{ p.api_token }}', enabled: {{ p.enabled | tojson }} }"
+                    :class="{ 'disabled': !enabled }"
                     data-provider-id="{{ p.id }}"
                     draggable="true">
                     <td class="col-id">
@@ -124,6 +128,7 @@
                         <!-- Actual input (unmasked by default) -->
                         <input :type="masked ? 'password' : 'text'"
                                :value="token"
+                               :class="{ 'filled': token.length > 0 }"
                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
                              {method:'POST',headers:{'Content-Type':'application/json'},
                               body:JSON.stringify({api_token:$event.target.value})})"
@@ -148,6 +153,7 @@
                     </td>
                     <td class="col-input">
                         <input type="number" value="{{ p.input_size }}" min="256" step="256"
+                               title="Maximum input tokens for this provider"
                                @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
                              {method:'POST',headers:{'Content-Type':'application/json'},
                               body:JSON.stringify({input_size:$event.target.value})})">
@@ -160,6 +166,7 @@
                     </td>
                     <td class="col-weight">
                         <input type="number" step="0.1" value="{{ p.weight }}"
+                               title="Weight used for load balancing"
                                @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
                              {method:'POST',headers:{'Content-Type':'application/json'},
                               body:JSON.stringify({weight:$event.target.value})})">
@@ -175,11 +182,12 @@
                     </td>
                     <td class="col-actions">
                         <div class="provider-actions">
-                            <button class="btnx btnx-small danger"
+                            <button class="action-delete" type="button"
                                     hx-post="{{ url_for('delete_provider', provider_id=p.id) }}"
                                     hx-swap="none"
-                                    hx-on="htmx:afterRequest: location.reload()">
-                                Del
+                                    hx-on="htmx:afterRequest: location.reload()"
+                                    title="Remove provider">
+                                🗑
                             </button>
                         </div>
                     </td>
@@ -189,11 +197,19 @@
             </table>
         </div>
 
-        <!-- Add provider full form -->
-        <div style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.05);border-top:1px solid var(--border-glass);">
-            <div style="font-size:0.75rem;font-weight:600;color:var(--accent);margin-bottom:0.5rem;">➕ Add new provider</div>
+        <!-- Toggle link for add provider form -->
+        <div style="padding:0.5rem 1.25rem;border-top:1px solid var(--border-glass);">
+            <a href="#" x-on:click.prevent="showForm = !showForm"
+               style="color:var(--accent);font-size:0.75rem;font-weight:600;text-decoration:none;">
+                <span x-text="showForm ? '✕ Hide provider form' : '➕ Add new provider'"></span>
+            </a>
+        </div>
+        <!-- Expandable add provider form -->
+        <div x-show="showForm" x-cloak x-transition
+             style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.04);border-top:1px solid var(--border-glass);max-height:0;overflow:hidden;"
+             :style="showForm ? 'max-height:600px' : ''">
             <form hx-post="{{ url_for('add_provider', model_id=m.id) }}" hx-trigger="submit"
-                  hx-swap="none" hx-on="htmx:afterRequest: location.reload()"
+                  hx-swap="none" hx-on="htmx:afterRequest: showForm = false, location.reload()"
                   style="display:grid;grid-template-columns:20% 20% 15% 5% 1fr 6% 4% 4% 6%;gap:8px;align-items:center;">
                 <input type="text" name="id" placeholder="Provider ID" required
                        style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
