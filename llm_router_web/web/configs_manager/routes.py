@@ -37,10 +37,15 @@ from .utils import (
     discover_host,
 )
 
+
 def _get_families(cfg_id):
     """Return all unique family names for a config from the Family table."""
-    families = [f.name for f in Family.query.filter_by(config_id=cfg_id).order_by(Family.name)]
+    families = [
+        f.name
+        for f in Family.query.filter_by(config_id=cfg_id).order_by(Family.name)
+    ]
     return families
+
 
 bp = Blueprint(
     "web",
@@ -597,7 +602,9 @@ def import_config():
                 db.session.flush()
 
             for mname, mval in (data.get(fam_name) or {}).items():
-                m = Model(config_id=cfg.id, family_id=fam.id, name=mname, is_active=False)
+                m = Model(
+                    config_id=cfg.id, family_id=fam.id, name=mname, is_active=False
+                )
                 db.session.add(m)
                 db.session.flush()  # get m.id for providers
                 for p in mval.get("providers", []):
@@ -730,7 +737,9 @@ def edit_config(config_id):
             fam_obj = Family.query.filter_by(config_id=cfg.id, name=fam).first()
             if not fam_obj:
                 continue
-            for m in Model.query.filter_by(config_id=cfg.id, family_id=fam_obj.id).all():
+            for m in Model.query.filter_by(
+                config_id=cfg.id, family_id=fam_obj.id
+            ).all():
                 is_sel = m.name in request.form.getlist(f"{fam}[]")
                 if m.is_active != is_sel:
                     m.is_active = is_sel
@@ -747,17 +756,19 @@ def edit_config(config_id):
         fam_obj = Family.query.filter_by(config_id=cfg.id, name=fam_name).first()
         if not fam_obj:
             continue
-        models_for_fam = (
-            Model.query.filter_by(config_id=cfg.id, family_id=fam_obj.id).all()
-        )
+        models_for_fam = Model.query.filter_by(
+            config_id=cfg.id, family_id=fam_obj.id
+        ).all()
         model_list = []
         providers_by_model = {}
         for m in models_for_fam:
-            model_list.append({
-                "id": m.id,
-                "name": m.name,
-                "is_active": m.is_active,
-            })
+            model_list.append(
+                {
+                    "id": m.id,
+                    "name": m.name,
+                    "is_active": m.is_active,
+                }
+            )
             provs = [
                 {
                     "id": p.id,  # primary key, used by update/delete endpoints
@@ -1025,7 +1036,9 @@ def restore_version(config_id, version):
             if mname in actives_for_fam:
                 is_active = True
 
-            m = Model(config_id=cfg.id, family_id=fam.id, name=mname, is_active=is_active)
+            m = Model(
+                config_id=cfg.id, family_id=fam.id, name=mname, is_active=is_active
+            )
             db.session.add(m)
             db.session.flush()  # get m.id for providers
             # ---- recreate providers with correct fields ----

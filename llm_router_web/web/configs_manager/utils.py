@@ -14,7 +14,10 @@ def to_json(config_id: int) -> dict:
     cfg = Config.query.get_or_404(config_id)
 
     # Discover all families from the Family table (one source of truth)
-    families = [f.name for f in Family.query.filter_by(config_id=cfg.id).order_by(Family.name)]
+    families = [
+        f.name
+        for f in Family.query.filter_by(config_id=cfg.id).order_by(Family.name)
+    ]
     if not families:
         return {"active_models": {}}
 
