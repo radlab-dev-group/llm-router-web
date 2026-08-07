@@ -25,8 +25,8 @@ from .models import (
     Config,
     ConfigVersion,
     Model,
+    Family,
     Provider,
-    ActiveModel,
     User,
     Project,
 )
@@ -38,10 +38,9 @@ from .utils import (
 )
 
 def _get_families(cfg_id):
-    """Return all unique families for a config from Model and ActiveModel tables."""
-    m = {r.family for r in Model.query.filter_by(config_id=cfg_id).all()}
-    a = {r.family for r in ActiveModel.query.filter_by(config_id=cfg_id).all()}
-    return sorted(m | a)
+    """Return all unique family names for a config from the Family table."""
+    families = [f.name for f in Family.query.filter_by(config_id=cfg_id).order_by(Family.name)]
+    return families
 
 bp = Blueprint(
     "web",
@@ -588,11 +587,19 @@ def import_config():
         db.session.add(cfg)
         db.session.flush()  # obtain cfg.id before adding models/providers
 
-        # ---- 7️⃣  Load models & providers from imported JSON ---------------
-        for fam in (k for k in data if k != "active_models"):
-            for mname, mval in (data.get(fam) or {}).items():
-                m = Model(config_id=cfg.id, family=fam, name=mname)
+        # ---- 7️⃣  Load families & models from imported JSON ---------------
+        for fam_name in (k for k in data if k != "active_models"):
+            # Create or reuse the Family row
+            fam = Family.query.filter_by(config_id=cfg.id, name=fam_name).first()
+            if not fam:
+                fam = Family(config_id=cfg.id, name=fam_name)
+                db.session.add(fam)
+                db.session.flush()
+
+            for mname, mval in (data.get(fam_name) or {}).items():
+                m = Model(config_id=cfg.id, family_id=fam.id, name=mname, is_active=False)
                 db.session.add(m)
+                db.session.flush()  # get m.id for providers
                 for p in mval.get("providers", []):
                     db.session.add(
                         Provider(
@@ -608,13 +615,13 @@ def import_config():
                         )
                     )
 
-        # ---- 8️⃣  Active models from imported JSON --------------------------
+        # ---- 8️⃣  Mark active models from imported JSON --------------------------
         active = data.get("active_models") or {}
-        for fam in active:
-            for mname in active.get(fam, []):
-                db.session.add(
-                    ActiveModel(config_id=cfg.id, family=fam, model_name=mname)
-                )
+        for fam_name in active:
+            for mname in active.get(fam_name, []):
+                m = Model.query.filter_by(config_id=cfg.id, name=mname).first()
+                if m:
+                    m.is_active = True
 
         # ---- 9️⃣  Commit everything & snapshot version -----------------------
         db.session.commit()
@@ -714,29 +721,65 @@ def edit_config(config_id):
             flash("Configuration description updated.", "success")
 
         note = request.form.get("note", "")
-        # Update active models from form data
+        # Update active flags on models from form data
         fam_list = _get_families(cfg.id)
         if not fam_list:
             fam_list = []
         for fam in fam_list:
-            ActiveModel.query.filter_by(config_id=cfg.id, family=fam).delete()
-            for mname in request.form.getlist(f"{fam}[]"):
-                db.session.add(
-                    ActiveModel(config_id=cfg.id, family=fam, model_name=mname)
-                )
+            # Mark models that are selected as active, unmark the rest
+            fam_obj = Family.query.filter_by(config_id=cfg.id, name=fam).first()
+            if not fam_obj:
+                continue
+            for m in Model.query.filter_by(config_id=cfg.id, family_id=fam_obj.id).all():
+                is_sel = m.name in request.form.getlist(f"{fam}[]")
+                if m.is_active != is_sel:
+                    m.is_active = is_sel
         db.session.commit()
         snapshot_version(cfg.id, note=note or "Updated active models")
         return redirect(url_for("web.edit_config", config_id=cfg.id))
 
     fam_list = _get_families(cfg.id) or []
-    families = {
-        fam: Model.query.filter_by(config_id=cfg.id, family=fam).all()
-        for fam in fam_list
-    }
-    actives = {
-        fam: [a.model_name for a in cfg.actives if a.family == fam]
-        for fam in fam_list
-    }
+    # Gather everything the template needs while the session is still alive.
+    # Build plain dicts so the template never touches lazy-loaded relationships
+    # after the DB session is closed.
+    families = {}
+    for fam_name in fam_list:
+        fam_obj = Family.query.filter_by(config_id=cfg.id, name=fam_name).first()
+        if not fam_obj:
+            continue
+        models_for_fam = (
+            Model.query.filter_by(config_id=cfg.id, family_id=fam_obj.id).all()
+        )
+        model_list = []
+        providers_by_model = {}
+        for m in models_for_fam:
+            model_list.append({
+                "id": m.id,
+                "name": m.name,
+                "is_active": m.is_active,
+            })
+            provs = [
+                {
+                    "id": p.id,  # primary key, used by update/delete endpoints
+                    "provider_id": p.provider_id,
+                    "api_host": p.api_host,
+                    "api_token": p.api_token,
+                    "api_type": p.api_type,
+                    "input_size": p.input_size,
+                    "model_path": p.model_path,
+                    "weight": p.weight,
+                    "enabled": p.enabled,
+                    "order": p.order,
+                }
+                for p in m.providers
+            ]
+            providers_by_model[m.name] = provs
+        families[fam_name] = {
+            "models": model_list,
+            "providers": providers_by_model,
+        }
+
+    actives = cfg.get_active_models()
     return render_template(
         "edit.html",
         cfg=cfg,
@@ -751,13 +794,21 @@ def edit_config(config_id):
 @bp.route("/configs/<int:config_id>/models/add", methods=["POST"])
 def add_model(config_id: int):
     cfg = _get_user_config(config_id)
-    fam = request.form.get("family")
+    fam_name = request.form.get("family")
     name = request.form.get("name", "").strip()
-    if not name:
+    if not name or not fam_name:
         abort(400, description="Invalid data")
-    if Model.query.filter_by(config_id=cfg.id, family=fam, name=name).first():
+
+    # Lookup or create the Family row
+    fam = Family.query.filter_by(config_id=cfg.id, name=fam_name).first()
+    if not fam:
+        fam = Family(config_id=cfg.id, name=fam_name)
+        db.session.add(fam)
+        db.session.flush()
+
+    if Model.query.filter_by(config_id=cfg.id, family_id=fam.id, name=name).first():
         abort(400, description="Model already exists")
-    m = Model(config_id=cfg.id, family=fam, name=name)
+    m = Model(config_id=cfg.id, family_id=fam.id, name=name, is_active=False)
     db.session.add(m)
     db.session.commit()
     snapshot_version(cfg.id, note=f"Added model {name}")
@@ -771,20 +822,14 @@ def add_model_family(config_id: int):
     if not family_name:
         abort(400, description="Family name is required.")
 
-    # Check for duplicates across both Model and ActiveModel tables
-    existing_families = {
-        r.family
-        for r in (
-            Model.query.filter_by(config_id=cfg.id).all()
-            + ActiveModel.query.filter_by(config_id=cfg.id).all()
-        )
-    }
-    if family_name in existing_families:
+    # Check for duplicates within this config
+    existing = Family.query.filter_by(config_id=cfg.id, name=family_name).first()
+    if existing:
         abort(400, description=f"Family '{family_name}' already exists.")
 
-    # Create an ActiveModel-only entry so the family appears in the UI immediately
-    new_active = ActiveModel(config_id=cfg.id, family=family_name, model_name=family_name)
-    db.session.add(new_active)
+    # Create a real Family row — models and providers live under it
+    new_fam = Family(config_id=cfg.id, name=family_name)
+    db.session.add(new_fam)
     db.session.commit()
     snapshot_version(cfg.id, note=f"Added family {family_name}")
     return jsonify({"ok": True})
@@ -806,21 +851,26 @@ def delete_model(model_id):
 @bp.route("/models/<int:model_id>/providers/add", methods=["POST"])
 def add_provider(model_id: int):
     m = Model.query.get_or_404(model_id)
-    payload = request.get_json(silent=True) or {}
+    # Accept both form data (from the UI HTML form) and JSON (from HTMX/XHR)
+    payload_form = request.form or {}
+    payload_json = request.get_json(silent=True) or {}
+    data = dict(payload_form)
+    data.update({k: v for k, v in payload_json.items() if k not in payload_form})
+
     max_order = (
         db.session.query(func.max(Provider.order)).filter_by(model_id=m.id).scalar()
         or 0
     )
     p = Provider(
         model=m,
-        provider_id=payload.get("id", ""),
-        api_host=payload.get("api_host", ""),
-        api_token=payload.get("api_token", ""),
-        api_type=payload.get("api_type", ""),
-        input_size=int(payload.get("input_size", 4096) or 4096),
-        model_path=payload.get("model_path", ""),
-        weight=float(payload.get("weight", 1.0) or 1.0),
-        enabled=bool(payload.get("enabled", True)),
+        provider_id=data.get("id", ""),
+        api_host=data.get("api_host", ""),
+        api_token=data.get("api_token", ""),
+        api_type=data.get("api_type", ""),
+        input_size=int(data.get("input_size", 4096) or 4096),
+        model_path=data.get("model_path", ""),
+        weight=float(data.get("weight", 1.0) or 1.0),
+        enabled="enabled" in data,
         order=max_order + 1,
     )
     if p.api_type not in {"vllm", "openai", "ollama"}:
@@ -947,30 +997,37 @@ def restore_version(config_id, version):
     data = json.loads(v.json_blob)
 
     # --------------------------------------------------------------
-    # 1️⃣  Remove *all* current data – providers, models and actives
+    # 1️⃣  Remove *all* current data – providers, models and families
     # --------------------------------------------------------------
-    # Bulk delete of providers (must be done first, because a bulk
-    # Model.delete() would not cascade to providers)
+    # Cascade order: providers → models → families (reverse creation)
     Provider.query.filter(Provider.model.has(config_id=cfg.id)).delete(
         synchronize_session=False
     )
-
-    # Delete models belonging to this config
     Model.query.filter_by(config_id=cfg.id).delete(synchronize_session=False)
-
-    # Delete active‑model entries
-    ActiveModel.query.filter_by(config_id=cfg.id).delete(synchronize_session=False)
 
     # Commit the deletions so the DB is clean before we re‑populate it
     db.session.commit()
 
     # --------------------------------------------------------------
-    # 2️⃣  Re‑create models & their providers from the snapshot
+    # 2️⃣  Re‑create families & models from the snapshot
     # --------------------------------------------------------------
-    for fam in (k for k in data if k != "active_models"):
-        for mname, mval in (data.get(fam) or {}).items():
-            m = Model(config_id=cfg.id, family=fam, name=mname)
+    for fam_name in (k for k in data if k != "active_models"):
+        fam = Family.query.filter_by(config_id=cfg.id, name=fam_name).first()
+        if not fam:
+            fam = Family(config_id=cfg.id, name=fam_name)
+            db.session.add(fam)
+            db.session.flush()
+
+        for mname, mval in (data.get(fam_name) or {}).items():
+            is_active = False
+            # Check if model should be active per snapshot
+            actives_for_fam = (data.get("active_models") or {}).get(fam_name, [])
+            if mname in actives_for_fam:
+                is_active = True
+
+            m = Model(config_id=cfg.id, family_id=fam.id, name=mname, is_active=is_active)
             db.session.add(m)
+            db.session.flush()  # get m.id for providers
             # ---- recreate providers with correct fields ----
             for idx, p in enumerate(mval.get("providers", [])):
                 db.session.add(
@@ -987,15 +1044,6 @@ def restore_version(config_id, version):
                         order=idx,
                     )
                 )
-
-    # --------------------------------------------------------------
-    # 3️⃣  Re‑create active‑model entries from snapshot
-    # --------------------------------------------------------------
-    for fam in (data.get("active_models") or {}):
-        for mname in data.get("active_models", {}).get(fam) or []:
-            db.session.add(
-                ActiveModel(config_id=cfg.id, family=fam, model_name=mname)
-            )
 
     db.session.commit()
     snapshot_version(cfg.id, note=f"Restored version {version}")

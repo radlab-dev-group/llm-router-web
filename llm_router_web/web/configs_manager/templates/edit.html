@@ -16,6 +16,17 @@
     </template>
 </div>
 
+<!-- Add new model group (freeform - no hardcoded list) -->
+<div class="panel" style="margin-bottom:1.5rem;">
+    <form hx-post="{{ url_for('add_model_family', config_id=cfg.id) }}" hx-trigger="submit"
+          hx-swap="none" hx-on="htmx:afterRequest: location.reload()"
+          style="display:flex;gap:8px;align-items:center;padding:0.75rem 1rem;">
+        <input type="text" name="family_name" placeholder="New model group name (e.g. google_models)" required
+               style="padding:0.5rem 0.75rem;border-radius:8px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.85rem;font-family:inherit;min-width:200px;flex:1;">
+        <button class="btnx primary" type="submit" style="padding:0.5rem 1rem;font-size:0.85rem;">➕ Add new model group</button>
+    </form>
+</div>
+
 <form method="post" class="form">
     <label>Additional config info (optional)
         <textarea name="description" rows="3"
@@ -24,24 +35,13 @@
 
     <h3>Active Models</h3>
 
-    <!-- Add new model group (freeform - no hardcoded list) -->
-    <div class="panel" style="margin-bottom:1.5rem;">
-        <form hx-post="{{ url_for('add_model_family', config_id=cfg.id) }}" hx-trigger="submit"
-              hx-swap="none" hx-on="htmx:afterRequest: location.reload()"
-              style="display:flex;gap:8px;align-items:center;padding:0.75rem 1rem;">
-            <input type="text" name="family_name" placeholder="New model group name (e.g. google_models)" required
-                   style="padding:0.5rem 0.75rem;border-radius:8px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.85rem;font-family:inherit;min-width:200px;flex:1;">
-            <button class="btnx primary" type="submit" style="padding:0.5rem 1rem;font-size:0.85rem;">➕ Add new model group</button>
-        </form>
-    </div>
-
     <div class="grid active-models" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
-        {% for fam, models in families.items() %}
+        {% for fam, fam_data in families.items() %}
         <div class="panel" style="min-height:auto;max-height:300px;overflow-y:auto;">
             <h4>{{ fam }}</h4>
-            {% for m in models %}
-            <label class="active-model-item{{ ' is-active' if m.name in actives[fam] }}" style="display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:3px;cursor:pointer;margin:0;">
-                <input type="checkbox" name="{{ fam }}[]" value="{{ m.name }}" {% if m.name in actives[fam] %}checked{% endif %} onclick="event.stopPropagation();" style="margin:0;height:auto;width:auto;">
+            {% for m in fam_data.models %}
+            <label class="active-model-item{{ ' is-active' if m.is_active }}" style="display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:3px;cursor:pointer;margin:0;">
+                <input type="checkbox" name="{{ fam }}[]" value="{{ m.name }}" {% if m.is_active %}checked{% endif %} onclick="event.stopPropagation();" style="margin:0;height:auto;width:auto;">
                 <span style="font-size:0.8rem;color:var(--text-main);">{{ m.name }}</span>
             </label>
             {% endfor %}
@@ -64,7 +64,7 @@
 <h3>Models and providers</h3>
 
 <div class="grid" style="grid-template-columns: 1fr;width:100%;">
-    {% for fam, models in families.items() %}
+    {% for fam, fam_data in families.items() %}
     <!-- Add model for this family -->
     <div style="width:100%;display:flex;flex-direction:column;">
         <hr class="model-separator" style="margin-top:0.5rem;">
@@ -83,12 +83,13 @@
         </div>
     </div>
 
-    {% for m in models %}
+    {% for m in fam_data.models %}
+    {% set provs = fam_data.providers.get(m.name, []) %}
     <div style="width:100%;display:flex;flex-direction:column;">
     <div class="edit-model-section">
         <div class="edit-model-header">
             <h5>{{ m.name }}</h5>
-            <span class="muted" style="font-size:0.75rem;">{{ m.providers|length }} provider{{ m.providers|length != 1 and "s" or "" }}</span>
+            <span class="muted" style="font-size:0.75rem;">{{ provs|length }} provider{{ provs|length != 1 and "s" or "" }}</span>
             <form hx-post="{{ url_for('delete_model', model_id=m.id) }}" hx-swap="none" hx-on="htmx:afterRequest: location.reload()">
                 <button class="btnx btnx-secondary"
                         style="color:var(--text-muted);border-color:rgba(128,128,128,0.2);"
@@ -115,7 +116,7 @@
                 </tr>
                 </thead>
                 <tbody data-model-id="{{ m.id }}">
-                {% for p in m.providers|sort(attribute='order') %}
+                {% for p in provs|sort(attribute='order') %}
                 <tr x-data="{ masked: true, showForm: false, token: '{{ p.api_token }}', enabled: {{ p.enabled | tojson }} }"
                     :class="{ 'disabled': !enabled }"
                     data-provider-id="{{ p.id }}"
@@ -208,18 +209,18 @@
                 </tbody>
             </table>
         </div>
-
         <!-- Toggle link for add provider form -->
-        <div style="padding:0.5rem 1.25rem;border-top:1px solid var(--border-glass);">
+        <div style="padding:0.5rem 1.25rem;border-top:1px solid var(--border-glass);"
+             x-data="{ showForm: false }">
             <a href="#" x-on:click.prevent="showForm = !showForm"
                style="color:var(--accent);font-size:0.75rem;font-weight:600;text-decoration:none;">
-                <span x-text="showForm ? '✕ Hide provider form' : '➕ Add new provider'"></span>
+                <span x-text="showForm ? '✕ Hide provider form' : '➕ Add new provider'">➕ Add new provider</span>
             </a>
         </div>
         <!-- Expandable add provider form -->
         <div x-show="showForm" x-cloak x-transition
-             style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.04);border-top:1px solid var(--border-glass);max-height:0;overflow:hidden;"
-             :style="showForm ? 'max-height:600px' : ''">
+             style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.04);border-top:1px solid var(--border-glass);"
+             :style="showForm ? 'max-height:600px;overflow:auto;' : ''">
             <form hx-post="{{ url_for('add_provider', model_id=m.id) }}" hx-trigger="submit"
                   hx-swap="none" hx-on="htmx:afterRequest: showForm = false, location.reload()"
                   style="display:grid;grid-template-columns:20% 20% 15% 5% 1fr 6% 4% 4% 6%;gap:8px;align-items:center;">
@@ -248,11 +249,6 @@
                 <button class="btnx primary" type="submit" style="padding:0.35rem 0.7rem;font-size:0.8rem;">➕ Add</button>
             </form>
         </div>
-    </div>
-                </tbody>
-            </table>
-        </div>
-    </div>
     {% endfor %}
     {% endfor %}
 </div>

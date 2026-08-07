@@ -6,27 +6,29 @@ from flask import send_file
 from datetime import datetime
 from sqlalchemy import func, inspect, text
 
-from .models import db, Config, ConfigVersion, Model, ActiveModel
+from .models import db, Config, ConfigVersion, Model, Family
 
 
 def to_json(config_id: int) -> dict:
     """Serialize a configuration to a JSON‑compatible dict."""
     cfg = Config.query.get_or_404(config_id)
 
-    # Discover all families dynamically from DB
-    fam_set = {r.family for r in Model.query.filter_by(config_id=cfg.id).all()} | \
-              {r.family for r in ActiveModel.query.filter_by(config_id=cfg.id).all()}
-    families = sorted(fam_set) or []
+    # Discover all families from the Family table (one source of truth)
+    families = [f.name for f in Family.query.filter_by(config_id=cfg.id).order_by(Family.name)]
+    if not families:
+        return {"active_models": {}}
 
     out = {}
-    active_models = {}
-    for fam in families:
-        out[fam] = {}
-        active_models[fam] = []
+    active_models = {fam: [] for fam in families}
     out["active_models"] = active_models
 
-    for fam in families:
-        for m in Model.query.filter_by(config_id=cfg.id, family=fam).all():
+    # Group models by family name
+    for fam_name in families:
+        fam_obj = next((f for f in cfg.families if f.name == fam_name), None)
+        if not fam_obj:
+            continue
+        out[fam_name] = {}
+        for m in fam_obj.models:
             providers = []
             for p in m.providers:
                 if p.enabled:
@@ -45,12 +47,11 @@ def to_json(config_id: int) -> dict:
                             ),
                         }
                     )
-            out[fam][m.name] = {"providers": providers}
+            out[fam_name][m.name] = {"providers": providers}
 
-    for fam in families:
-        active_models[fam] = [
-            a.model_name for a in cfg.actives if a.family == fam
-        ]
+            # Collect active models by their is_active flag
+            if m.is_active:
+                active_models[fam_name].append(m.name)
 
     return out
 
