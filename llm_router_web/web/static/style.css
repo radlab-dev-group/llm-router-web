@@ -70,8 +70,14 @@
     box-sizing: border-box;
 }
 
-html, body {
+html {
     height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     margin: 0;
     font-family: var(--font-sans);
     background: var(--bg-main);

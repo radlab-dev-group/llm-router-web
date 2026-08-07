@@ -145,6 +145,12 @@
     </div>
 </header>
 
+<div class="app-container">
+    <main class="app-main">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
 <footer class="app-footer">
     <div class="footer-content">
         <div class="footer-links">
@@ -153,12 +159,6 @@
         <div class="footer-copy">{{ _('footer_text') }}</div>
     </div>
 </footer>
-
-<div class="app-container">
-    <main class="app-main">
-        {% block content %}{% endblock %}
-    </main>
-</div>
 
 </body>
 </html>
