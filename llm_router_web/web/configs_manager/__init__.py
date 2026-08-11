@@ -1,5 +1,7 @@
-import os
 import json
+import logging
+import os
+import secrets
 
 from flask import Flask, session
 
@@ -24,7 +26,14 @@ def create_config_manager_app() -> Flask:
     )
 
     # ---- Configuration -------------------------------------------------
-    app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "change-me-local")
+    _secret = os.getenv("FLASK_SECRET_KEY")
+    if not _secret:
+        logging.warning(
+            "FLASK_SECRET_KEY is not set! Using auto-generated key — "
+            "sessions will be invalidated on restart."
+        )
+        _secret = secrets.token_hex(32)
+    app.config["SECRET_KEY"] = _secret
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
         "DATABASE_URL", "sqlite:///configs.db"
     )
@@ -67,6 +76,23 @@ def create_config_manager_app() -> Flask:
         return text.format(**kwargs) if kwargs else text
 
     app.jinja_env.globals.update(_=get_text)
+
+    def _js_escape(value) -> str:
+        """Escape single quotes for safe embedding in JS string literals.
+
+        Replaces `'` with `` \\&#x27; `` — the backslash breaks out of the JS
+        string *before* any untrusted quote, while the HTML entity is rendered
+        correctly by Alpine.js reactivity ($el.value).  Does NOT use Jinja2
+        auto-escape path (no |e), so the rest of the string stays raw and works
+        with reactive :value bindings.
+
+        Safely handles non-string values (ints, floats) from the database.
+        """
+        if not isinstance(value, str):
+            return str(value) if value is not None else ""
+        return value.replace("'", "\\&#x27;")
+
+    app.jinja_env.filters["js_escape"] = _js_escape
 
     # ---- Ensure DB schema (order column) -------------------------------
     with app.app_context():

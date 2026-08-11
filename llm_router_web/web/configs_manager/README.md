@@ -86,7 +86,7 @@ Adjust the number of workers or other gunicorn options inside `run.sh` as needed
 
 | Variable           | Description                                   | Default                |
 |--------------------|-----------------------------------------------|------------------------|
-| `FLASK_SECRET_KEY` | Secret key for session signing                | `change-me-local`      |
+| `FLASK_SECRET_KEY` | Secret key for session signing                | auto-generated         |
 | `DATABASE_URL`     | SQLAlchemy database URL (SQLite by default)   | `sqlite:///configs.db` |
 | `FLASK_ENV`        | Set to `production` for HTTPS scheme handling | –                      |
 

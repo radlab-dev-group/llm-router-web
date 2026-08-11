@@ -93,7 +93,7 @@
                     </thead>
                     <tbody data-model-id="{{ m.id }}">
                     {% for p in _prov|sort(attribute='order') %}
-                    <tr x-data="{ masked: true, showForm: false, token: '{{ p.api_token }}', enabled: {{ p.enabled | tojson }}, prov_id: '{{ p.provider_id }}', prov_host: '{{ p.api_host }}', prov_type: '{{ p.api_type }}', prov_in: '{{ p.input_size }}', prov_path: '{{ p.model_path }}', prov_weight: '{{ p.weight }}', prov_url: '{{ url_for("update_provider", provider_id=p.id) }}' }"
+                    <tr x-data="{ masked: true, showForm: false, token: '{{ p.api_token | js_escape }}', enabled: {{ p.enabled | tojson }}, prov_id: '{{ p.provider_id | js_escape }}', prov_host: '{{ p.api_host | js_escape }}', prov_type: '{{ p.api_type | js_escape }}', prov_in: '{{ p.input_size | js_escape }}', prov_path: '{{ p.model_path | js_escape }}', prov_weight: '{{ p.weight | js_escape }}', prov_url: '{{ url_for("update_provider", provider_id=p.id) }}' }"
                         :class="{ 'disabled': !enabled }" data-provider-id="{{ p.id }}" draggable="true">
                         <td><input :value="prov_id" @change="$el.value=$event.target.value;fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider_id:$event.target.value})})"></td>
                         <td><input :value="prov_host" @change="$el.value=$event.target.value;fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_host:$event.target.value})})"></td>
@@ -192,7 +192,7 @@
                     <thead><tr><th>ID</th><th>Host</th><th>Token</th><th>Type</th><th>In</th><th>Path</th><th>W</th><th>En</th><th>Act</th></tr></thead>
                     <tbody data-model-id="{{ m.id }}">
                     {% for p in _prov|sort(attribute='order') %}
-                    <tr x-data="{ masked: true, showForm: false, token: '{{ p.api_token }}', enabled: {{ p.enabled | tojson }}, prov_id: '{{ p.provider_id }}', prov_host: '{{ p.api_host }}', prov_type: '{{ p.api_type }}', prov_in: '{{ p.input_size }}', prov_path: '{{ p.model_path }}', prov_weight: '{{ p.weight }}', prov_url: '{{ url_for("update_provider", provider_id=p.id) }}' }"
+                    <tr x-data="{ masked: true, showForm: false, token: '{{ p.api_token | js_escape }}', enabled: {{ p.enabled | tojson }}, prov_id: '{{ p.provider_id | js_escape }}', prov_host: '{{ p.api_host | js_escape }}', prov_type: '{{ p.api_type | js_escape }}', prov_in: '{{ p.input_size | js_escape }}', prov_path: '{{ p.model_path | js_escape }}', prov_weight: '{{ p.weight | js_escape }}', prov_url: '{{ url_for("update_provider", provider_id=p.id) }}' }"
                         :class="{ 'disabled': !enabled }" data-provider-id="{{ p.id }}" draggable="true">
                         <td><input :value="prov_id" @change="$el.value=$event.target.value;fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider_id:$event.target.value})})"></td>
                         <td><input :value="prov_host" @change="$el.value=$event.target.value;fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_host:$event.target.value})})"></td>

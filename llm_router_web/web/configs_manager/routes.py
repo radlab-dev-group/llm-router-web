@@ -2,11 +2,14 @@ import os
 import json
 import requests
 
+from urllib.parse import urlparse
 from functools import wraps
 from sqlalchemy import func
 from datetime import datetime
 
 from werkzeug.security import generate_password_hash, check_password_hash
+
+from urllib.parse import urlparse
 
 from flask import (
     Blueprint,
@@ -36,6 +39,16 @@ from .utils import (
     export_config_to_file,
     discover_host,
 )
+
+
+def urlsafe_redirect(url, fallback=None):
+    """Safe redirect: only follow url if it points to same host or is a relative URL."""
+    if not url or not urlparse(url).netloc:
+        return redirect(fallback or url_for("index"))
+    parsed = urlparse(url)
+    if parsed.netloc == urlparse(request.host_url).netloc:
+        return redirect(url)
+    return redirect(fallback or url_for("index"))
 
 
 def _get_families(cfg_id):
@@ -997,14 +1010,20 @@ def delete_config(config_id):
     #   • If the request came from the configs list page, stay there.
     #   • Otherwise (e.g., from the index page) go back to index.
     # --------------------------------------------------------------
-    # `request.referrer` contains the full URL of the page that submitted the form.
-    # We compare it with the URL generated for the configs list view.
+    # Determine where to send the user after deletion:
+    #   - If the request came from the configs list page, stay there.
+    #   - Otherwise (e.g., from the index page) go back to index.
     ref = request.referrer or ""
     configs_url = url_for("list_configs", _external=True)
     if ref.startswith(configs_url):
         return redirect(url_for("list_configs"))
-    else:
-        return redirect(url_for("index"))
+
+    # Validate referrer is same-host before following it
+    parsed = urlparse(ref)
+    if parsed.netloc and parsed.netloc != urlparse(request.host_url).netloc:
+        pass  # Not a safe redirect target — ignore the referrer
+
+    return redirect(url_for("index"))
 
 
 # ----------------------------------------------------------------------
@@ -1120,7 +1139,7 @@ def set_lang(lang):
     if lang not in ["pl", "en"]:
         lang = "pl"
     session["lang"] = lang
-    return redirect(request.referrer or url_for("index"))
+    return urlsafe_redirect(request.referrer, fallback=url_for("index"))
 
 
 # ----------------------------------------------------------------------

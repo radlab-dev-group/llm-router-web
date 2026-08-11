@@ -1,5 +1,8 @@
-import os
 import json
+import logging
+import os
+import secrets
+
 from flask import Flask, redirect, url_for, session
 
 # Blueprint is located in the same package
@@ -52,7 +55,14 @@ def create_anonymize_app() -> Flask:
     # Register the helper function as a global in Jinja2 templates
     app.jinja_env.globals.update(_=get_text)
 
-    app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "change-me-anonymizer")
+    _secret = os.getenv("FLASK_SECRET_KEY")
+    if not _secret:
+        logging.warning(
+            "FLASK_SECRET_KEY is not set! Using auto-generated key — "
+            "sessions will be invalidated on restart."
+        )
+        _secret = secrets.token_hex(32)
+    app.config["SECRET_KEY"] = _secret
 
     # Address of the llm-router API
     app.config["LLM_ROUTER_HOST"] = os.getenv(
