@@ -808,7 +808,9 @@ def edit_config(config_id):
     # Pre-compute active/inactive model lists across ALL families (for rendering)
     all_active = []
     all_inactive = []
-    active_by_family = {}  # {fam_name: [model_entry, ...]} for templates that iterate by family
+    active_by_family = (
+        {}
+    )  # {fam_name: [model_entry, ...]} for templates that iterate by family
     inactive_by_family = {}
     for fam_name, fam_data in families.items():
         fam_active = []

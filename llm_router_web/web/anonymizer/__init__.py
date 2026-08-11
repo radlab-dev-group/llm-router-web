@@ -1,19 +1,20 @@
+import os
 import json
 import logging
-import os
 import secrets
-from urllib.parse import urlparse
-
 import requests
 
+from urllib.parse import urlparse
 from flask import Flask, redirect, url_for, session
 
-# Blueprint is located in the same package
 from .routes import anonymize_bp
 
 
-def _check_host_availability(host: str, path: str, label: str, timeout: float = 3.0) -> None:
-    """Check if an external service host is reachable.
+def _check_host_availability(
+    host: str, path: str, label: str, timeout: float = 3.0
+) -> None:
+    """
+    Check if an external service host is reachable.
 
     Logs INFO on success or WARNING on failure. Never raises — the app
     starts regardless of the result.
@@ -24,16 +25,25 @@ def _check_host_availability(host: str, path: str, label: str, timeout: float = 
         return
 
     base_url = host.rstrip("/")
-    target = f"{base_url}{path}" if path.startswith("/") else f"{base_url}/{path.lstrip('/')}"
+    target = (
+        f"{base_url}{path}"
+        if path.startswith("/")
+        else f"{base_url}/{path.lstrip('/')}"
+    )
 
     try:
         resp = requests.get(target, timeout=timeout)
-        # Any status < 500 means the server is responding (4xx = reachable, auth-required etc.)
+        # Any status < 500 means the server is responding
+        # (4xx = reachable, auth-required, etc.)
         logging.info("  %s (%s): OK (HTTP %d)", label, target, resp.status_code)
     except requests.exceptions.ConnectionError:
-        logging.warning("  %s (%s): NOT REACHABLE — connection refused", label, target)
+        logging.warning(
+            "  %s (%s): NOT REACHABLE — connection refused", label, target
+        )
     except requests.exceptions.Timeout:
-        logging.warning("  %s (%s): NOT REACHABLE — timeout after %.0fs", label, target, timeout)
+        logging.warning(
+            "  %s (%s): NOT REACHABLE — timeout after %.0fs", label, target, timeout
+        )
     except Exception as exc:
         # SSL errors, malformed URLs etc. — treat as reachable (connection succeeded)
         status = "?"
@@ -131,7 +141,9 @@ def create_anonymize_app() -> Flask:
 
     # Check external service availability at startup
     logging.info("Checking external service availability:")
-    _check_host_availability(app.config["LLM_ROUTER_SERVICES_HOST"], "/api/maskers/pii", "PII Masker")
+    _check_host_availability(
+        app.config["LLM_ROUTER_SERVICES_HOST"], "/api/maskers/pii", "PII Masker"
+    )
     _check_host_availability(app.config["LLM_ROUTER_HOST"], "/models", "LLM Router")
 
     return app

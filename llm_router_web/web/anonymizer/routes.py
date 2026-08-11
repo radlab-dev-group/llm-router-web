@@ -441,5 +441,7 @@ def models():
         models = data.get("models") or data.get("data") or []
         return jsonify({"models": models})
     except Exception:
-        logging.exception("Failed to fetch models from LLM router at %s", external_url)
+        logging.exception(
+            "Failed to fetch models from LLM router at %s", external_url
+        )
         return jsonify({"models": []}), 500
