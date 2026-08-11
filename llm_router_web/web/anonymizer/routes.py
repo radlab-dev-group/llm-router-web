@@ -17,6 +17,7 @@ Endpoints provided:
     - /models: GET (fetch available models)
 """
 
+import os
 import json
 import logging
 import requests
@@ -48,8 +49,9 @@ def _t(key):
 
 def _build_bearer_headers():
     """Build headers dict with optional Bearer token for LLM-Router requests."""
-    if api_key:
-        return {"Authorization": f"Bearer {api_key}"}
+    key = os.environ.get("LLM_ROUTER_API_KEY", "")
+    if key:
+        return {"Authorization": f"Bearer {key}"}
     return {}
 
 
@@ -217,12 +219,19 @@ def process_text():
             result={"error": f"Not supported method {algorithm}."},
         )
 
-    _p_map = {}
     if isinstance(result, dict):
+        # Ensure "text" exists so the template always has something to render.
+        result.setdefault("text", raw_text)
+        _p_map = {}
         for _k, _v in result.get("mappings", {}).items():
             key = _k if _k.startswith("{") else "{" + _k + "}"
             _p_map[key] = _v
         result["mappings"] = _p_map
+
+    # For any non-dict result (e.g. error string from a failed call), wrap it
+    # in a safe dict so the template never receives an ``Undefined`` value.
+    if not isinstance(result, dict):
+        result = {"error": str(result), "mappings": {}, "text": ""}
 
     return render_template(
         "anonymize_result_partial.html",
@@ -432,4 +441,5 @@ def models():
         models = data.get("models") or data.get("data") or []
         return jsonify({"models": models})
     except Exception:
+        logging.exception("Failed to fetch models from LLM router at %s", external_url)
         return jsonify({"models": []}), 500
