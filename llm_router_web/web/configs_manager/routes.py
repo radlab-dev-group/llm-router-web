@@ -2,11 +2,14 @@ import os
 import json
 import requests
 
+from urllib.parse import urlparse
 from functools import wraps
 from sqlalchemy import func
 from datetime import datetime
 
 from werkzeug.security import generate_password_hash, check_password_hash
+
+from urllib.parse import urlparse
 
 from flask import (
     Blueprint,
@@ -37,10 +40,25 @@ from .utils import (
     discover_host,
 )
 
+
+def urlsafe_redirect(url, fallback=None):
+    """Safe redirect: only follow url if it points to same host or is a relative URL."""
+    if not url or not urlparse(url).netloc:
+        return redirect(fallback or url_for("index"))
+    parsed = urlparse(url)
+    if parsed.netloc == urlparse(request.host_url).netloc:
+        return redirect(url)
+    return redirect(fallback or url_for("index"))
+
+
 def _get_families(cfg_id):
     """Return all unique family names for a config from the Family table."""
-    families = [f.name for f in Family.query.filter_by(config_id=cfg_id).order_by(Family.name)]
+    families = [
+        f.name
+        for f in Family.query.filter_by(config_id=cfg_id).order_by(Family.name)
+    ]
     return families
+
 
 bp = Blueprint(
     "web",
@@ -597,7 +615,9 @@ def import_config():
                 db.session.flush()
 
             for mname, mval in (data.get(fam_name) or {}).items():
-                m = Model(config_id=cfg.id, family_id=fam.id, name=mname, is_active=False)
+                m = Model(
+                    config_id=cfg.id, family_id=fam.id, name=mname, is_active=False
+                )
                 db.session.add(m)
                 db.session.flush()  # get m.id for providers
                 for p in mval.get("providers", []):
@@ -730,7 +750,9 @@ def edit_config(config_id):
             fam_obj = Family.query.filter_by(config_id=cfg.id, name=fam).first()
             if not fam_obj:
                 continue
-            for m in Model.query.filter_by(config_id=cfg.id, family_id=fam_obj.id).all():
+            for m in Model.query.filter_by(
+                config_id=cfg.id, family_id=fam_obj.id
+            ).all():
                 is_sel = m.name in request.form.getlist(f"{fam}[]")
                 if m.is_active != is_sel:
                     m.is_active = is_sel
@@ -747,17 +769,19 @@ def edit_config(config_id):
         fam_obj = Family.query.filter_by(config_id=cfg.id, name=fam_name).first()
         if not fam_obj:
             continue
-        models_for_fam = (
-            Model.query.filter_by(config_id=cfg.id, family_id=fam_obj.id).all()
-        )
+        models_for_fam = Model.query.filter_by(
+            config_id=cfg.id, family_id=fam_obj.id
+        ).all()
         model_list = []
         providers_by_model = {}
         for m in models_for_fam:
-            model_list.append({
-                "id": m.id,
-                "name": m.name,
-                "is_active": m.is_active,
-            })
+            model_list.append(
+                {
+                    "id": m.id,
+                    "name": m.name,
+                    "is_active": m.is_active,
+                }
+            )
             provs = [
                 {
                     "id": p.id,  # primary key, used by update/delete endpoints
@@ -780,11 +804,44 @@ def edit_config(config_id):
         }
 
     actives = cfg.get_active_models()
+
+    # Pre-compute active/inactive model lists across ALL families (for rendering)
+    all_active = []
+    all_inactive = []
+    active_by_family = (
+        {}
+    )  # {fam_name: [model_entry, ...]} for templates that iterate by family
+    inactive_by_family = {}
+    for fam_name, fam_data in families.items():
+        fam_active = []
+        fam_inactive = []
+        for m in fam_data["models"]:
+            entry = {
+                "id": m["id"],
+                "name": m["name"],
+                "is_active": m["is_active"],
+                "family": fam_name,
+            }
+            if m["is_active"]:
+                all_active.append(entry)
+                fam_active.append(m)
+            else:
+                all_inactive.append(entry)
+                fam_inactive.append(m)
+        if fam_active:
+            active_by_family[fam_name] = fam_active
+        if fam_inactive:
+            inactive_by_family[fam_name] = fam_inactive
+
     return render_template(
         "edit.html",
         cfg=cfg,
         families=families,
         actives=actives,
+        all_active=all_active,
+        all_inactive=all_inactive,
+        active_by_family=active_by_family,
+        inactive_by_family=inactive_by_family,
     )
 
 
@@ -955,14 +1012,20 @@ def delete_config(config_id):
     #   • If the request came from the configs list page, stay there.
     #   • Otherwise (e.g., from the index page) go back to index.
     # --------------------------------------------------------------
-    # `request.referrer` contains the full URL of the page that submitted the form.
-    # We compare it with the URL generated for the configs list view.
+    # Determine where to send the user after deletion:
+    #   - If the request came from the configs list page, stay there.
+    #   - Otherwise (e.g., from the index page) go back to index.
     ref = request.referrer or ""
     configs_url = url_for("list_configs", _external=True)
     if ref.startswith(configs_url):
         return redirect(url_for("list_configs"))
-    else:
-        return redirect(url_for("index"))
+
+    # Validate referrer is same-host before following it
+    parsed = urlparse(ref)
+    if parsed.netloc and parsed.netloc != urlparse(request.host_url).netloc:
+        pass  # Not a safe redirect target — ignore the referrer
+
+    return redirect(url_for("index"))
 
 
 # ----------------------------------------------------------------------
@@ -1025,7 +1088,9 @@ def restore_version(config_id, version):
             if mname in actives_for_fam:
                 is_active = True
 
-            m = Model(config_id=cfg.id, family_id=fam.id, name=mname, is_active=is_active)
+            m = Model(
+                config_id=cfg.id, family_id=fam.id, name=mname, is_active=is_active
+            )
             db.session.add(m)
             db.session.flush()  # get m.id for providers
             # ---- recreate providers with correct fields ----
@@ -1076,7 +1141,7 @@ def set_lang(lang):
     if lang not in ["pl", "en"]:
         lang = "pl"
     session["lang"] = lang
-    return redirect(request.referrer or url_for("index"))
+    return urlsafe_redirect(request.referrer, fallback=url_for("index"))
 
 
 # ----------------------------------------------------------------------

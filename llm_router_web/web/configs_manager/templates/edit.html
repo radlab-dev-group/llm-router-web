@@ -61,199 +61,207 @@
 
 <hr class="model-divider">
 
-<h3>Models and providers</h3>
-
-<div class="grid" style="grid-template-columns: 1fr;width:100%;">
-    {% for fam, fam_data in families.items() %}
-    <!-- Add model for this family -->
-    <div style="width:100%;display:flex;flex-direction:column;">
-        <hr class="model-separator" style="margin-top:0.5rem;">
-        <div class="edit-model-section" style="background:var(--bg-glass);border:1px dashed var(--border-glass);border-radius:var(--radius-xl);">
-            <div style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.1);border-bottom:1px solid var(--border-glass);">
-                <h5 style="margin:0;font-size:0.9rem;font-weight:600;color:var(--accent);">➕ Add new model to <strong>{{ fam }}</strong></h5>
-            </div>
-            <form hx-post="{{ url_for('add_model', config_id=cfg.id) }}" hx-trigger="submit"
-                  hx-swap="none" hx-on="htmx:afterRequest: location.reload()"
-                  style="display:flex;gap:8px;align-items:center;padding:0.75rem 1rem;">
-                <input type="hidden" name="family" value="{{ fam }}">
-                <input type="text" name="name" placeholder="Enter model name..." required
-                       style="padding:0.5rem 0.75rem;border-radius:8px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.85rem;font-family:inherit;min-width:200px;flex:1;">
-                <button class="btnx primary" type="submit" style="padding:0.5rem 1rem;font-size:0.85rem;">➕ Add model</button>
-            </form>
-        </div>
+<!-- ====== ACTIVE MODELS (grouped by family) ====== -->
+{% if active_by_family %}
+<hr class="model-divider" style="margin-top:2rem;">
+<h3>Models and providers (active)</h3>
+<div class="panel" style="padding:1.25rem 1.5rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <span style="display:inline-flex;align-items:center;gap:0.5rem;">
+            <span style="color:var(--ok);">&#9679;</span> Active -- {{ all_active|length }} model{{ all_active|length != 1 and "s" or "" }}
+        </span>
     </div>
-
-    {% for m in fam_data.models %}
-    {% set provs = fam_data.providers.get(m.name, []) %}
-    <div style="width:100%;display:flex;flex-direction:column;">
-    <div class="edit-model-section">
-        <div class="edit-model-header">
-            <h5>{{ m.name }}</h5>
-            <span class="muted" style="font-size:0.75rem;">{{ provs|length }} provider{{ provs|length != 1 and "s" or "" }}</span>
-            <form hx-post="{{ url_for('delete_model', model_id=m.id) }}" hx-swap="none" hx-on="htmx:afterRequest: location.reload()">
-                <button class="btnx btnx-secondary"
-                        style="color:var(--text-muted);border-color:rgba(128,128,128,0.2);"
-                        hx-confirm="Delete {{ m.name }}?"
-                        title="Delete entire model family">
-                    🗑 Delete family
-                </button>
-            </form>
+    <div style="display:flex;flex-direction:column;gap:1.5rem;">
+    {% for fam, active_models in active_by_family.items() %}
+    <div class="model-card" style="border:1px solid var(--border-glass);border-radius:var(--radius-lg);overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:var(--bg-glass);border-bottom:1px solid var(--border-glass);">
+            <span style="font-weight:600;font-size:0.95rem;"><code>{{ fam }}</code></span>
+            <span class="muted" style="font-size:0.75rem;">{{ active_models|length }} active model{{ active_models|length != 1 and "s" or "" }}</span>
         </div>
-
-        <div class="scroll-wrap">
-            <table class="edit-provider-table">
-                <thead>
-                <tr>
-                    <th class="col-id" title="Provider ID">ID</th>
-                    <th class="col-host" title="Host address">Host</th>
-                    <th class="col-token" title="API token">Token</th>
-                    <th class="col-type" title="API type">Type</th>
-                    <th class="col-input" title="Maximum input tokens">In</th>
-                    <th class="col-path" title="Model path/name">Path</th>
-                    <th class="col-weight" title="Load balancer weight">W</th>
-                    <th class="col-enabled" title="Enabled">En</th>
-                    <th class="col-actions" title="Actions">Act</th>
-                </tr>
-                </thead>
-                <tbody data-model-id="{{ m.id }}">
-                {% for p in provs|sort(attribute='order') %}
-                <tr x-data="{ masked: true, showForm: false, token: '{{ p.api_token }}', enabled: {{ p.enabled | tojson }} }"
-                    :class="{ 'disabled': !enabled }"
-                    data-provider-id="{{ p.id }}"
-                    draggable="true">
-                    <td class="col-id">
-                        <input value="{{ p.provider_id }}"
-                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                             {method:'POST',headers:{'Content-Type':'application/json'},
-                              body:JSON.stringify({provider_id:$event.target.value})})">
-                    </td>
-                    <td class="col-host">
-                        <input value="{{ p.api_host }}"
-                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                             {method:'POST',headers:{'Content-Type':'application/json'},
-                              body:JSON.stringify({host:$event.target.value})})">
-                    </td>
-                    <td class="col-token" style="position:relative;">
-                        <!-- Show masked dots only when masked AND no value -->
-                         <span x-show="masked && !token" 
-                             style="color:var(--text-muted);font-size:0.8rem;pointer-events:none;"
-                             x-text="'••••'"></span>
-                        <!-- Actual input (unmasked by default) -->
-                        <input :type="masked ? 'password' : 'text'"
-                               :value="token"
-                               :class="{ 'filled': token.length > 0 }"
-                              @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                             {method:'POST',headers:{'Content-Type':'application/json'},
-                              body:JSON.stringify({api_token:$event.target.value})})"
-                               style="padding-right:34px;min-width:60px;">
-                        <button type="button"
-                               @click="masked = !masked"
-                               class="token-eye-btn"
-                               :title="masked ? 'Show token' : 'Hide token'"
-                               style="font-size:0.85rem; position:absolute; right:4px; top:50%; transform:translateY(-50%); z-index:1;">
-                            <span x-text="masked ? '👁' : '👁‍🗨'"></span>
-                        </button>
-                    </td>
-                    <td class="col-type">
-                        <select @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                             {method:'POST',headers:{'Content-Type':'application/json'},
-                              body:JSON.stringify({api_type:$event.target.value})})">
-                            <option value="vllm" {% if p.api_type=='vllm' %}selected{% endif %}>vllm</option>
-                            <option value="ollama" {% if p.api_type=='ollama' %}selected{% endif %}>ollama</option>
-                            <option value="openai" {% if p.api_type=='openai' %}selected{% endif %}>openai</option>
-                            <option value="lmstudio" {% if p.api_type=='lmstudio' %}selected{% endif %}>lmstudio</option>
-                        </select>
-                    </td>
-                    <td class="col-input">
-                        <input type="number" value="{{ p.input_size }}" min="256" step="256"
-                               title="Maximum input tokens for this provider"
-                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                             {method:'POST',headers:{'Content-Type':'application/json'},
-                              body:JSON.stringify({input_size:$event.target.value})})">
-                    </td>
-                    <td class="col-path">
-                        <input value="{{ p.model_path }}"
-                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                             {method:'POST',headers:{'Content-Type':'application/json'},
-                              body:JSON.stringify({model_path:$event.target.value})})">
-                    </td>
-                    <td class="col-weight">
-                        <input type="number" step="0.1" value="{{ p.weight }}"
-                               title="Weight used for load balancing"
-                               @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                             {method:'POST',headers:{'Content-Type':'application/json'},
-                              body:JSON.stringify({weight:$event.target.value})})">
-                    </td>
-                    <td class="col-enabled">
-                        <div class="enabled-toggle">
-                            <input type="checkbox"
-                                   {% if p.enabled %}checked{% endif %}
-                                   @change="fetch('{{ url_for('update_provider', provider_id=p.id) }}',
-                                {method:'POST',headers:{'Content-Type':'application/json'},
-                                 body:JSON.stringify({enabled:$event.target.checked})})">
-                        </div>
-                    </td>
-                    <td class="col-actions">
-                        <div class="provider-actions">
-                            <button class="action-delete" type="button"
-                                    hx-post="{{ url_for('delete_provider', provider_id=p.id) }}"
-                                    hx-swap="none"
-                                    hx-on="htmx:afterRequest: location.reload()"
-                                    title="Remove provider">
-                                🗑
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+        {% for m in active_models %}
+        {% set _prov = families[fam]["providers"].get(m.name, []) %}
+        <div class="model-card" style="border:1px solid var(--border-glass);border-radius:var(--radius-lg);overflow:hidden;margin:0.5rem 0.75rem;background:var(--bg-input);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.75rem;border-bottom:1px solid var(--border-glass);background:rgba(var(--accent-rgb),0.04);">
+                <span style="font-weight:600;font-size:0.95rem;"><code>{{ m.name }}</code></span>
+                <span class="muted" style="font-size:0.75rem;">{{ _prov|length }} provider{{ (_prov|length != 1 and 's') or '' }}</span>
+            </div>
+            {% if _prov %}
+            <div class="scroll-wrap">
+                <table class="edit-provider-table" style="margin:0;">
+                    <thead>
+                    <tr><th>ID</th><th>Host</th><th>Token</th><th>Type</th><th>In</th><th>Path</th><th>W</th><th>En</th><th>Act</th></tr>
+                    </thead>
+                    <tbody data-model-id="{{ m.id }}">
+                    {% for p in _prov|sort(attribute='order') %}
+                    <tr x-data="{ masked: true, showForm: false, token: '{{ p.api_token | js_escape }}', enabled: {{ p.enabled | tojson }}, prov_id: '{{ p.provider_id | js_escape }}', prov_host: '{{ p.api_host | js_escape }}', prov_type: '{{ p.api_type | js_escape }}', prov_in: '{{ p.input_size | js_escape }}', prov_path: '{{ p.model_path | js_escape }}', prov_weight: '{{ p.weight | js_escape }}', prov_url: '{{ url_for("update_provider", provider_id=p.id) }}' }"
+                        :class="{ 'disabled': !enabled }" data-provider-id="{{ p.id }}" draggable="true">
+                        <td><input :value="prov_id" @change="$el.value=$event.target.value;fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider_id:$event.target.value})})"></td>
+                        <td><input :value="prov_host" @change="$el.value=$event.target.value;fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_host:$event.target.value})})"></td>
+                        <td style="position:relative;">
+                            <span x-show="masked && !token" style="color:var(--text-muted);font-size:0.8rem;pointer-events:none;" x-text="'••••'"></span>
+                            <input :type="masked ? 'password' : 'text'" :value="token" :class="{ 'filled': token.length > 0 }" @change="$el.value=$event.target.value;fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_token:$event.target.value})})" style="padding-right:34px;min-width:60px;">
+                            <button type="button" @click="masked = !masked" class="token-eye-btn" :title="masked ? 'Show token' : 'Hide token'" style="font-size:0.85rem; position:absolute; right:4px; top:50%; transform:translateY(-50%); z-index:1;"><span x-text="masked ? '👁' : '👁‍🗨'"></span></button>
+                        </td>
+                        <td><select @change="fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_type:$event.target.value})})">
+                            <option value="vllm" x-bind:selected="prov_type==='vllm'">vllm</option>
+                            <option value="ollama" x-bind:selected="prov_type==='ollama'">ollama</option>
+                            <option value="openai" x-bind:selected="prov_type==='openai'">openai</option>
+                            <option value="lmstudio" x-bind:selected="prov_type==='lmstudio'">lmstudio</option>
+                        </select></td>
+                        <td><input type="number" :value="prov_in" min="256" step="256" @change="fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input_size:$event.target.value})})"></td>
+                        <td><input :value="prov_path" @change="fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_path:$event.target.value})})"></td>
+                        <td><input type="number" step="0.1" :value="prov_weight" @change="fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({weight:$event.target.value})})"></td>
+                        <td><input type="checkbox" x-model="enabled" @change="fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:$event.target.checked})})"></td>
+                        <td><button class="action-delete" type="button" hx-post="{{ url_for('delete_provider', provider_id=p.id) }}" hx-swap="none" hx-on="htmx:afterRequest: location.reload()" title="Remove provider">🗑</button></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="padding:0.5rem 1rem;color:var(--text-muted);font-size:0.85rem;">no providers</div>
+            {% endif %}
         </div>
-        <!-- Toggle link + expandable add provider form (shared x-data scope) -->
-        <div style="padding:0.5rem 1.25rem;border-top:1px solid var(--border-glass);"
-             x-data="{ showForm: false }">
-            <a href="#" x-on:click.prevent="showForm = !showForm"
+        <!-- Toggle link + expandable add provider form -->
+        <div style="padding:0.5rem 1rem;border-top:1px solid var(--border-glass);" x-data="{ showForm: false }">
+            <a href="#" @click.prevent="showForm = !showForm"
                style="color:var(--accent);font-size:0.75rem;font-weight:600;text-decoration:none;">
                 <span x-text="showForm ? '✕ Hide provider form' : '➕ Add new provider'">➕ Add new provider</span>
             </a>
-            <!-- Expandable add provider form -->
-            <div x-show="showForm" x-cloak x-transition
-                 style="padding:0.75rem 1.25rem;background:rgba(var(--accent-rgb),0.04);border-top:1px solid var(--border-glass);"
-                 :style="showForm ? 'max-height:600px;overflow:auto;' : ''">
+            <div x-show="showForm" x-cloak style="padding:0.75rem 1rem;background:rgba(var(--accent-rgb),0.04);border-top:1px solid var(--border-glass);margin-top:0.5rem;">
             <form hx-post="{{ url_for('add_provider', model_id=m.id) }}" hx-trigger="submit"
                   hx-swap="none" hx-on="htmx:afterRequest: showForm = false, location.reload()"
                   style="display:grid;grid-template-columns:20% 20% 15% 5% 1fr 6% 4% 4% 6%;gap:8px;align-items:center;">
-                <input type="text" name="id" placeholder="Provider ID" required
-                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
-                <input type="text" name="api_host" placeholder="Host" required
-                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
-                <input type="text" name="api_token" placeholder="Token"
-                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="id" placeholder="Provider ID" required style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="api_host" placeholder="Host" required style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="api_token" placeholder="Token" style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
                 <select name="api_type" style="padding:0.35rem 0.4rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
-                    <option value="vllm">vllm</option>
-                    <option value="ollama">ollama</option>
-                    <option value="openai">openai</option>
-                    <option value="lmstudio">lmstudio</option>
+                    <option value="vllm">vllm</option><option value="ollama">ollama</option><option value="openai">openai</option><option value="lmstudio">lmstudio</option>
                 </select>
-                <input type="number" name="input_size" placeholder="In (4096)" min="256" step="256"
-                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
-                <input type="text" name="model_path" placeholder="Path"
-                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
-                <input type="number" name="weight" placeholder="Wt" step="0.1" value="1.0"
-                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
-                <div style="display:flex;align-items:center;gap:4px;">
-                    <label style="font-size:0.8rem;color:var(--text-muted);">En:</label>
-                    <input type="checkbox" name="enabled" checked>
-                </div>
+                <input type="number" name="input_size" placeholder="In (4096)" min="256" step="256" style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="model_path" placeholder="Path" style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="number" name="weight" placeholder="Wt" step="0.1" value="1.0" style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <div style="display:flex;align-items:center;gap:4px;"><label style="font-size:0.8rem;color:var(--text-muted);">En:</label><input type="checkbox" name="enabled" checked></div>
                 <button class="btnx primary" type="submit" style="padding:0.35rem 0.7rem;font-size:0.8rem;">➕ Add</button>
             </form>
+            </div>
         </div>
-        <!-- close expandable form -->
+        {% endfor %}
+        <!-- Add model form for this family -->
+        <div style="padding:0.75rem 1rem;border-top:1px solid var(--border-glass);display:flex;gap:6px;align-items:center;">
+            <form hx-post="{{ url_for('add_model', config_id=cfg.id) }}" method="post" hx-trigger="submit"
+                  hx-swap="none" hx-on="htmx:afterRequest: location.reload()"
+                  style="display:flex;gap:6px;align-items:center;flex:1;">
+                <input type="hidden" name="family" value="{{ fam }}">
+                <input type="text" name="name" placeholder="Add model..." required
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.82rem;font-family:inherit;flex:1;">
+                <button class="btnx primary" type="submit" style="padding:0.35rem 0.7rem;font-size:0.82rem;">➕</button>
+            </form>
+        </div>
     </div>
-    <!-- close x-data wrapper -->
     {% endfor %}
-    {% endfor %}
+    </div>
 </div>
+{% endif %}
+
+<!-- ====== INACTIVE MODELS (grouped by family) ====== -->
+{% if inactive_by_family %}
+<div class="panel" style="padding:1.25rem 1.5rem;opacity:0.6;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <span style="display:inline-flex;align-items:center;gap:0.5rem;">
+            <span style="color:var(--danger-soft);">&#9679;</span> Inactive -- {{ all_inactive|length }} model{{ all_inactive|length != 1 and "s" or "" }}
+        </span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1.5rem;">
+    {% for fam, inactive_models in inactive_by_family.items() %}
+    <div class="model-card" style="border:1px solid var(--border-glass);border-radius:var(--radius-lg);overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:var(--bg-glass);border-bottom:1px solid var(--border-glass);">
+            <span style="font-weight:600;font-size:0.95rem;"><code>{{ fam }}</code></span>
+            <span class="muted" style="font-size:0.75rem;">{{ inactive_models|length }} inactive model{{ inactive_models|length != 1 and "s" or "" }}</span>
+        </div>
+        {% for m in inactive_models %}
+        {% set _prov = families[fam]["providers"].get(m.name, []) %}
+        <div class="model-card" style="border:1px solid var(--border-glass);border-radius:var(--radius-lg);overflow:hidden;margin:0.5rem 0.75rem;background:var(--bg-input);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.75rem;border-bottom:1px solid var(--border-glass);background:rgba(var(--accent-rgb),0.04);">
+                <span style="font-weight:600;font-size:0.95rem;"><code>{{ m.name }}</code></span>
+                <span class="muted" style="font-size:0.75rem;">{{ _prov|length }} provider{{ (_prov|length != 1 and 's') or '' }}</span>
+            </div>
+            {% if _prov %}
+            <div class="scroll-wrap">
+                <table class="edit-provider-table" style="margin:0;">
+                    <thead><tr><th>ID</th><th>Host</th><th>Token</th><th>Type</th><th>In</th><th>Path</th><th>W</th><th>En</th><th>Act</th></tr></thead>
+                    <tbody data-model-id="{{ m.id }}">
+                    {% for p in _prov|sort(attribute='order') %}
+                    <tr x-data="{ masked: true, showForm: false, token: '{{ p.api_token | js_escape }}', enabled: {{ p.enabled | tojson }}, prov_id: '{{ p.provider_id | js_escape }}', prov_host: '{{ p.api_host | js_escape }}', prov_type: '{{ p.api_type | js_escape }}', prov_in: '{{ p.input_size | js_escape }}', prov_path: '{{ p.model_path | js_escape }}', prov_weight: '{{ p.weight | js_escape }}', prov_url: '{{ url_for("update_provider", provider_id=p.id) }}' }"
+                        :class="{ 'disabled': !enabled }" data-provider-id="{{ p.id }}" draggable="true">
+                        <td><input :value="prov_id" @change="$el.value=$event.target.value;fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider_id:$event.target.value})})"></td>
+                        <td><input :value="prov_host" @change="$el.value=$event.target.value;fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_host:$event.target.value})})"></td>
+                        <td style="position:relative;">
+                            <span x-show="masked && !token" style="color:var(--text-muted);font-size:0.8rem;pointer-events:none;" x-text="'••••'"></span>
+                            <input :type="masked ? 'password' : 'text'" :value="token" :class="{ 'filled': token.length > 0 }" @change="$el.value=$event.target.value;fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_token:$event.target.value})})" style="padding-right:34px;min-width:60px;">
+                            <button type="button" @click="masked = !masked" class="token-eye-btn" :title="masked ? 'Show token' : 'Hide token'" style="font-size:0.85rem; position:absolute; right:4px; top:50%; transform:translateY(-50%); z-index:1;"><span x-text="masked ? '👁' : '👁‍🗨'"></span></button>
+                        </td>
+                        <td><select @change="fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_type:$event.target.value})})">
+                            <option value="vllm" x-bind:selected="prov_type==='vllm'">vllm</option>
+                            <option value="ollama" x-bind:selected="prov_type==='ollama'">ollama</option>
+                            <option value="openai" x-bind:selected="prov_type==='openai'">openai</option>
+                            <option value="lmstudio" x-bind:selected="prov_type==='lmstudio'">lmstudio</option>
+                        </select></td>
+                        <td><input type="number" :value="prov_in" min="256" step="256" @change="fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input_size:$event.target.value})})"></td>
+                        <td><input :value="prov_path" @change="fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_path:$event.target.value})})"></td>
+                        <td><input type="number" step="0.1" :value="prov_weight" @change="fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({weight:$event.target.value})})"></td>
+                        <td><input type="checkbox" x-model="enabled" @change="fetch(prov_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:$event.target.checked})})"></td>
+                        <td><button class="action-delete" type="button" hx-post="{{ url_for('delete_provider', provider_id=p.id) }}" hx-swap="none" hx-on="htmx:afterRequest: location.reload()" title="Remove provider">🗑</button></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="padding:0.5rem 1rem;color:var(--text-muted);font-size:0.85rem;">no providers</div>
+            {% endif %}
+        </div>
+        <!-- Toggle link + expandable add provider form -->
+        <div style="padding:0.5rem 1rem;border-top:1px solid var(--border-glass);" x-data="{ showForm: false }">
+            <a href="#" @click.prevent="showForm = !showForm"
+               style="color:var(--accent);font-size:0.75rem;font-weight:600;text-decoration:none;">
+                <span x-text="showForm ? '✕ Hide provider form' : '➕ Add new provider'">➕ Add new provider</span>
+            </a>
+            <div x-show="showForm" x-cloak style="padding:0.75rem 1rem;background:rgba(var(--accent-rgb),0.04);border-top:1px solid var(--border-glass);margin-top:0.5rem;">
+            <form hx-post="{{ url_for('add_provider', model_id=m.id) }}" hx-trigger="submit"
+                  hx-swap="none" hx-on="htmx:afterRequest: showForm = false, location.reload()"
+                  style="display:grid;grid-template-columns:20% 20% 15% 5% 1fr 6% 4% 4% 6%;gap:8px;align-items:center;">
+                <input type="text" name="id" placeholder="Provider ID" required style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="api_host" placeholder="Host" required style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="api_token" placeholder="Token" style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <select name="api_type" style="padding:0.35rem 0.4rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                    <option value="vllm">vllm</option><option value="ollama">ollama</option><option value="openai">openai</option><option value="lmstudio">lmstudio</option>
+                </select>
+                <input type="number" name="input_size" placeholder="In (4096)" min="256" step="256" style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="text" name="model_path" placeholder="Path" style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <input type="number" name="weight" placeholder="Wt" step="0.1" value="1.0" style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.8rem;font-family:inherit;">
+                <div style="display:flex;align-items:center;gap:4px;"><label style="font-size:0.8rem;color:var(--text-muted);">En:</label><input type="checkbox" name="enabled" checked></div>
+                <button class="btnx primary" type="submit" style="padding:0.35rem 0.7rem;font-size:0.8rem;">➕ Add</button>
+            </form>
+            </div>
+        </div>
+        {% endfor %}
+        <!-- Add model form for this family -->
+        <div style="padding:0.75rem 1rem;border-top:1px solid var(--border-glass);display:flex;gap:6px;align-items:center;">
+            <form hx-post="{{ url_for('add_model', config_id=cfg.id) }}" method="post" hx-trigger="submit"
+                  hx-swap="none" hx-on="htmx:afterRequest: location.reload()"
+                  style="display:flex;gap:6px;align-items:center;flex:1;">
+                <input type="hidden" name="family" value="{{ fam }}">
+                <input type="text" name="name" placeholder="Add model..." required
+                       style="padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border-glass);background:var(--bg-input);color:var(--text-main);font-size:0.82rem;font-family:inherit;flex:1;">
+                <button class="btnx primary" type="submit" style="padding:0.35rem 0.7rem;font-size:0.82rem;">➕</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 <div class="form-actions" style="margin-top:1rem;">
     <a class="btnx" href="{{ url_for('export_config', config_id=cfg.id) }}">Export</a>
@@ -301,6 +309,7 @@
                     <button class="btnx btnx-small"
                             hx-post="/configs/${configId}/versions/${v.version}/restore"
                             hx-trigger="click"
+                            hx-confirm="Are you sure? This will replace the current configuration with version ${v.version}."
                             hx-swap="none"
                             hx-on="htmx:afterRequest: location.reload()">Restore</button>
                 </td>

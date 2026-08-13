@@ -17,15 +17,20 @@
 HOST="${LLM_ROUTER_WEB_ANO_HOST:-0.0.0.0}"
 PORT="${LLM_ROUTER_WEB_ANO_PORT:-8082}"
 DEBUG="${LLM_ROUTER_WEB_ANO_DEBUG:-true}"
-# -------------------------------------------------------------------------
-# llm-router ap hosti:
-LLM_ROUTER_HOST="${LLM_ROUTER_HOST:-"http://192.168.100.65:8080"}"
-# llm-router api key:
-LLM_ROUTER_API_KEY="${LLM_ROUTER_API_KEY:-"sk-litm-QRFJ4nNyGJYVcBgD0m1i6bIpPWU0NJy6D8n1KSFp90SKuiKj"}"
-# -------------------------------------------------------------------------
-# llm-router-services api:
-LLM_ROUTER_SERVICES_HOST="${LLM_ROUTER_SERVICES_HOST:-"http://192.168.100.65:5000"}"
-# -------------------------------------------------------------------------
+# llm-router services API host (optional — defaults to localhost for dev only)
+export LLM_ROUTER_SERVICES_HOST="${LLM_ROUTER_SERVICES_HOST:-http://localhost:5000}"
+
+# ---- Validate required variables -----------------------------------------
+if [ -z "$LLM_ROUTER_API_KEY" ]; then
+    echo "ERROR: LLM_ROUTER_API_KEY is not set. Please configure it before starting the service." >&2
+    exit 1
+fi
+
+export LLM_ROUTER_API_KEY
+
+# llm-router API host (optional — defaults to localhost for dev only)
+export LLM_ROUTER_HOST="${LLM_ROUTER_HOST:-http://localhost:8000}"
+
 # Export the variables so the Flask app (app.py) can read them.
 #  -> anonymizer web:
 export LLM_ROUTER_WEB_ANO_HOST="$HOST"

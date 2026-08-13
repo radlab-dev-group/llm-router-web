@@ -78,7 +78,7 @@ Configuration is managed via environment variables:
 
 | Variable                   | Description                                  | Default                 |
 |:---------------------------|:---------------------------------------------|:------------------------|
-| `FLASK_SECRET_KEY`         | Secret key for Flask session signing         | `change-me-anonymizer`  |
+| `FLASK_SECRET_KEY`         | Secret key for Flask session signing         | auto-generated          |
 | `LLM_ROUTER_HOST`          | Base URL of the llm-router api               | `http://localhost:8000` |
 | `LLM_ROUTER_SERVICES_HOST` | Base URL of the llm-royer-services           | `http://localhost:5000` |
 | `LLM_ROUTER_API_KEY`       | API key for authenticating to llm-router api | _(none)_                |

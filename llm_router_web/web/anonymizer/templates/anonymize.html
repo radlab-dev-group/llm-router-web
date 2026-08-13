@@ -57,7 +57,7 @@
                     </div>
 
                     <div id="result-wrapper">
-                        {% if result %}
+                        {% if result and 'mappings' in result and 'text' in result %}
                             <div id="result-content" class="result-area"
                                  data-mappings='{{ result.mappings | tojson | safe }}'>{{ result.text | e }}</div>
                         {% else %}

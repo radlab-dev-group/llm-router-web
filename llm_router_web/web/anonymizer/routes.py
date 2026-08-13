@@ -17,10 +17,13 @@ Endpoints provided:
     - /models: GET (fetch available models)
 """
 
+import os
 import json
+import logging
 import requests
 
 from typing import Dict
+from urllib.parse import urlparse
 
 from flask import (
     Blueprint,
@@ -42,6 +45,24 @@ def _t(key):
     translations = current_app.config.get("TRANSLATIONS", {})
     texts = translations.get(lang, translations.get("en", {}))
     return texts.get(key, f"NO TRANSLATION: {key}")
+
+
+def _build_bearer_headers():
+    """Build headers dict with optional Bearer token for LLM-Router requests."""
+    key = os.environ.get("LLM_ROUTER_API_KEY", "")
+    if key:
+        return {"Authorization": f"Bearer {key}"}
+    return {}
+
+
+def urlsafe_redirect(url, fallback=None):
+    """Safe redirect: only follow url if it points to same host or is a relative URL."""
+    if not url or not urlparse(url).netloc:
+        return redirect(fallback or url_for("anonymize_web.show_form"))
+    parsed = urlparse(url)
+    if parsed.netloc == urlparse(request.host_url).netloc:
+        return redirect(url)
+    return redirect(fallback or url_for("anonymize_web.show_form"))
 
 
 # Blueprint configuration
@@ -93,7 +114,7 @@ def set_lang(lang):
     if lang not in ["pl", "en"]:
         lang = "pl"
     session["lang"] = lang
-    return redirect(request.referrer or url_for("anonymize_web.show_form"))
+    return urlsafe_redirect(request.referrer)
 
 
 @anonymize_bp.route("/", methods=["POST"])
@@ -160,10 +181,7 @@ def process_text():
             Dict: The JSON response from the router service.
             str: An error message if the request fails.
         """
-        api_key = current_app.config.get("LLM_ROUTER_API_KEY", "")
-        headers = {}
-        if api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
+        headers = _build_bearer_headers()
         try:
             resp = requests.post(
                 f"{router_host}{endpoint}",
@@ -201,12 +219,19 @@ def process_text():
             result={"error": f"Not supported method {algorithm}."},
         )
 
-    _p_map = {}
     if isinstance(result, dict):
+        # Ensure "text" exists so the template always has something to render.
+        result.setdefault("text", raw_text)
+        _p_map = {}
         for _k, _v in result.get("mappings", {}).items():
             key = _k if _k.startswith("{") else "{" + _k + "}"
             _p_map[key] = _v
         result["mappings"] = _p_map
+
+    # For any non-dict result (e.g. error string from a failed call), wrap it
+    # in a safe dict so the template never receives an ``Undefined`` value.
+    if not isinstance(result, dict):
+        result = {"error": str(result), "mappings": {}, "text": ""}
 
     return render_template(
         "anonymize_result_partial.html",
@@ -280,10 +305,7 @@ def chat_message():
         "messages": payload_messages,
     }
 
-    api_key = current_app.config.get("LLM_ROUTER_API_KEY", "")
-    headers = {}
-    if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
+    headers = _build_bearer_headers()
 
     external_url = (
         f"{current_app.config['LLM_ROUTER_HOST'].rstrip('/')}/v1/chat/completions"
@@ -325,9 +347,9 @@ def chat_message():
                 chunk = (
                     data.get("choices", [{}])[0].get("delta", {}).get("content", "")
                 )
-            except:
+            except Exception:
                 chunk = cleaned
-
+                logging.warning("Failed to parse SSE chunk", exc_info=True)
             if chunk:
                 yield chunk
 
@@ -348,7 +370,8 @@ def chat_finalize():
     """
     try:
         payload = request.get_json(force=True) or {}
-    except:
+    except Exception:
+        logging.warning("Failed to parse JSON payload in finalize", exc_info=True)
         payload = {}
 
     assistant_msg = (payload.get("assistant") or "").strip()
@@ -410,10 +433,7 @@ def models():
             parsing its response results in a 500 response.
     """
     external_url = f"{current_app.config['LLM_ROUTER_HOST'].rstrip('/')}/models"
-    api_key = current_app.config.get("LLM_ROUTER_API_KEY", "")
-    headers = {}
-    if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
+    headers = _build_bearer_headers()
     try:
         resp = requests.get(external_url, timeout=10, headers=headers)
         resp.raise_for_status()
@@ -421,4 +441,7 @@ def models():
         models = data.get("models") or data.get("data") or []
         return jsonify({"models": models})
     except Exception:
+        logging.exception(
+            "Failed to fetch models from LLM router at %s", external_url
+        )
         return jsonify({"models": []}), 500

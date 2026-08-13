@@ -1,6 +1,4 @@
 <div id="result-content"
      class="result-area"
      data-mappings='{{ result.mappings | tojson | safe }}'>
-    {% if result %}{{ result.text | e }}{% else %}<span style="opacity:0.5; font-style:italic;">
-            Wynik pojawi się tutaj po przetworzeniu...
-        </span>{% endif %}</div>
+    {% if result and 'text' in result %}{{ result.text | e }}{% else %}<span style="opacity:0.5; font-style:italic;">Wynik pojawi się tutaj po przetworzeniu...</span>{% endif %}</div>

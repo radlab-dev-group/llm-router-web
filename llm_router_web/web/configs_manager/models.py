@@ -60,9 +60,7 @@ class Config(db.Model):
     families = db.relationship(
         "Family", backref="config", cascade="all, delete-orphan"
     )
-    models = db.relationship(
-        "Model", backref="config", cascade="all, delete-orphan"
-    )
+    models = db.relationship("Model", backref="config", cascade="all, delete-orphan")
     versions = db.relationship(
         "ConfigVersion", backref="config", cascade="all, delete-orphan"
     )
@@ -108,9 +106,7 @@ class Model(db.Model):
     config_id = db.Column(
         db.Integer, db.ForeignKey("config.id"), nullable=False, index=True
     )
-    family_id = db.Column(
-        db.Integer, db.ForeignKey("family.id"), nullable=False
-    )
+    family_id = db.Column(db.Integer, db.ForeignKey("family.id"), nullable=False)
     name = db.Column(db.String(200), nullable=False)
     is_active = db.Column(db.Boolean, default=False, nullable=False)
 
